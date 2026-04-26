@@ -34,5 +34,5 @@ python ./scripts/06_visualize_distance.py
 ```
 
 ## Contact
-* Dongfang Zhao, University of Washington, USA
-* dzhao@uw.edu
+* Author: Dongfang Zhao, University of Washington, USA
+* Email: dzhao@uw.edu

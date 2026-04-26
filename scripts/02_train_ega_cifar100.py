@@ -1,3 +1,9 @@
+# Copyright (c) 2026 Dongfang Zhao <dzhao@uw.edu>
+# Created: April 26, 2026
+#
+# This source code is licensed under the MIT license found in the
+# LICENSE file in the root directory of this source tree.
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
