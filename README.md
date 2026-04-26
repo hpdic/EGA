@@ -13,16 +13,26 @@ pip install numpy tqdm
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
 pip install git+https://github.com/openai/CLIP.git
 pip install faiss-cpu
+pip install scikit-learn matplotlib umap-learn
 pip install --upgrade pip
 
 touch ~/hpdic/EGA/models/__init__.py
 export PYTHONPATH=$PYTHONPATH:$(pwd)
 
+# CIFAR-10
 python ./scripts/01_extract_vit_features.py 
 python ./scripts/02_train_ega.py
 python ./scripts/03_eval_ivf.py
 
+# CIFAR-100
 python ./scripts/04_extract_cifar100_features.py
 python ./scripts/02_train_ega_cifar100.py
 python ./scripts/05_eval_generalization.py
+
+# Visualization
+python ./scripts/06_visualize_distance.py
 ```
+
+## Contact
+* Dongfang Zhao, University of Washington, USA
+* dzhao@uw.edu
