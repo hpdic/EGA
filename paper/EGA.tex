@@ -1,0 +1,173 @@
+\documentclass{article}
+
+% if you need to pass options to natbib, use, e.g.:
+%     \PassOptionsToPackage{numbers, compress}{natbib}
+% before loading neurips_2026
+
+% The authors should use one of these tracks.
+% Before accepting by the NeurIPS conference, select one of the options below.
+% 0. "default" for submission
+
+\usepackage[preprint]{neurips_2026}
+% \usepackage[position]{neurips_2026}
+
+% the "default" option is equal to the "main" option, which is used for the Main Track with double-blind reviewing.
+% 1. "main" option is used for the Main Track
+%  \usepackage[main]{neurips_2026}
+% 2. "position" option is used for the Position Paper Track
+%  \usepackage[position]{neurips_2026}
+% 3. "eandd" option is used for the Evaluations & Datasets Track
+ % \usepackage[eandd]{neurips_2026}
+ % if you need to opt-in for a single-blind submission in the E&D track:
+ %\usepackage[eandd, nonanonymous]{neurips_2026}
+% 4. "creativeai" option is used for the Creative AI Track
+%  \usepackage[creativeai]{neurips_2026}
+% 5. "sglblindworkshop" option is used for the Workshop with single-blind reviewing
+ % \usepackage[sglblindworkshop]{neurips_2026}
+% 6. "dblblindworkshop" option is used for the Workshop with double-blind reviewing
+%  \usepackage[dblblindworkshop]{neurips_2026}
+
+% After being accepted, the authors should add "final" behind the track to compile a camera-ready version.
+% 1. Main Track
+ % \usepackage[main, final]{neurips_2026}
+% 2. Position Paper Track
+%  \usepackage[position, final]{neurips_2026}
+% 3. Evaluations & Datasets Track
+ % \usepackage[eandd, final]{neurips_2026}
+% 4. Creative AI Track
+%  \usepackage[creativeai, final]{neurips_2026}
+% 5. Workshop with single-blind reviewing
+%  \usepackage[sglblindworkshop, final]{neurips_2026}
+% 6. Workshop with double-blind reviewing
+%  \usepackage[dblblindworkshop, final]{neurips_2026}
+% Note. For the workshop paper template, both \title{} and \workshoptitle{} are required, with the former indicating the paper title shown in the title and the latter indicating the workshop title displayed in the footnote.
+% For workshops (5., 6.), the authors should add the name of the workshop, "\workshoptitle" command is used to set the workshop title.
+% \workshoptitle{WORKSHOP TITLE}
+
+% "preprint" option is used for arXiv or other preprint submissions
+ % \usepackage[preprint]{neurips_2026}
+
+% to avoid loading the natbib package, add option nonatbib:
+%    \usepackage[nonatbib]{neurips_2026}
+
+\usepackage[utf8]{inputenc} % allow utf-8 input
+\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
+\usepackage{hyperref}       % hyperlinks
+\usepackage{url}            % simple URL typesetting
+\usepackage{booktabs}       % professional-quality tables
+\usepackage{amsfonts}       % blackboard math symbols
+\usepackage{nicefrac}       % compact symbols for 1/2, etc.
+\usepackage{microtype}      % microtypography
+\usepackage{xcolor}         % colors
+
+\usepackage{graphicx}
+\usepackage[strings]{underscore} % 自动处理文本中的下划线
+\usepackage{grffile}           % 增强文件名处理，允许更多特殊字符
+\newcommand{\don}[1]{\textcolor{blue}{[Dongfang: #1]}}
+
+% Note. For the workshop paper template, both \title{} and \workshoptitle{} are required, with the former indicating the paper title shown in the title and the latter indicating the workshop title displayed in the footnote. 
+\title{Semantic Neighbors Are Not Geometric Neighbors: Rescuing Vector Search through EGA}
+
+
+% The \author macro works with any number of authors. There are two commands
+% used to separate the names and addresses of multiple authors: \And and \AND.
+%
+% Using \And between authors leaves it to LaTeX to determine where to break the
+% lines. Using \AND forces a line break at that point. So, if LaTeX puts 3 of 4
+% authors names on the first line, and the last on the second line, try using
+% \AND instead of \And before the third author name.
+
+
+\author{%
+  Dongfang Zhao \\
+  Tacoma School of Engineering and Technology\\
+  Paul G. Allen School of Computer Science \& Engineering\\
+  University of Washington\\
+  \texttt{dzhao@cs.washington.edu} \\
+  % examples of more authors
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \AND
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+  % \And
+  % Coauthor \\
+  % Affiliation \\
+  % Address \\
+  % \texttt{email} \\
+}
+
+
+\begin{document}
+
+
+\maketitle
+
+
+\begin{abstract}
+Representation learning and vector search are evolving as isolated disciplines. Foundation models optimize for semantic alignment, implicitly assuming the resulting latent spaces possess a clean Euclidean geometry. We argue this is a fundamental geometric illusion. Contrastive pretraining creates highly distorted manifolds where semantic neighbors are scattered across distant Voronoi cells. This architectural disconnect forces search engines to waste massive computational resources bridging a gap that should not exist. We position that the community must abandon this siloed paradigm. To support our stance, we introduce Euclidean Geodesic Alignment (EGA), a proof-of-concept demonstrating that explicitly flattening the local manifold dramatically reduces indexing complexity. We outline a comprehensive roadmap to shift the field from post-hoc adaptations to native geometric co-optimization.
+
+\end{abstract}
+
+\section{Introduction}
+
+Modern representation learning and vector search are evolving as isolated disciplines with fundamentally conflicting objectives. Representation models like CLIP are trained to align multimodal semantics on a hypersphere, while downstream search engines like FAISS rely on Euclidean partitioning to navigate these spaces. \textbf{This position paper argues that the current paradigm of treating representation and retrieval as independent silos is unsustainable because semantic similarity does not naturally equate to geometric proximity in latent manifolds.} 
+
+This architectural disconnect creates a severe impedance mismatch. Popular indexing algorithms rely heavily on Voronoi partitioning, assuming that semantic neighbors exist within compact, localized Euclidean cells. However, our analysis reveals that latent manifolds are highly distorted. Semantic neighbors are often scattered across distant Voronoi cells, intermingled with irrelevant background noise. Practitioners are forced to waste massive computational resources at inference time to compensate for this geometric blindness. 
+
+We take the stance that we must stop blindly trusting the latent spaces of pretrained models. Instead, the community must mandate a shift toward native geometric co-optimization. By introducing Euclidean Geodesic Alignment (EGA), we provide a proof-of-concept that explicitly flattening the manifold is the only way to rescue vector search from its current efficiency ceiling.
+
+\section{Synthesis and Analysis of Literature}
+
+\section{Theoretical Reasoning}
+
+\section{Experimental Evidence}
+
+\subsection{Experimental Setup}
+
+\paragraph{Experiment Platform}
+All experiments were conducted on the Chameleon Cloud~\cite{keahey2020lessons} platform using a compute node equipped with 256 AMD EPYC-7763 CPU cores, 512 GiB of RAM, and an NVIDIA A100 GPU of 80 GB HBM2e. 
+The operating system is Ubuntu 24.04 LTS.
+\don{Provide more system setup info.}
+
+\subsection{Distances in Latent and EGA Spaces}
+
+To validate our stance on the systemic disconnect between semantic alignment and geometric proximity, we present empirical evidence across two dimensions: physical distance distributions and retrieval efficiency metrics. We evaluate Euclidean Geodesic Alignment (EGA) against raw foundational model embeddings using CIFAR10 and CIFAR100 datasets. 
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\linewidth]{fig/distance_distribution_grid.pdf}
+    \caption{L2 distance distributions for Top K neighbors versus random background points. The original space exhibits significant overlap, whereas EGA enforces a clear geometric margin.}
+    \label{fig:dist_grid}
+\end{figure}
+
+The results in Figure \ref{fig:dist_grid} expose the root cause of retrieval failure. In the original CLIP latent manifold, the distance distributions of true semantic neighbors and random background points exhibit significant overlap. \textbf{This position paper argues that this overlap constitutes a geometric illusion where noise is indistinguishable from signal, rendering Euclidean indexing inherently unreliable.} 
+
+\subsection{Recalls in Latent and EGA Spaces}
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=\linewidth]{fig/recall_tradeoff_grid.pdf}
+    \caption{Recall@1 versus nprobe tradeoff. EGA consistently shifts the efficiency frontier upward, enabling high recall at minimal search probes.}
+    \label{fig:recall_grid}
+\end{figure}
+
+The impact of this flattening is quantified in Figure \ref{fig:recall_grid}. The raw CLIP space achieves a meager 0.51 Recall@1 at nprobe=1 on CIFAR100. To compensate for this disorganized geometry, systems are forced to increase search volume to nprobe=10 to reach a recall of 0.85. This represents a 10x waste of computational resources. 
+
+In contrast, EGA elevates the nprobe=1 Recall@1 to 0.68. Notably, EGA at nprobe=1 outperforms the original space at nprobe=5 across all benchmarks. This confirms that fixing the geometry at the source is the only viable path to scalable retrieval. We achieve accuracy parity with brute force multi probe baselines while maintaining the extreme efficiency of single cell lookups. These results verify that our position is a necessary requirement for the next generation of scalable retrieval systems.
+
+\section{Conclusion}
+
+\bibliography{ref}
+\bibliographystyle{plain}
+
+\end{document}

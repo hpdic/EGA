@@ -1,3 +1,24 @@
+# Latex
+*.aux
+*.log
+*.out
+*.toc
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.nav
+*.snm
+*.vrb
+*.bbl
+*.blg
+*.lof
+*.lot
+*.gz
+*.backup
+*.backup.*
+*.dvi
+*.ps
+
 # Ignore massive datasets and extracted features
 data/
 embeddings/*.npy
