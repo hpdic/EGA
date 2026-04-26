@@ -6,96 +6,102 @@ import numpy as np
 import os
 import faiss
 from tqdm import tqdm
-
-# Import the model we defined earlier
 from models.ega_mlp import EGAMLP
 
-class NeighborDataset(Dataset):
+class AdvancedTripletDataset(Dataset):
     def __init__(self, features, neighbors):
         self.features = torch.from_numpy(features).float()
         self.neighbors = neighbors
+        self.num_samples = len(features)
 
     def __len__(self):
-        return len(self.features)
+        return self.num_samples
 
     def __getitem__(self, idx):
-        # Return the anchor point and a randomly sampled original neighbor
         anchor = self.features[idx]
-        neighbor_idx = np.random.choice(self.neighbors[idx])
-        positive = self.features[neighbor_idx]
-        return anchor, positive
+        # Pick a positive sample from the pre-calculated neighbors
+        pos_idx = np.random.choice(self.neighbors[idx])
+        positive = self.features[pos_idx]
+        
+        # Harder negative mining: pick a random point that is definitely not a neighbor
+        neg_idx = np.random.randint(0, self.num_samples)
+        while neg_idx in self.neighbors[idx] or neg_idx == idx:
+            neg_idx = np.random.randint(0, self.num_samples)
+        negative = self.features[neg_idx]
+        
+        return anchor, positive, negative
 
-def get_original_neighbors(features, k=10):
-    print("Pre-calculating original manifold neighbors...")
+def get_original_neighbors(features, k=20):
+    print("Pre-calculating manifold neighbors...")
     dim = features.shape[1]
     index = faiss.IndexFlatL2(dim)
     index.add(features)
-    # We find k+1 neighbors because the closest one is always the point itself
     _, indices = index.search(features, k + 1)
     return indices[:, 1:]
 
 def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    
-    # Define absolute paths
     features_path = os.path.expanduser("~/hpdic/EGA/embeddings/cifar10_vit_b32_features.npy")
-    model_save_path = os.path.expanduser("~/hpdic/EGA/models/ega_bridge.pth")
-    output_features_path = os.path.expanduser("~/hpdic/EGA/embeddings/cifar10_ega_features.npy")
+    output_path = os.path.expanduser("~/hpdic/EGA/embeddings/cifar10_ega_features.npy")
 
-    # 1. Load original features
     features = np.load(features_path).astype(np.float32)
-    train_features = features[:8000] # Use the same split as the eval script
+    # Ensure input features are normalized before training
+    features = features / np.linalg.norm(features, axis=1, keepdims=True)
+    train_features = features[:8000]
     
-    # 2. Find neighbors in the twisted manifold
-    neighbors = get_original_neighbors(train_features, k=20)
-    
-    # 3. Setup Dataset and Model
-    dataset = NeighborDataset(train_features, neighbors)
+    neighbors = get_original_neighbors(train_features, k=30)
+    dataset = AdvancedTripletDataset(train_features, neighbors)
     loader = DataLoader(dataset, batch_size=1024, shuffle=True)
     
-    model = EGAMLP(input_dim=512, hidden_dim=1024).to(device)
-    optimizer = optim.Adam(model.parameters(), lr=1e-4)
-    criterion = nn.MSELoss()
+    model = EGAMLP(input_dim=512, hidden_dim=2048).to(device)
+    optimizer = optim.AdamW(model.parameters(), lr=5e-5, weight_decay=1e-2)
+    # Increased margin to force clearer geometric separation
+    criterion = nn.TripletMarginLoss(margin=1.2, p=2)
 
-    # 4. Training Loop
-    print("Training EGA to flatten the manifold...")
+    print("Training enhanced EGA model...")
     model.train()
-    for epoch in range(50):
+    for epoch in range(150):
         epoch_loss = 0
-        for anchors, positives in loader:
-            anchors, positives = anchors.to(device), positives.to(device)
-            
+        for a, p, n in loader:
+            a, p, n = a.to(device), p.to(device), n.to(device)
             optimizer.zero_grad()
             
-            # Map both points through the EGA bridge
-            anchor_out = model(anchors)
-            positive_out = model(positives)
+            a_out, p_out, n_out = model(a), model(p), model(n)
+            loss = criterion(a_out, p_out, n_out)
             
-            # Loss: Neighbors in the manifold should be close in Euclidean space
-            loss = criterion(anchor_out, positive_out)
+            # Semantic reconstruction loss to prevent drifting too far
+            recon_loss = torch.mean((a_out - a)**2)
             
-            # Regularization: Keep the output close to the original to preserve semantics
-            reg_loss = criterion(anchor_out, anchors)
-            
-            total_loss = loss + 0.1 * reg_loss
+            total_loss = loss + 0.05 * recon_loss
             total_loss.backward()
             optimizer.step()
-            
             epoch_loss += total_loss.item()
             
-        if (epoch + 1) % 10 == 0:
-            print(f"Epoch [{epoch+1}/50], Loss: {epoch_loss/len(loader):.6f}")
+        if (epoch + 1) % 25 == 0:
+            print(f"Epoch [{epoch+1}/150], Loss: {epoch_loss/len(loader):.6f}")
 
-    # 5. Transform all features and save
-    print("Transforming all features with the trained EGA bridge...")
     model.eval()
     all_features_tensor = torch.from_numpy(features).float().to(device)
     with torch.no_grad():
-        transformed_features = model(all_features_tensor).cpu().numpy()
+        transformed = model(all_features_tensor).cpu().numpy()
     
-    np.save(output_features_path, transformed_features)
-    torch.save(model.state_dict(), model_save_path)
-    print(f"Success: Transformed features saved to {output_features_path}")
+    np.save(output_path, transformed)
+    print(f"Enhanced EGA Transformation complete. Saved to {output_path}")
 
 if __name__ == "__main__":
     main()
+
+#
+# Example Output:
+#
+
+# (venv) cc@uc-a100:~/hpdic/EGA$ python scripts/02_train_ega.py
+# Pre-calculating manifold neighbors...
+# Training enhanced EGA model...
+# Epoch [25/150], Loss: 0.217645
+# Epoch [50/150], Loss: 0.205627
+# Epoch [75/150], Loss: 0.200030
+# Epoch [100/150], Loss: 0.192480
+# Epoch [125/150], Loss: 0.190569
+# Epoch [150/150], Loss: 0.192629
+# Enhanced EGA Transformation complete. Saved to /home/cc/hpdic/EGA/embeddings/cifar10_ega_features.npy    
