@@ -1,0 +1,13 @@
+# Ignore massive datasets and extracted features
+data/
+embeddings/*.npy
+
+# Ignore Python caches and virtual environments
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Ignore model checkpoints
+*.pt
+*.pth
