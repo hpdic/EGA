@@ -28,8 +28,11 @@ python ./scripts/01_extract_features.py
 python ./scripts/02_train_ega.py
 python ./scripts/03_eval_label_prediction.py
 python ./scripts/04_eval_anns_recall.py
-python ./scripts/05_visualize_distance.py
-python ./scripts/06_visualize_recall.py
+python ./scripts/05_visualize_precision.py
+python ./scripts/06_visualize_distance.py
+python ./scripts/07_visualize_recall.py
+python ./scripts/08_visualize_projection.py
+```
 
 ## Contact
 * Author: Dongfang Zhao, University of Washington, USA
