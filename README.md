@@ -36,6 +36,12 @@ python ./scripts/05_eval_generalization.py
 # Visualization
 python ./scripts/06_visualize_distance.py
 python ./scripts/07_visualize_recall.py
+
+# More tests (questionable)
+python ./scripts/eval_baselines.py \
+  --features ~/hpdic/EGA/embeddings/cifar100_vit_b32_features.npy \
+  --save_ega ~/hpdic/EGA/embeddings/cifar100_ega_features.npy \
+  --skip_train
 ```
 
 ## Contact

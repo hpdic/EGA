@@ -66,7 +66,7 @@
 \newcommand{\don}[1]{\textcolor{blue}{[Dongfang: #1]}}
 
 % Note. For the workshop paper template, both \title{} and \workshoptitle{} are required, with the former indicating the paper title shown in the title and the latter indicating the workshop title displayed in the footnote. 
-\title{Semantic Neighbors Are Not Geometric Neighbors: Rescuing Vector Search through EGA}
+\title{Semantic Neighbors Are Not Geometric Neighbors: Representation Learning Must Own Retrieval Geometry}
 
 
 % The \author macro works with any number of authors. There are two commands
@@ -115,23 +115,76 @@
 
 
 \begin{abstract}
-Representation learning and vector search are evolving as isolated disciplines. Foundation models optimize for semantic alignment, implicitly assuming the resulting latent spaces possess a clean Euclidean geometry. We argue this is a fundamental geometric illusion. Contrastive pretraining creates highly distorted manifolds where semantic neighbors are scattered across distant Voronoi cells. This architectural disconnect forces search engines to waste massive computational resources bridging a gap that should not exist. We position that the community must abandon this siloed paradigm. To support our stance, we introduce Euclidean Geodesic Alignment (EGA), a proof-of-concept demonstrating that explicitly flattening the local manifold dramatically reduces indexing complexity. We outline a comprehensive roadmap to shift the field from post-hoc adaptations to native geometric co-optimization.
+Representation learning and vector search are treated as independent problems, yet they share a fundamental geometric contract that neither community explicitly enforces. Foundation models such as CLIP optimize for semantic alignment on hyperspheres, while downstream search engines assume well-behaved Euclidean partitions, an assumption that latent manifolds systematically violate. We argue this is not an engineering inconvenience but a structural flaw in how the field is organized: retrieval geometry is an afterthought, patched post-hoc through increased search budgets rather than addressed at the source. The community has accepted a 10x computational tax on inference as normal, when it is in fact the cost of ignoring geometry during pretraining. To ground this position empirically, we introduce Euclidean Geodesic Alignment (EGA), a lightweight post-hoc transformation that explicitly flattens local manifold structure. Despite its simplicity, EGA at nprobe=1 matches raw CLIP embeddings at nprobe=5 across CIFAR10 and CIFAR100, demonstrating that geometric correction yields disproportionate retrieval gains. We present this not as a final solution, but as evidence that the field needs to move from post-hoc adaptation to native geometric co-optimization between representation models and retrieval systems.
 
 \end{abstract}
 
 \section{Introduction}
 
-Modern representation learning and vector search are evolving as isolated disciplines with fundamentally conflicting objectives. Representation models like CLIP are trained to align multimodal semantics on a hypersphere, while downstream search engines like FAISS rely on Euclidean partitioning to navigate these spaces. \textbf{This position paper argues that the current paradigm of treating representation and retrieval as independent silos is unsustainable because semantic similarity does not naturally equate to geometric proximity in latent manifolds.} 
+The machine learning community has quietly accepted an inefficiency 
+so pervasive it has become invisible. When a practitioner deploys a 
+CLIP-based image retrieval system and finds recall unsatisfactory, 
+the standard remedy is to increase \texttt{nprobe}: probing more 
+Voronoi cells at search time until the recall target is met. This 
+workaround is so routine that it appears in the default 
+configurations of production systems and benchmark tutorials alike. 
+We argue it should not be.
 
-This architectural disconnect creates a severe impedance mismatch. Popular indexing algorithms rely heavily on Voronoi partitioning, assuming that semantic neighbors exist within compact, localized Euclidean cells. However, our analysis reveals that latent manifolds are highly distorted. Semantic neighbors are often scattered across distant Voronoi cells, intermingled with irrelevant background noise. Practitioners are forced to waste massive computational resources at inference time to compensate for this geometric blindness. 
+\textbf{This paper takes the position that retrieval geometry is not 
+a downstream engineering concern but a first-class objective that 
+must be co-optimized with representation learning, and that the 
+field's failure to treat it as such imposes a systematic and 
+unnecessary computational tax on every deployed vector search system.}
 
-We take the stance that we must stop blindly trusting the latent spaces of pretrained models. Instead, the community must mandate a shift toward native geometric co-optimization. By introducing Euclidean Geodesic Alignment (EGA), we provide a proof-of-concept that explicitly flattening the manifold is the only way to rescue vector search from its current efficiency ceiling.
+The root cause is a geometric mismatch that has been designed into 
+the stack by accident. Foundation models such as CLIP are trained 
+with contrastive objectives that optimize semantic alignment on a 
+hypersphere: semantically similar inputs are pulled together, 
+dissimilar ones pushed apart. Separately, approximate nearest 
+neighbor (ANN) search engines such as FAISS partition the embedding 
+space into Voronoi cells and assume that semantic neighbors 
+co-locate within the same cell under Euclidean geometry. Neither 
+side is wrong on its own terms. But the two geometric contracts are 
+incompatible, and no one is responsible for reconciling them.
+
+The consequences are concrete. As we show in Section~\ref{sec:exp}, 
+raw CLIP embeddings on CIFAR100 achieve only 0.51 Recall@1 at 
+\texttt{nprobe}=1. Reaching 0.85 recall requires \texttt{nprobe}=10: a 10$\times$ increase in search cost that buys back accuracy 
+that was never lost in semantic space, only in geometric space. This 
+is not a scaling limitation or a model capacity problem. It is the 
+measurable cost of ignoring geometry at training time.
+
+We introduce Euclidean Geodesic Alignment (EGA) as a proof-of-concept 
+to make this argument empirical rather than theoretical. EGA is a 
+lightweight post-hoc transformation that flattens local manifold 
+structure, enforcing a clear geometric margin between semantic 
+neighbors and background points. It is deliberately simple: our 
+claim is not that EGA is the right solution, but that even a 
+minimal geometric correction applied after the fact yields 
+disproportionate gains: EGA at \texttt{nprobe}=1 consistently 
+matches or outperforms raw CLIP at \texttt{nprobe}=5. If a post-hoc 
+patch this lightweight moves the efficiency frontier this 
+significantly, the gains from native co-optimization should be 
+substantially larger.
+
+The remainder of this paper is organized as follows. 
+Section~\ref{sec:lit} situates our position within existing work on 
+metric learning, manifold alignment, and retrieval-aware 
+representation. Section~\ref{sec:theory} formalizes the geometric 
+mismatch and explains why post-hoc corrections are inherently 
+limited. Section~\ref{sec:exp} presents empirical evidence through 
+EGA. We conclude with a roadmap for how the community should 
+restructure the boundary between representation learning and 
+retrieval systems, in Section~\ref{sec:conclusion}.
 
 \section{Synthesis and Analysis of Literature}
+\label{sec:lit}
 
 \section{Theoretical Reasoning}
+\label{sec:theory}
 
 \section{Experimental Evidence}
+\label{sec:exp}
 
 \subsection{Experimental Setup}
 
@@ -166,6 +219,7 @@ The impact of this flattening is quantified in Figure \ref{fig:recall_grid}. The
 In contrast, EGA elevates the nprobe=1 Recall@1 to 0.68. Notably, EGA at nprobe=1 outperforms the original space at nprobe=5 across all benchmarks. This confirms that fixing the geometry at the source is the only viable path to scalable retrieval. We achieve accuracy parity with brute force multi probe baselines while maintaining the extreme efficiency of single cell lookups. These results verify that our position is a necessary requirement for the next generation of scalable retrieval systems.
 
 \section{Conclusion}
+\label{sec:conclusion}
 
 \bibliography{ref}
 \bibliographystyle{plain}
