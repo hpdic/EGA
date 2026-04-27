@@ -30,7 +30,7 @@ def run_evaluation(features_path, label_text, k_list):
     exact.add(base)
     _, gt = exact.search(query, max(k_list))
 
-    nlist = 1000
+    nlist = 100
     ivf = faiss.IndexIVFFlat(faiss.IndexFlatL2(dim), dim, nlist, faiss.METRIC_L2)
     ivf.train(base)
     ivf.add(base)
@@ -54,55 +54,49 @@ def main():
 if __name__ == '__main__':
     main()
 
-#
-# Example Output:
-#
-
 # (venv) cc@uc-a100:~/hpdic/EGA$ python ./scripts/05_eval_generalization.py 
 
 # Evaluating: CIFAR-100 Original
-# WARNING clustering 8000 points to 1000 centroids: please provide at least 39000 training points
 
 # Recall@1:
-# nprobe 1: 0.5130
-# nprobe 5: 0.8455
-# nprobe 10: 0.9265
+# nprobe 1: 0.6665
+# nprobe 5: 0.9370
+# nprobe 10: 0.9800
 
 # Recall@3:
-# nprobe 1: 0.4432
-# nprobe 5: 0.8133
-# nprobe 10: 0.9088
+# nprobe 1: 0.6363
+# nprobe 5: 0.9292
+# nprobe 10: 0.9765
 
 # Recall@5:
-# nprobe 1: 0.4046
-# nprobe 5: 0.7825
-# nprobe 10: 0.8886
+# nprobe 1: 0.6198
+# nprobe 5: 0.9203
+# nprobe 10: 0.9736
 
 # Recall@10:
-# nprobe 1: 0.3399
-# nprobe 5: 0.7319
-# nprobe 10: 0.8557
+# nprobe 1: 0.5930
+# nprobe 5: 0.9060
+# nprobe 10: 0.9684
 
 # Evaluating: CIFAR-100 EGA
-# WARNING clustering 8000 points to 1000 centroids: please provide at least 39000 training points
 
 # Recall@1:
-# nprobe 1: 0.6865
-# nprobe 5: 0.9865
-# nprobe 10: 0.9995
+# nprobe 1: 0.8245
+# nprobe 5: 0.9900
+# nprobe 10: 0.9975
 
 # Recall@3:
-# nprobe 1: 0.6218
-# nprobe 5: 0.9788
-# nprobe 10: 0.9977
+# nprobe 1: 0.8140
+# nprobe 5: 0.9842
+# nprobe 10: 0.9962
 
 # Recall@5:
-# nprobe 1: 0.5728
-# nprobe 5: 0.9710
-# nprobe 10: 0.9963
+# nprobe 1: 0.8052
+# nprobe 5: 0.9827
+# nprobe 10: 0.9964
 
 # Recall@10:
-# nprobe 1: 0.4780
-# nprobe 5: 0.9484
-# nprobe 10: 0.9930
+# nprobe 1: 0.7870
+# nprobe 5: 0.9771
+# nprobe 10: 0.9948
 # (venv) cc@uc-a100:~/hpdic/EGA$ 

@@ -23,26 +23,13 @@ pip install --upgrade pip
 touch ~/hpdic/EGA/models/__init__.py
 export PYTHONPATH=$PYTHONPATH:$(pwd)
 
-# CIFAR-10
-python ./scripts/01_extract_vit_features.py 
-python ./scripts/02_train_ega.py
-python ./scripts/03_eval_ivf.py
-
 # CIFAR-100
-python ./scripts/04_extract_cifar100_features.py
-python ./scripts/02_train_ega_cifar100.py
-python ./scripts/05_eval_generalization.py
-
-# Visualization
-python ./scripts/06_visualize_distance.py
-python ./scripts/07_visualize_recall.py
-
-# More tests (questionable)
-python ./scripts/eval_baselines.py \
-  --features ~/hpdic/EGA/embeddings/cifar100_vit_b32_features.npy \
-  --save_ega ~/hpdic/EGA/embeddings/cifar100_ega_features.npy \
-  --skip_train
-```
+python ./scripts/01_extract_features.py
+python ./scripts/02_train_ega.py
+python ./scripts/03_eval_label_prediction.py
+python ./scripts/04_eval_anns_recall.py
+python ./scripts/05_visualize_distance.py
+python ./scripts/06_visualize_recall.py
 
 ## Contact
 * Author: Dongfang Zhao, University of Washington, USA
