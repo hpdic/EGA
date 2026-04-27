@@ -1,91 +1,109 @@
 # Copyright (c) 2026 Dongfang Zhao <dzhao@uw.edu>
-# Created: April 26, 2026
+# Created: April 27, 2026
 
-import os
-import numpy as np
 import matplotlib.pyplot as plt
-import umap
-import warnings
+import numpy as np
+import os
+from mpl_toolkits.axes_grid1.inset_locator import inset_axes, mark_inset
 
-warnings.filterwarnings('ignore')
+# Global plotting configurations for publication quality
+plt.rcParams.update({
+    'font.size': 16,
+    'font.family': 'serif',
+    'pdf.fonttype': 42,
+    'ps.fonttype': 42
+})
 
-def main():
+def plot_recall_final():
+    # Path settings
     base_dir = os.path.expanduser('~/hpdic/EGA')
-    embed_dir = os.path.join(base_dir, 'embeddings')
+    save_dir = os.path.join(base_dir, 'paper/fig')
+    os.makedirs(save_dir, exist_ok=True)
+    save_path = os.path.join(save_dir, 'cifar10_generalization_recall.pdf')
+
+    # Data definition
+    k_labels = ['Recall@1', 'Recall@3', 'Recall@5', 'Recall@10']
+    nprobes = [1, 5, 10]
     
-    orig_path = os.path.join(embed_dir, 'cifar100_vit_b32_features.npy')
-    ega_path = os.path.join(embed_dir, 'cifar100_ega_features.npy')
-    labels_path = os.path.join(embed_dir, 'cifar100_vit_b32_labels.npy')
-    
-    save_path = os.path.join(base_dir, 'paper/fig/manifold_projection.pdf')
+    # Results data for each model [n=1, n=5, n=10]
+    results = {
+        'Original CLIP': [
+            [0.6170, 0.9555, 0.9925], [0.5887, 0.9442, 0.9873], 
+            [0.5707, 0.9399, 0.9857], [0.5363, 0.9291, 0.9819]
+        ],
+        'ICon': [
+            [0.7875, 0.9910, 0.9990], [0.7665, 0.9862, 0.9973], 
+            [0.7543, 0.9839, 0.9976], [0.7349, 0.9809, 0.9966]
+        ],
+        'SRL': [
+            [0.8305, 0.9925, 0.9990], [0.7983, 0.9893, 0.9988], 
+            [0.7902, 0.9873, 0.9981], [0.7719, 0.9844, 0.9975]
+        ],
+        'EGA': [
+            [0.8580, 0.9985, 0.9995], [0.8418, 0.9978, 0.9997], 
+            [0.8332, 0.9986, 0.9997], [0.8034, 0.9981, 0.9997]
+        ]
+    }
 
-    orig_features = np.load(orig_path).astype(np.float32)
-    ega_features = np.load(ega_path).astype(np.float32)
-    labels = np.load(labels_path)
-    
-    orig_features /= np.linalg.norm(orig_features, axis=1, keepdims=True)
-    ega_features /= np.linalg.norm(ega_features, axis=1, keepdims=True)
+    # Style definitions: Purple for EGA, Gold for SRL
+    colors = {'Original CLIP': '#A0A0A0', 'ICon': '#333333', 'SRL': '#FDB927', 'EGA': '#552583'}
+    markers = {'Original CLIP': 'o', 'ICon': '^', 'SRL': 'D', 'EGA': 's'}
 
-    train_size = 8000
-    base_orig = orig_features[:train_size]
-    base_ega = ega_features[:train_size]
-    subset_labels = labels[:train_size]
+    # Using wider aspect ratio (24x6) as requested
+    fig, axes = plt.subplots(1, 4, figsize=(24, 6.5))
 
-    # Use a fixed seed and print the selected classes as proof
-    random_seed = 666
-    np.random.seed(random_seed)
-    all_unique_classes = np.unique(subset_labels)
-    target_classes = np.random.choice(all_unique_classes, 10, replace=False)
-    
-    print(f'Randomly selected classes using seed {random_seed}:')
-    print(target_classes)
+    lines = []
+    labels = []
 
-    samples_per_class = 20
-    class_colors = [
-        '#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231',
-        '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe'
-    ]
-
-    print('Projecting manifolds...')
-    reducer_orig = umap.UMAP(n_neighbors=10, min_dist=0.1, random_state=42)
-    proj_orig = reducer_orig.fit_transform(base_orig)
-
-    reducer_ega = umap.UMAP(n_neighbors=10, min_dist=0.1, random_state=42)
-    proj_ega = reducer_ega.fit_transform(base_ega)
-
-    plt.rcParams.update({'font.size': 22, 'font.family': 'serif'})
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(28, 12))
-
-    def render_plot(ax, proj, title, title_color):
-        ax.scatter(proj[:, 0], proj[:, 1], c='lightgray', s=5, alpha=0.08, rasterized=True)
+    for i, k_val in enumerate(k_labels):
+        ax = axes[i]
         
-        for i, cls_id in enumerate(target_classes):
-            idx = np.where(subset_labels == cls_id)[0]
-            if len(idx) > 0:
-                sel = np.random.choice(idx, min(len(idx), samples_per_class), replace=False)
-                ax.scatter(proj[sel, 0], proj[sel, 1], 
-                           c=class_colors[i], s=120, edgecolors='black', 
-                           linewidth=0.8, label=f'Class {cls_id}', zorder=10)
+        # Plot model lines
+        for model in ['Original CLIP', 'ICon', 'SRL', 'EGA']:
+            ln, = ax.plot(nprobes, [results[model][i][j] for j in range(3)], 
+                          color=colors[model], marker=markers[model], 
+                          linewidth=2.5, markersize=10, alpha=0.9)
+            if i == 0:
+                lines.append(ln)
+                labels.append(model)
+
+        # Style each subplot: removing italics from titles
+        ax.set_title(k_val, fontsize=22, pad=15)
+        ax.set_xlabel('nprobe', fontsize=18)
+        ax.set_xticks(nprobes)
+        ax.set_ylim(0.5, 1.05)
+        ax.grid(True, linestyle=':', alpha=0.6)
+
+        # Inset Zoom focusing on n=10 area
+        # Positioned to avoid overlapping with data points as much as possible
+        ax_ins = inset_axes(ax, width='35%', height='30%', loc='lower right', 
+                            bbox_to_anchor=(-0.05, 0.15, 1, 1), bbox_transform=ax.transAxes)
         
-        for spine in ax.spines.values():
-            spine.set_visible(True)
-            spine.set_linewidth(2.0)
-            spine.set_color('black')
+        for model in ['Original CLIP', 'ICon', 'SRL', 'EGA']:
+            ax_ins.plot(nprobes, [results[model][i][j] for j in range(3)], 
+                        color=colors[model], marker=markers[model], 
+                        linewidth=1.8, markersize=6)
         
-        ax.set_xticks([])
-        ax.set_yticks([])
-        ax.set_title(title, fontsize=32, color=title_color, pad=30)
+        # Set zoom limits for high-precision differences at n=10
+        ax_ins.set_xlim(9.6, 10.4)
+        ax_ins.set_ylim(0.994, 1.0005)
+        ax_ins.set_xticks([10])
+        ax_ins.tick_params(labelsize=10)
+        
+        # Connect main plot to zoom area
+        mark_inset(ax, ax_ins, loc1=2, loc2=4, fc='none', ec='0.6', linestyle='--', alpha=0.5)
 
-    render_plot(ax1, proj_orig, 'Latent Manifold (Original CLIP)', '#FDB927')
-    render_plot(ax2, proj_ega, 'EGA-flattened (Ours)', '#552583')
+        if i == 0:
+            ax.set_ylabel('Recall Score', fontsize=20)
 
-    handles, lgd_labels = ax1.get_legend_handles_labels()
-    fig.legend(handles, lgd_labels, loc='lower center', bbox_to_anchor=(0.5, 0.02),
-               ncol=5, frameon=False, fontsize=18)
+    # Place legend centered at the top
+    fig.legend(lines, labels, loc='upper center', bbox_to_anchor=(0.5, 1.1), 
+               ncol=4, fontsize=18, frameon=False)
 
-    plt.tight_layout(rect=[0, 0.08, 1, 1])
-    plt.savefig(save_path, format='pdf', dpi=300, bbox_inches='tight')
-    print(f'Visualization completed. Seed used: {random_seed}')
+    plt.tight_layout()
+    # Save the professional PDF
+    plt.savefig(save_path, format='pdf', bbox_inches='tight')
+    print(f'Final production PDF saved to: {save_path}')
 
 if __name__ == '__main__':
-    main()
+    plot_recall_final()

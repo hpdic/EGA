@@ -23,8 +23,14 @@ pip install --upgrade pip
 touch ~/hpdic/EGA/models/__init__.py
 export PYTHONPATH=$PYTHONPATH:$(pwd)
 
-# CIFAR-100
+########################
+# CIFAR-100 & CIFAR-10 #
+########################
+
+# CLIP ViT-B/32
 python ./scripts/01_extract_features.py
+
+# EGA (ours)
 python ./scripts/02_train_ega.py
 python ./scripts/03_eval_label_prediction.py
 python ./scripts/04_eval_anns_recall.py
@@ -32,6 +38,21 @@ python ./scripts/05_visualize_precision.py
 python ./scripts/06_visualize_distance.py
 python ./scripts/07_visualize_recall.py
 python ./scripts/08_visualize_projection.py
+
+# ICon (ICLR-2025)
+python ./scripts/ICon/00_train_icon.py
+python ./scripts/ICon/01_extract_features_icon.py
+python ./scripts/ICon/02_extract_features_icon_cifar10.py
+python ./scripts/ICon/03_eval_recall_cifar10.py
+
+# SRL (CVPR-2025)
+python ./scripts/SRL/00_train_srl.py
+python ./scripts/SRL/01_extract_features_srl.py
+python ./scripts/SRL/02_extract_features_srl_cifar10.py
+python ./scripts/SRL/03_eval_recall_cifar10.py
+
+# Summary
+python ./scripts/09_visualize_transfer.py
 ```
 
 ## Contact
