@@ -53,6 +53,16 @@ python ./scripts/SRL/03_eval_recall_cifar10.py
 
 # Summary
 python ./scripts/09_visualize_transfer.py
+
+########################
+# More Data Sets #
+########################
+
+cd ~/hpdic/EGA
+export PYTHONPATH=$PYTHONPATH:$(pwd)
+python scripts/MoreDatasets/extract_flowers_full.py
+python scripts/MoreDatasets/train_ega_full.py
+python scripts/MoreDatasets/eval_recall.py
 ```
 
 ## Contact
