@@ -258,6 +258,19 @@ At a minimum search budget of nprobe=1, EGA achieves a Recall@1 of 0.858, signif
     \label{fig:generalization_recall}
 \end{figure}
 
+To further validate the robustness of EGA under fine-grained domain shifts, we extend our evaluation to the FGVC Aircraft dataset. 
+Figure~\ref{fig:aircraft} visually corroborates that EGA remains the only method capable of scaling zero-shot retrieval performance on fine-grained domains without destroying the underlying manifold.
+In this setting, models are trained on 80 known aircraft categories and tested on 20 strictly unseen categories. For a fair comparison, all baseline methods are restricted to training identical lightweight MLP adapters on top of frozen CLIP features, thereby eliminating the parameter advantage of end-to-end backbone fine-tuning.
+The empirical results reveal a stark contrast in spatial preservation capabilities. Global contrastive and structural regularization methods, such as ICon and SRL, suffer severe performance degradation when confined to a lightweight adapter bottleneck. Specifically, at $K=1$ and nprobe=1, the recall for ICon and SRL collapses to 0.422 and 0.440 respectively, falling significantly below the original frozen CLIP baseline of 0.773. This phenomenon indicates that global contrastive objectives aggressively distort the latent manifold of unseen fine-grained categories when the representation capacity is constrained. 
+Conversely, EGA exhibits exceptional stability and generalization, elevating the recall to 0.898 under the exact same adapter constraints. By leveraging local geometric anchors rather than forcing global distributions, EGA successfully compresses class-specific clusters while maintaining the structural integrity of the broader semantic space. 
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{fig/aircraft_recall.pdf}
+    \caption{Recall versus nprobe tradeoff on 20 unseen FGVC Aircraft classes.}
+    \label{fig:aircraft}
+\end{figure}
+
 
 \section{Conclusion}
 \label{sec:conclusion}

@@ -43,26 +43,25 @@ python ./scripts/08_visualize_projection.py
 python ./scripts/ICon/00_train_icon.py
 python ./scripts/ICon/01_extract_features_icon.py
 python ./scripts/ICon/02_extract_features_icon_cifar10.py
-python ./scripts/ICon/03_eval_recall_cifar10.py
+python ./scripts/ICon/03_eval_recall_icon_cifar10.py
 
 # SRL (CVPR-2025)
 python ./scripts/SRL/00_train_srl.py
 python ./scripts/SRL/01_extract_features_srl.py
 python ./scripts/SRL/02_extract_features_srl_cifar10.py
-python ./scripts/SRL/03_eval_recall_cifar10.py
+python ./scripts/SRL/03_eval_recall_srl_cifar10.py
 
 # Summary
 python ./scripts/09_visualize_transfer.py
 
-########################
-# More Data Sets #
-########################
+############
+# Aircraft #
+############
 
 cd ~/hpdic/EGA
 export PYTHONPATH=$PYTHONPATH:$(pwd)
-python scripts/MoreDatasets/extract_flowers_full.py
-python scripts/MoreDatasets/train_ega_full.py
-python scripts/MoreDatasets/eval_recall.py
+python scripts/Aircraft/train_eval_aircraft.py
+python scripts/Aircraft/plot_aircraft.py
 ```
 
 ## Contact
