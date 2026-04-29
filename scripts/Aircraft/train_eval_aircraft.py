@@ -153,17 +153,33 @@ def train_ega(train_feats, train_labels, device):
     model = EGAMLP(input_dim=512, hidden_dim=2048).to(device)
     optimizer = optim.AdamW(model.parameters(), lr=1e-4, weight_decay=1e-4)
     scheduler = CosineAnnealingLR(optimizer, T_max=150)
-    criterion = nn.TripletMarginLoss(margin=0.2, p=2)
+    margin = 0.2
+    criterion = nn.TripletMarginLoss(margin=margin, p=2)
 
     model.train()
     for epoch in range(150):
+        total_active = 0.0
+        total_batches = 0
         for a, p, n in loader:
             a, p, n = a.to(device), p.to(device), n.to(device)
             optimizer.zero_grad()
-            loss = criterion(model(a), model(p), model(n))
+            out_a = model(a)
+            out_p = model(p)
+            out_n = model(n)
+            loss = criterion(out_a, out_p, out_n)
             loss.backward()
             optimizer.step()
-        scheduler.step()
+
+            with torch.no_grad():
+                d_pos = F.pairwise_distance(out_a, out_p)
+                d_neg = F.pairwise_distance(out_a, out_n)
+                active_ratio = (d_pos - d_neg + margin > 0).float().mean()
+                total_active += active_ratio.item()
+                total_batches += 1
+
+        if (epoch + 1) % 10 == 0:
+            print(f"Epoch {epoch+1}/150 | Active triplet ratio: {total_active/total_batches:.3f}")
+
     return model
 
 def train_contrastive_baseline(train_feats, train_labels, loss_fn, device):
@@ -230,102 +246,24 @@ def main():
 if __name__ == '__main__':
     main()
 
-# (venv) cc@uc-a100:~/hpdic/EGA$ python scripts/Aircraft/train_eval_aircraft_split.py 
-# Splitting dataset by class (80% Train, 20% Test)...
-# Training EGA with Cosine Annealing on 80 known aircraft classes...
-
-# Evaluating: Original CLIP on 20 Unseen Classes
-
-# Results for K=1
-# nprobe 1: Label Precision = 0.5119 | ANNS Recall = 0.7738
-# nprobe 5: Label Precision = 0.5238 | ANNS Recall = 0.9940
-# nprobe 10: Label Precision = 0.5238 | ANNS Recall = 1.0000
-
-# Results for K=3
-# nprobe 1: Label Precision = 0.4782 | ANNS Recall = 0.7857
-# nprobe 5: Label Precision = 0.5079 | ANNS Recall = 0.9980
-# nprobe 10: Label Precision = 0.5079 | ANNS Recall = 1.0000
-
-# Results for K=5
-# nprobe 1: Label Precision = 0.4536 | ANNS Recall = 0.7786
-# nprobe 5: Label Precision = 0.4690 | ANNS Recall = 0.9976
-# nprobe 10: Label Precision = 0.4679 | ANNS Recall = 1.0000
-
-# Results for K=10
-# nprobe 1: Label Precision = 0.4095 | ANNS Recall = 0.7685
-# nprobe 5: Label Precision = 0.4185 | ANNS Recall = 0.9976
-# nprobe 10: Label Precision = 0.4173 | ANNS Recall = 1.0000
-
-# Evaluating: EGA on 20 Unseen Classes
-
-# Results for K=1
-# nprobe 1: Label Precision = 0.6071 | ANNS Recall = 0.8988
-# nprobe 5: Label Precision = 0.6071 | ANNS Recall = 1.0000
-# nprobe 10: Label Precision = 0.6071 | ANNS Recall = 1.0000
-
-# Results for K=3
-# nprobe 1: Label Precision = 0.5675 | ANNS Recall = 0.9028
-# nprobe 5: Label Precision = 0.5615 | ANNS Recall = 1.0000
-# nprobe 10: Label Precision = 0.5615 | ANNS Recall = 1.0000
-
-# Results for K=5
-# nprobe 1: Label Precision = 0.5321 | ANNS Recall = 0.8976
-# nprobe 5: Label Precision = 0.5381 | ANNS Recall = 1.0000
-# nprobe 10: Label Precision = 0.5381 | ANNS Recall = 1.0000
-
-# Results for K=10
-# nprobe 1: Label Precision = 0.5030 | ANNS Recall = 0.8786
-# nprobe 5: Label Precision = 0.5054 | ANNS Recall = 1.0000
-# nprobe 10: Label Precision = 0.5054 | ANNS Recall = 1.0000
-
-# Evaluating: ICon on 20 Unseen Classes
-
-# Results for K=1
-# nprobe 1: Label Precision = 0.6190 | ANNS Recall = 0.9345
-# nprobe 5: Label Precision = 0.6071 | ANNS Recall = 1.0000
-# nprobe 10: Label Precision = 0.6071 | ANNS Recall = 1.0000
-
-# Results for K=3
-# nprobe 1: Label Precision = 0.6012 | ANNS Recall = 0.9286
-# nprobe 5: Label Precision = 0.6151 | ANNS Recall = 1.0000
-# nprobe 10: Label Precision = 0.6151 | ANNS Recall = 1.0000
-
-# Results for K=5
-# nprobe 1: Label Precision = 0.5631 | ANNS Recall = 0.9179
-# nprobe 5: Label Precision = 0.5821 | ANNS Recall = 1.0000
-# nprobe 10: Label Precision = 0.5821 | ANNS Recall = 1.0000
-
-# Results for K=10
-# nprobe 1: Label Precision = 0.5173 | ANNS Recall = 0.9131
-# nprobe 5: Label Precision = 0.5369 | ANNS Recall = 1.0000
-# nprobe 10: Label Precision = 0.5369 | ANNS Recall = 1.0000
-
-# Evaluating: SRL on 20 Unseen Classes
-
-# Results for K=1
-# nprobe 1: Label Precision = 0.5774 | ANNS Recall = 0.9583
-# nprobe 5: Label Precision = 0.5774 | ANNS Recall = 1.0000
-# nprobe 10: Label Precision = 0.5774 | ANNS Recall = 1.0000
-
-# Results for K=3
-# nprobe 1: Label Precision = 0.5496 | ANNS Recall = 0.9365
-# nprobe 5: Label Precision = 0.5556 | ANNS Recall = 1.0000
-# nprobe 10: Label Precision = 0.5556 | ANNS Recall = 1.0000
-
-# Results for K=5
-# nprobe 1: Label Precision = 0.5405 | ANNS Recall = 0.9321
-# nprobe 5: Label Precision = 0.5417 | ANNS Recall = 1.0000
-# nprobe 10: Label Precision = 0.5417 | ANNS Recall = 1.0000
-
-# Results for K=10
-# nprobe 1: Label Precision = 0.4863 | ANNS Recall = 0.9060
-# nprobe 5: Label Precision = 0.4976 | ANNS Recall = 1.0000
-# nprobe 10: Label Precision = 0.4976 | ANNS Recall = 1.0000
-
-# Execution completed.
-# (venv) cc@uc-a100:~/hpdic/EGA$ python scripts/Aircraft/train_extract_baselines_aircraft.py 
+# (venv) (base) cc@uc-a100:~/hpdic/EGA$ python scripts/Aircraft/train_eval_aircraft.py 
 # Splitting dataset by class (80% Train, 20% Test)...
 # 1/3 Training Fair EGA...
+# Epoch 10/150 | Active triplet ratio: 0.174
+# Epoch 20/150 | Active triplet ratio: 0.126
+# Epoch 30/150 | Active triplet ratio: 0.116
+# Epoch 40/150 | Active triplet ratio: 0.099
+# Epoch 50/150 | Active triplet ratio: 0.078
+# Epoch 60/150 | Active triplet ratio: 0.070
+# Epoch 70/150 | Active triplet ratio: 0.073
+# Epoch 80/150 | Active triplet ratio: 0.062
+# Epoch 90/150 | Active triplet ratio: 0.052
+# Epoch 100/150 | Active triplet ratio: 0.047
+# Epoch 110/150 | Active triplet ratio: 0.051
+# Epoch 120/150 | Active triplet ratio: 0.046
+# Epoch 130/150 | Active triplet ratio: 0.041
+# Epoch 140/150 | Active triplet ratio: 0.044
+# Epoch 150/150 | Active triplet ratio: 0.035
 # 2/3 Training Fair ICon (MLP Adapter Only)...
 # 3/3 Training Fair SRL (MLP Adapter Only)...
 
@@ -354,24 +292,24 @@ if __name__ == '__main__':
 # Evaluating: EGA (Fair Adapter)
 
 # Results for K=1
-# nprobe 1: Label Precision = 0.6071 | ANNS Recall = 0.8988
-# nprobe 5: Label Precision = 0.6071 | ANNS Recall = 1.0000
-# nprobe 10: Label Precision = 0.6071 | ANNS Recall = 1.0000
+# nprobe 1: Label Precision = 0.5476 | ANNS Recall = 0.8929
+# nprobe 5: Label Precision = 0.5536 | ANNS Recall = 1.0000
+# nprobe 10: Label Precision = 0.5536 | ANNS Recall = 1.0000
 
 # Results for K=3
-# nprobe 1: Label Precision = 0.5675 | ANNS Recall = 0.9028
-# nprobe 5: Label Precision = 0.5615 | ANNS Recall = 1.0000
-# nprobe 10: Label Precision = 0.5615 | ANNS Recall = 1.0000
+# nprobe 1: Label Precision = 0.5337 | ANNS Recall = 0.8929
+# nprobe 5: Label Precision = 0.5536 | ANNS Recall = 1.0000
+# nprobe 10: Label Precision = 0.5536 | ANNS Recall = 1.0000
 
 # Results for K=5
-# nprobe 1: Label Precision = 0.5321 | ANNS Recall = 0.8976
-# nprobe 5: Label Precision = 0.5381 | ANNS Recall = 1.0000
-# nprobe 10: Label Precision = 0.5381 | ANNS Recall = 1.0000
+# nprobe 1: Label Precision = 0.5060 | ANNS Recall = 0.8869
+# nprobe 5: Label Precision = 0.5238 | ANNS Recall = 1.0000
+# nprobe 10: Label Precision = 0.5238 | ANNS Recall = 1.0000
 
 # Results for K=10
-# nprobe 1: Label Precision = 0.5030 | ANNS Recall = 0.8786
-# nprobe 5: Label Precision = 0.5054 | ANNS Recall = 1.0000
-# nprobe 10: Label Precision = 0.5054 | ANNS Recall = 1.0000
+# nprobe 1: Label Precision = 0.4720 | ANNS Recall = 0.8792
+# nprobe 5: Label Precision = 0.4905 | ANNS Recall = 1.0000
+# nprobe 10: Label Precision = 0.4905 | ANNS Recall = 1.0000
 
 # Evaluating: ICon (Fair Adapter)
 
@@ -418,4 +356,4 @@ if __name__ == '__main__':
 # nprobe 10: Label Precision = 0.3887 | ANNS Recall = 1.0000
 
 # Execution completed.
-# (venv) cc@uc-a100:~/hpdic/EGA$     
+# (venv) (base) cc@uc-a100:~/hpdic/EGA$ 

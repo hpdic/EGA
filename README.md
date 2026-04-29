@@ -53,6 +53,8 @@ python ./scripts/SRL/03_eval_recall_srl_cifar10.py
 
 # Summary
 python ./scripts/09_visualize_transfer.py
+python ./scripts/10_ablation.py
+python ./scripts/11_sensitivity.py
 
 ############
 # Aircraft #
@@ -62,6 +64,16 @@ cd ~/hpdic/EGA
 export PYTHONPATH=$PYTHONPATH:$(pwd)
 python scripts/Aircraft/train_eval_aircraft.py
 python scripts/Aircraft/plot_aircraft.py
+python scripts/12_visualize_egaLoss.py
+
+############
+# Food-101 #
+############
+
+cd ~/hpdic/EGA
+export PYTHONPATH=$PYTHONPATH:$(pwd)
+python scripts/Food/train_eval_food.py
+python scripts/Food/plot_food.py
 ```
 
 ## Contact

@@ -235,6 +235,79 @@ Conversely, EGA exhibits exceptional stability and generalization, elevating the
     \label{fig:food}
 \end{figure}
 
+% ─────────────────────────────────────────────────────────────────────────────
+% Section 4.7: Mechanistic Analysis
+% Place after Section 4.6 (OOD Generalization) and before Ablation Study
+% Requires: \usepackage{graphicx}, \usepackage{booktabs} in preamble
+% Figure file: paper/fig/mechanism_sparse_gradient.pdf
+% ─────────────────────────────────────────────────────────────────────────────
+
+\subsection{Mechanistic Analysis: Gradient Sparsity as OOD Protection}
+\label{sec:mechanism}
+
+The superior OOD generalization of EGA raises a fundamental question: why does a
+triplet-trained adapter preserve unseen class structure while global contrastive
+objectives destroy it? We identify \textbf{gradient sparsity} as the key mechanism.
+
+A triplet loss with margin $m$ produces a non-zero gradient for a sample triplet
+$(a, p, n)$ only when the margin constraint is violated, i.e., when
+\begin{equation}
+    d(a, p) - d(a, n) + m > 0.
+    \label{eq:active_triplet}
+\end{equation}
+As the adapter converges on seen classes, the fraction of such \emph{active}
+triplets decays rapidly. Figure~\ref{fig:mechanism} (left) tracks this ratio
+throughout training: starting at $17.4\%$ at epoch~10, it falls to $3.5\%$ by
+convergence. At steady state, \textbf{96.5\% of triplets contribute zero
+gradient}, meaning the adapter updates only a sparse subset of local neighborhood
+relationships and leaves the remainder of the embedding space---including regions
+occupied by unseen classes---structurally intact.
+
+Global contrastive objectives such as ICon~\cite{alshammariunifying} and SRL~\cite{dong2025improve} exhibit
+the opposite behavior. ICon minimizes a KL divergence over the full pairwise
+similarity matrix, and SRL jointly optimizes batch-wide uniformity and
+homogeneity. Both produce \emph{dense} gradient fields in every training step:
+every sample pair contributes to the loss regardless of whether its local geometry
+already satisfies the retrieval objective. This global optimization pressure from
+seen-class training propagates into unseen regions of the embedding space,
+distorting the local manifold structure that CLIP had established for those
+categories.
+
+Figure~\ref{fig:mechanism} (right) quantifies the consequence on FGVC Aircraft,
+where all models are trained on 80 seen classes and evaluated strictly on 20 unseen
+classes. ICon and SRL collapse to label precision of $0.423$ and $0.441$,
+respectively---\textbf{below the frozen CLIP baseline of $0.512$}---confirming that
+dense gradient updates actively harm zero-shot retrieval. EGA, by contrast,
+improves to $0.548$ while modifying only $3.5\%$ of the embedding geometry at
+convergence.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{fig/mechanism_sparse_gradient.pdf}
+    \caption{
+        \textbf{Gradient sparsity as the mechanism behind EGA's OOD
+        generalization.}
+        % \textbf{Left:} Active triplet ratio during training on 80 seen FGVC
+        % Aircraft classes. By epoch~150, only $3.5\%$ of triplets produce non-zero
+        % gradients, leaving $96.5\%$ of the embedding space---including unseen class
+        % regions---structurally unchanged from CLIP.
+        % \textbf{Right:} Label Precision@1 at $\text{nprobe}{=}1$ on 20 strictly
+        % unseen classes. ICon and SRL, which produce dense gradient fields
+        % throughout training, both collapse \emph{below} the frozen CLIP baseline.
+        % EGA's sparse updates preserve the pretrained manifold and improve retrieval
+        % on unseen categories.
+    }
+    \label{fig:mechanism}
+\end{figure}
+
+This analysis points to a key distinction in adapter design for foundation models:
+\textbf{objectives that produce dense gradient fields throughout training
+systematically degrade the pretrained manifold for unseen categories, while
+objectives that converge to sparse local updates preserve it}. The contrast is not
+merely one of degree---ICon and SRL fall below the frozen CLIP baseline entirely,
+suggesting that dense global optimization actively destructs zero-shot retrieval
+structure rather than simply failing to improve it.
+
 \subsection{Ablation Study}
 
 We perform a comprehensive ablation study on the CIFAR 100 dataset to verify the effectiveness of our design components. The results are summarized in Table~\ref{tab:ablation}. Each architectural choice contributes to the structural integrity of the calibrated manifold.
