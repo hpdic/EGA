@@ -271,6 +271,19 @@ Conversely, EGA exhibits exceptional stability and generalization, elevating the
     \label{fig:aircraft}
 \end{figure}
 
+To comprehensively evaluate the versatility of EGA across diverse fine-grained domains, we extend our evaluation to the Food-101 dataset. 
+Figure~\ref{fig:food} visually corroborates that EGA remains the only method capable of scaling zero-shot retrieval performance on fine-grained domains without destroying the underlying manifold.
+In this setting, models are trained on 80 known food categories and tested on 21 strictly unseen categories. For a fair comparison, all baseline methods are restricted to training identical lightweight MLP adapters on top of frozen CLIP features, thereby eliminating the parameter advantage of end-to-end backbone fine-tuning.
+The empirical results reveal a stark contrast in spatial preservation capabilities, particularly given the strong pre-trained representations of common food items. Global contrastive and structural regularization methods, such as ICon and SRL, suffer performance degradation when confined to a lightweight adapter bottleneck. Specifically, at $K=1$ and nprobe=1, the recall for ICon and SRL drops to 0.838 and 0.840 respectively, falling below the original frozen CLIP baseline of 0.842. This phenomenon indicates that global contrastive objectives aggressively distort the already well-structured latent manifold of unseen categories when the representation capacity is constrained. 
+Conversely, EGA exhibits exceptional stability and generalization, elevating the recall to 0.897 under the exact same adapter constraints. By leveraging local geometric anchors rather than forcing global distributions, EGA successfully compresses class-specific clusters while maintaining the structural integrity of the broader semantic space, significantly enhancing retrieval efficiency even on a highly optimized baseline manifold.
+
+\begin{figure}[t]
+    \centering
+    \includegraphics[width=\linewidth]{fig/food_recall.pdf}
+    \caption{Recall versus nprobe tradeoff on 21 unseen Food-101 classes.}
+    \label{fig:food}
+\end{figure}
+
 
 \section{Conclusion}
 \label{sec:conclusion}
