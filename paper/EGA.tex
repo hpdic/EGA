@@ -284,6 +284,48 @@ Conversely, EGA exhibits exceptional stability and generalization, elevating the
     \label{fig:food}
 \end{figure}
 
+\subsection{Ablation Study}
+
+We perform a comprehensive ablation study on the CIFAR 100 dataset to verify the effectiveness of our design components. The results are summarized in Table~\ref{tab:ablation}. Each architectural choice contributes to the structural integrity of the calibrated manifold.
+
+The residual connection is the most essential part of the design. When the residual connection is removed, the accuracy collapses from 0.7015 to 0.0065. This failure proves that the EGA adapter should refine the existing semantic space rather than replace it. Without this shortcut, the lightweight MLP cannot reconstruct the complex semantic relationships from limited training data. 
+
+L2 normalization is also necessary for stable search performance. Its removal leads to a performance loss of approximately 4.2 percent. This confirms that the hypersphere constraint is vital for consistent distance metrics in vector similarity search. Finally, the zero initialization strategy provides a 1.7 percent gain. By starting the adapter as an identity mapping, the model preserves pre trained knowledge at the beginning of the process, which provides a superior starting point for manifold smoothing.
+
+\begin{table}[t]
+\centering
+\caption{Ablation study of EGA components on CIFAR-100.}
+\label{tab:ablation}
+\begin{tabular}{lc}
+\hline
+Variant & Accuracy \\ \hline
+Full EGA (Ours) & 0.7015 \\
+w/o Residual connection & 0.0065 \\
+w/o Zero-initialization & 0.6840 \\
+w/o L2-normalization & 0.6590 \\ \hline
+\end{tabular}
+\end{table}
+
+\subsection{Hyperparameter Sensitivity Analysis}
+
+The internal stability of EGA is evaluated by varying the triplet margin $m$ and the hidden dimension $d$ of the adapter. As presented in Table~\ref{tab:sensitivity}, our method demonstrates a consistent performance plateau across a broad range of settings. 
+
+The results for $K=5$ indicate that EGA maintains high retrieval quality even when the margin $m$ fluctuates. While the $K=1$ metric shows sensitivity to larger margin values, the overall stability of the manifold is preserved. This trend suggests that a moderate margin setting, specifically between 0.1 and 0.3, is optimal for calibrating fine grained latent spaces. Furthermore, the performance remains nearly identical as the hidden dimension $d$ scales from 512 to 4096. This observation confirms that the geometric correction provided by EGA is structural in nature and does not rely on massive parameter counts.
+
+\begin{table}[htbp]
+\centering
+\caption{Sensitivity of retrieval performance to different hyperparameter configurations on CIFAR 100.}
+\label{tab:sensitivity}
+\begin{tabular}{lcccc}
+\hline
+Triplet Margin $m$ & 0.1 & 0.2 & 0.3 & 0.5 \\ \hline
+Recall@1 & 0.8420 & 0.8180 & 0.8160 & 0.7400 \\
+Recall@5 & 0.9782 & 0.9654 & 0.9610 & 0.9125 \\ \hline
+Hidden Dimension $d$ & 512 & 1024 & 2048 & 4096 \\ \hline
+Recall@1 & 0.8300 & 0.8340 & 0.8200 & 0.8240 \\
+Recall@5 & 0.9695 & 0.9712 & 0.9680 & 0.9688 \\ \hline
+\end{tabular}
+\end{table}
 
 \section{Conclusion}
 \label{sec:conclusion}
