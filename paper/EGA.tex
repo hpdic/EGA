@@ -66,7 +66,7 @@
 \newcommand{\don}[1]{\textcolor{blue}{[Dongfang: #1]}}
 
 % Note. For the workshop paper template, both \title{} and \workshoptitle{} are required, with the former indicating the paper title shown in the title and the latter indicating the workshop title displayed in the footnote. 
-\title{EGA: Manifold-Preserving Adapter Training for Out-of-Distribution Retrieval}
+\title{EGA: Manifold-Preserving Adapter Training for Out-of-Distribution Retrieval in Vector Search}
 
 
 % The \author macro works with any number of authors. There are two commands
@@ -131,7 +131,7 @@ intact. Extensive evaluations on CIFAR-10, CIFAR-100, FGVC-Aircraft, and Food-10
 demonstrate that EGA consistently outperforms global contrastive methods including
 ICon and SRL across both in-distribution and OOD settings. On strictly unseen
 fine-grained categories, competing adapters degrade below the frozen CLIP baseline
-in label precision, whereas EGA improves it by up to $18.5$ percentage points.
+in label precision, whereas EGA improves it by up to $18.5\%$.
 \end{abstract}
 
 \section{Introduction}
@@ -165,6 +165,18 @@ This paper makes the following contributions:
 
 \section{Related Work}
 \label{sec:lit}
+
+\paragraph{Vision Language Representations and Semantic Manifolds}
+Vision language foundational models, such as CLIP \cite{clip_icml21}, have established a dominant paradigm for constructing joint semantic spaces through large scale contrastive learning. Despite their remarkable zero shot capabilities, recent studies reveal that these continuous representations suffer from inherent geometric failures \cite{savietto2026geometryrepresentationalfailuresvision}. Specifically, the modality gap and cross modal misalignment lead to feature spaces that are overly sparse and structurally fractured \cite{10656738, eslami2025mitigate}. Furthermore, attempts to align complex compositional concepts often struggle in standard Euclidean spaces, highlighting the systemic disconnect between semantic meaning and spatial proximity \cite{pal2025compositional}.
+This geometric illusion is exacerbated by the representation degradation problem prevalent in contrastive objectives. Extensive research indicates that latent embeddings tend to occupy narrow conic regions, a phenomenon known as anisotropy, which renders standard similarity metrics ineffective \cite{zhao-etal-2024-representation}. When models undergo continual learning or adapt to imbalanced fine grained categories, the feature space becomes increasingly distorted \cite{lanza2026degradationfeaturespacecontinual, xue2025protocol}. Consequently, the dense gradient updates required by conventional multi view alignment often destruct specific latent structures rather than preserving them \cite{11093676}.
+To mitigate these issues, recent adaptation strategies impose strict geometric constraints, such as orthogonality regularization, to balance new knowledge acquisition with the stability of the original representation \cite{ricci2026boldsymbollambdaorthogonality}. 
+While these methods attempt to preserve the global topological structure, they still rely on global optimization pressures that inadvertently alter the continuous manifold. Unlike these approaches, EGA employs a lightweight residual adapter with local geometric anchors to smooth specific class clusters, thereby correcting the Euclidean distance metric without subjecting the broader pre trained semantic relations to destructive global gradients.
+
+\paragraph{Global Contrastive Objectives and Structural Regularization}
+\don{TODO}
+
+\paragraph{Parameter Efficient Manifold Adaptation}
+\paragraph{Vector Similarity Search and Metric Consistency}
 
 \section{Euclidean Geodesic Alignment for Vector Search}
 \label{sec:ega}

@@ -108,7 +108,7 @@ def main():
     ax_right.set_xticks(x)
     ax_right.set_xticklabels(methods, fontsize=17)
     ax_right.set_ylabel('Label Precision @ K=1, nprobe=1')
-    ax_right.set_title('OOD Retrieval on Unseen Classes\n(FGVC Aircraft)')
+    ax_right.set_title('OOD Retrieval on Unseen Classes')
     ax_right.set_ylim([0.30, 0.65])
     ax_right.grid(True, axis='y', linestyle=':', alpha=0.6)
     ax_right.legend(loc='upper right', frameon=False, fontsize=15)
