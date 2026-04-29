@@ -66,7 +66,7 @@
 \newcommand{\don}[1]{\textcolor{blue}{[Dongfang: #1]}}
 
 % Note. For the workshop paper template, both \title{} and \workshoptitle{} are required, with the former indicating the paper title shown in the title and the latter indicating the workshop title displayed in the footnote. 
-\title{EGA: Towards Euclidean Geodesic Alignment for Vector Search on Manifolds}
+\title{EGA: Manifold-Preserving Adapter Training for Out-of-Distribution Retrieval}
 
 
 % The \author macro works with any number of authors. There are two commands
@@ -115,7 +115,23 @@
 
 
 \begin{abstract}
-Vector search engines rely heavily on the Euclidean distance between latent representations. However, foundational models often generate manifolds where semantic alignment disconnects from geometric proximity, creating a geometric illusion that degrades retrieval accuracy. To bridge this gap, we introduce Euclidean Geodesic Alignment (EGA), a lightweight manifold-smoothing approach prior to vector search on manifolds. EGA employs a residual adapter with zero initialization and L2 normalization constraints to refine the pretrained semantic space. By optimizing local geometric anchors, EGA  compresses class-specific clusters while maintaining the structural integrity of the broader semantic space. Extensive evaluations across CIFAR-10, CIFAR-100, FGVC-Aircraft, and Food-101 demonstrate that EGA consistently outperforms state-of-the-art regularization methods like ICon and SRL. Notably, EGA achieves parity with multi-probe baselines using only single-cell lookups, thereby pushing the efficiency frontier for scalable zero-shot retrieval.
+Adapting pre-trained vision-language models for vector retrieval typically relies
+on global contrastive objectives, which optimize semantic alignment across all
+training categories simultaneously. We identify a fundamental limitation of this
+approach: when applied through lightweight adapters, global objectives produce
+dense gradient fields that systematically distort the latent manifold of unseen
+categories, causing out-of-distribution~(OOD) retrieval performance to collapse
+below the frozen baseline. To address this, we propose \textbf{Euclidean Geodesic
+Alignment~(EGA)}, a residual adapter trained with a small-margin triplet loss on
+the class-aware neighborhood graph of pre-trained embeddings. By operating locally
+rather than globally, EGA converges to a sparse-gradient regime in which 96.5\% of
+training triplets produce zero gradient at steady state, leaving the broader
+embedding space---including regions occupied by unseen categories---structurally
+intact. Extensive evaluations on CIFAR-10, CIFAR-100, FGVC-Aircraft, and Food-101
+demonstrate that EGA consistently outperforms global contrastive methods including
+ICon and SRL across both in-distribution and OOD settings. On strictly unseen
+fine-grained categories, competing adapters degrade below the frozen CLIP baseline
+in label precision, whereas EGA improves it by up to $18.5$ percentage points.
 \end{abstract}
 
 \section{Introduction}
@@ -123,9 +139,28 @@ Vector search engines rely heavily on the Euclidean distance between latent repr
 \paragraph{Contributions}
 This paper makes the following contributions:
 \begin{itemize}
-    \item We identify the systemic disconnect between semantic alignment and geometric proximity in foundational latent manifolds, revealing that distance overlap between true neighbors and noise renders Euclidean indexing unreliable.
-    \item We propose Euclidean Geodesic Alignment (EGA), an efficient adapter leveraging residual structures and local geometric anchors to smooth manifold irregularities without destroying pretrained semantic relations.
-    \item We demonstrate through empirical evaluation that EGA significantly accelerates approximate nearest neighbor search and exhibits superior out-of-distribution generalization on complex fine-grained domains, outperforming contemporary global contrastive objectives.
+  \item \textbf{Phenomenon.} We identify a fundamental in-distribution/OOD
+  tradeoff in global contrastive adapter training: while global objectives achieve
+  higher geometric compression on seen categories, they produce dense gradient
+  fields that systematically distort the pretrained manifold of unseen categories,
+  causing retrieval performance to fall below the frozen CLIP baseline on
+  out-of-distribution data.
+ 
+  \item \textbf{Method.} We propose EGA, a lightweight residual adapter combining
+  zero initialization, $\ell_2$ normalization, and a small-margin triplet loss.
+  By restricting optimization to locally violated neighborhood constraints, EGA
+  refines the pretrained embedding space without destroying its global semantic
+  structure, simultaneously improving retrieval quality on seen categories and
+  preserving manifold integrity for unseen ones.
+ 
+  \item \textbf{Mechanism and evaluation.} We provide a mechanistic explanation
+  grounded in gradient sparsity: EGA's triplet objective converges to a regime
+  where 96.5\% of training triplets contribute zero gradient, leaving unseen
+  class regions structurally unchanged from CLIP. We validate this mechanism
+  empirically and demonstrate through evaluations on three OOD benchmarks
+  (CIFAR-10, FGVC-Aircraft, Food-101) that EGA outperforms ICon and SRL on both
+  label precision and ANNS recall, while competing methods degrade below the
+  frozen baseline.
 \end{itemize}
 
 \section{Related Work}
