@@ -8,8 +8,8 @@
 % Before accepting by the NeurIPS conference, select one of the options below.
 % 0. "default" for submission
 
-\usepackage[preprint]{neurips_2026}
-% \usepackage{neurips_2026}
+% \usepackage[preprint]{neurips_2026}
+\usepackage{neurips_2026}
 
 % the "default" option is equal to the "main" option, which is used for the Main Track with double-blind reviewing.
 % 1. "main" option is used for the Main Track
@@ -140,33 +140,22 @@ in label precision, whereas EGA improves it by up to $18.5\%$.
 
 \section{Introduction}
 
-\paragraph{Contributions}
-This paper makes the following contributions:
-\begin{itemize}
-  \item \textbf{Phenomenon.} We identify a fundamental in-distribution/OOD
-  tradeoff in global contrastive adapter training: while global objectives achieve
-  higher geometric compression on seen categories, they produce dense gradient
-  fields that systematically distort the pretrained manifold of unseen categories,
-  causing retrieval performance to fall below the frozen CLIP baseline on
-  out-of-distribution data.
- 
-  \item \textbf{Method.} We propose EGA, a lightweight residual adapter combining
-  zero initialization, $\ell_2$ normalization, and a small-margin triplet loss.
-  By restricting optimization to locally violated neighborhood constraints, EGA
-  refines the pretrained embedding space without destroying its global semantic
-  structure, simultaneously improving retrieval quality on seen categories and
-  preserving manifold integrity for unseen ones.
- 
-  \item \textbf{Mechanism and evaluation.} We provide a mechanistic explanation
-  grounded in gradient sparsity: EGA's triplet objective converges to a regime
-  where 96.5\% of training triplets contribute zero gradient, leaving unseen
-  class regions structurally unchanged from CLIP. We validate this mechanism
-  empirically and demonstrate through evaluations on three OOD benchmarks
-  (CIFAR-10, FGVC-Aircraft, Food-101) that EGA outperforms ICon and SRL on both
-  label precision and ANNS recall, while competing methods degrade below the
-  frozen baseline.
-\end{itemize}
+Vector similarity search is the core mechanism for retrieving high dimensional representations in modern applications. While foundational vision language models such as CLIP \cite{clip_icml21} offer rich zero shot semantic capabilities, their latent manifolds often exhibit a systemic disconnect between semantic alignment and geometric proximity. This geometric illusion means that true semantic neighbors frequently overlap with noise in the Euclidean space, rendering standard approximate nearest neighbor search inefficient \cite{savietto2026geometryrepresentationalfailuresvision}. 
 
+To address these metric inconsistencies, recent approaches apply global contrastive objectives or structural regularizers \cite{alshammariunifying, dong2025improve} to recalibrate the representation space. However, these methods rely on batch wide alignment and uniformity pressures that generate dense gradient fields during training. When applied through lightweight adapters for parameter efficient tuning, this global optimization aggressively reconfigures the entire latent manifold. Consequently, the delicate geometric structures of unseen fine grained categories are systematically distorted, causing out of distribution retrieval performance to collapse below that of the frozen baseline.
+
+To overcome this fundamental limitation, we propose Euclidean Geodesic Alignment (EGA), a parameter efficient manifold smoothing approach. EGA introduces a residual adapter equipped with zero initialization and L2 normalization constraints to refine the pre trained semantic space. Instead of forcing global uniformity, EGA optimizes local geometric anchors via a small margin triplet loss. This localized objective compresses class specific clusters and resolves metric misalignment without subjecting the broader pre trained semantic relations to destructive global gradients.
+
+Extensive empirical evaluations across CIFAR-10, CIFAR-100, FGVC-Aircraft, and Food-101 validate the superiority of our method. EGA converges to a sparse gradient regime where 96.5 percent of training triplets produce zero gradient at steady state, effectively preserving the structural integrity of unseen categories. As a result, EGA consistently outperforms state of the art global contrastive methods in both in distribution and out of distribution settings. For instance, on strictly unseen fine grained domains, competing methods degrade below the frozen baseline, whereas EGA significantly elevates label precision by up to 18.5 percent and achieves parity with multi probe search baselines using only single cell lookups.
+
+\subsection{Contributions}
+This paper makes the following contributions:
+
+\begin{itemize}
+    \item We identify the systemic disconnect between semantic alignment and geometric proximity in foundational latent manifolds, revealing that distance overlap between true neighbors and noise renders Euclidean indexing unreliable.
+    \item We propose Euclidean Geodesic Alignment (EGA), a parameter efficient adapter leveraging residual structures and local geometric anchors to smooth manifold irregularities without destroying pre trained semantic relations.
+    \item We demonstrate through rigorous empirical evaluation that EGA significantly accelerates approximate nearest neighbor search and exhibits superior out of distribution generalization on complex fine grained domains, outperforming contemporary global contrastive objectives.
+\end{itemize}
 \section{Related Work}
 \label{sec:lit}
 
@@ -468,7 +457,6 @@ shown in Figure~\ref{fig:mechanism}.
 \paragraph{Experiment Platform}
 All experiments were conducted on the Chameleon Cloud~\cite{keahey2020lessons} platform using a compute node equipped with 256 AMD EPYC-7763 CPU cores, 512 GiB of RAM, and an NVIDIA A100 GPU of 80 GB HBM2e. 
 The operating system is Ubuntu 24.04 LTS.
-\don{Provide more system setup info.}
 
 \subsection{Ground truth of label precision}
 
@@ -679,6 +667,10 @@ Recall@5 & 0.9695 & 0.9712 & 0.9680 & 0.9688 \\ \hline
 
 \section{Conclusion}
 \label{sec:conclusion}
+
+In this paper, we introduced Euclidean Geodesic Alignment (EGA) to bridge the gap between semantic alignment and geometric proximity in foundational representation spaces. We identified that global contrastive objectives often produce dense gradient fields that distort the latent manifold of unseen categories. To resolve this, EGA utilizes a lightweight residual adapter initialized as an identity mapping and trained with a small margin triplet loss. This localized approach enables the model to refine specific class clusters while preserving the broader semantic integrity established by the pre trained backbone.
+
+Our experimental results across multiple benchmarks demonstrate that EGA significantly improves label precision and retrieval recall, particularly in out of distribution settings. The analysis of gradient sparsity reveals that EGA converges to a regime where only a small fraction of training samples exert update pressure, effectively protecting the manifolds of unseen categories from destructive optimization. This finding suggests that sparse local updates are vital for maintaining the zero shot capabilities of foundational models during adaptation. While our current evaluation focuses on visual representations, future work could explore the application of EGA to more diverse multimodal manifolds. By achieving parity with multi probe search through single cell lookups, EGA proves that correcting the metric geometry at the source is a highly efficient strategy for scalable vector retrieval. Unlike conventional structural regularization methods that rely on global optimization pressures, EGA provides a sparse and targeted solution for robust manifold alignment in vector search systems.
 
 \bibliography{ref}
 \bibliographystyle{plain}
