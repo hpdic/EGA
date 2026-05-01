@@ -332,3 +332,112 @@ def main():
 
 if __name__ == '__main__':
     main()
+
+
+# (venv) (base) cc@uc-a100:~/hpdic/EGA$ python scripts/Food/train_eval_food101.py 
+# Loading cached Food-101 features from /home/cc/hpdic/EGA/embeddings/food101_features.npy
+
+# Total samples : 25250
+# Total classes : 101
+
+# Splitting by class (80% train / 20% unseen test) ...
+#   Train classes : 80, Train samples : 20000
+#   Unseen classes: 21, Unseen samples: 5250
+
+# [1/3] Training EGA ...
+#   EGA epoch 30/150
+#   EGA epoch 60/150
+#   EGA epoch 90/150
+#   EGA epoch 120/150
+#   EGA epoch 150/150
+
+# [2/3] Training ICon ...
+#   ICon epoch 30/150
+#   ICon epoch 60/150
+#   ICon epoch 90/150
+#   ICon epoch 120/150
+#   ICon epoch 150/150
+
+# [3/3] Training SRL ...
+#   SRL epoch 30/150
+#   SRL epoch 60/150
+#   SRL epoch 90/150
+#   SRL epoch 120/150
+#   SRL epoch 150/150
+
+# Saved adapter outputs and unseen-class labels to embeddings/
+
+# Evaluating: Original CLIP (Food-101 unseen)
+#   K=1
+#     nprobe= 1: LP=0.8812  AR=0.8423
+#     nprobe= 5: LP=0.8888  AR=0.9977
+#     nprobe=10: LP=0.8880  AR=1.0000
+#   K=3
+#     nprobe= 1: LP=0.8705  AR=0.8370
+#     nprobe= 5: LP=0.8789  AR=0.9977
+#     nprobe=10: LP=0.8789  AR=1.0000
+#   K=5
+#     nprobe= 1: LP=0.8583  AR=0.8264
+#     nprobe= 5: LP=0.8673  AR=0.9974
+#     nprobe=10: LP=0.8673  AR=1.0000
+#   K=10
+#     nprobe= 1: LP=0.8351  AR=0.8212
+#     nprobe= 5: LP=0.8518  AR=0.9968
+#     nprobe=10: LP=0.8519  AR=1.0000
+
+# Evaluating: EGA (Food-101 unseen)
+#   K=1
+#     nprobe= 1: LP=0.7982  AR=0.8858
+#     nprobe= 5: LP=0.8165  AR=0.9970
+#     nprobe=10: LP=0.8165  AR=1.0000
+#   K=3
+#     nprobe= 1: LP=0.7746  AR=0.8771
+#     nprobe= 5: LP=0.7865  AR=0.9959
+#     nprobe=10: LP=0.7857  AR=1.0000
+#   K=5
+#     nprobe= 1: LP=0.7613  AR=0.8725
+#     nprobe= 5: LP=0.7736  AR=0.9966
+#     nprobe=10: LP=0.7736  AR=1.0000
+#   K=10
+#     nprobe= 1: LP=0.7437  AR=0.8653
+#     nprobe= 5: LP=0.7575  AR=0.9966
+#     nprobe=10: LP=0.7575  AR=1.0000
+
+# Evaluating: ICon (Food-101 unseen)
+#   K=1
+#     nprobe= 1: LP=0.5567  AR=0.8111
+#     nprobe= 5: LP=0.5720  AR=0.9962
+#     nprobe=10: LP=0.5712  AR=1.0000
+#   K=3
+#     nprobe= 1: LP=0.5395  AR=0.7987
+#     nprobe= 5: LP=0.5570  AR=0.9954
+#     nprobe=10: LP=0.5560  AR=1.0000
+#   K=5
+#     nprobe= 1: LP=0.5216  AR=0.7893
+#     nprobe= 5: LP=0.5354  AR=0.9950
+#     nprobe=10: LP=0.5363  AR=0.9998
+#   K=10
+#     nprobe= 1: LP=0.5050  AR=0.7740
+#     nprobe= 5: LP=0.5208  AR=0.9931
+#     nprobe=10: LP=0.5211  AR=1.0000
+
+# Evaluating: SRL (Food-101 unseen)
+#   K=1
+#     nprobe= 1: LP=0.5202  AR=0.8271
+#     nprobe= 5: LP=0.5255  AR=0.9962
+#     nprobe=10: LP=0.5255  AR=1.0000
+#   K=3
+#     nprobe= 1: LP=0.5161  AR=0.8071
+#     nprobe= 5: LP=0.5179  AR=0.9959
+#     nprobe=10: LP=0.5182  AR=1.0000
+#   K=5
+#     nprobe= 1: LP=0.5046  AR=0.7998
+#     nprobe= 5: LP=0.5115  AR=0.9944
+#     nprobe=10: LP=0.5110  AR=1.0000
+#   K=10
+#     nprobe= 1: LP=0.4940  AR=0.7846
+#     nprobe= 5: LP=0.5045  AR=0.9926
+#     nprobe=10: LP=0.5035  AR=1.0000
+
+# Done.
+# (venv) (base) cc@uc-a100:~/hpdic/EGA$ 
