@@ -569,49 +569,61 @@ We now turn to the central empirical claim of this paper: under strict OOD setti
 % \hline
 % \end{tabular}
 % \end{table}
-\begin{wraptable}{r}{0.50\textwidth}
+\begin{wraptable}{r}{0.55\textwidth}
 \vspace{-1em}
 \centering
-\caption{Out-of-distribution ANNS Recall@1 at $K=1$, nprobe=1. Bold marks the best result.}
+\caption{OOD performance at $K=1$, nprobe=1. Bold $=$ exceeds CLIP; underline $=$ below CLIP.}
 \label{tab:ood_summary}
 \small
-\begin{tabular}{lcccc}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{llcccc}
 \hline
-Dataset          & CLIP   & ICon   & SRL    & EGA \\
+Dataset & Metric & CLIP & ICon & SRL & EGA \\
 \hline
-CIFAR-10         & 0.617  & 0.788  & 0.831  & \textbf{0.858} \\
-FGVC-Aircraft    & 0.773  & 0.875  & 0.863  & \textbf{0.898} \\
-Food-101         & 0.842  & 0.811  & 0.827  & \textbf{0.886} \\
+\multirow{2}{*}{CIFAR-10}
+  & AR@1 & 0.863 & \textbf{0.913} & \textbf{0.942} & \textbf{0.986} \\
+  & LP@1 & 0.880 & \underline{0.841} & \underline{0.794} & \textbf{0.886} \\
+\hline
+\multirow{2}{*}{Aircraft}
+  & AR@1 & 0.773 & \textbf{0.875} & \textbf{0.863} & \textbf{0.898} \\
+  & LP@1 & 0.512 & \underline{0.423} & \underline{0.441} & \textbf{0.548} \\
+\hline
+\multirow{2}{*}{Food-101}
+  & AR@1 & 0.842 & \underline{0.811} & \underline{0.827} & \textbf{0.886} \\
+  & LP@1 & 0.881 & \underline{0.557} & \underline{0.520} & \underline{0.798} \\
 \hline
 \end{tabular}
 \vspace{-1em}
 \end{wraptable}
-The generalization capabilities of EGA are evaluated on the CIFAR-10 dataset, providing a rigorous out-of-distribution (OOD) test since all models were trained exclusively on CIFAR-100. Figure~\ref{fig:generalization_recall} illustrates the recall performance across varying nprobe values and K settings. EGA consistently maintains a dominant lead over all baselines, including recent state-of-the-art methods like ICon~\cite{alshammariunifying} and SRL~\cite{dong2025improve}. At a minimum search budget of nprobe=1, EGA achieves a Recall@1 of 0.858, significantly outperforming SRL (0.831) and ICon (0.788). As shown in the inset zooms, EGA continues to hold a clear advantage even at nprobe=10. A key observation is the efficiency gain: EGA achieves a recall level at nprobe=5 that matches or exceeds the performance of supervised baselines at nprobe=10, indicating that the manifold smoothing provided by EGA effectively doubles the search efficiency in unseen data environments.
+We evaluate OOD generalization on three benchmarks: CIFAR-10 (trained on CIFAR-100), FGVC-Aircraft (80 seen / 20 unseen classes), and Food-101 (80 seen / 21 unseen classes). Table~\ref{tab:ood_summary} summarizes the headline result. The two metrics tell different stories. On ANNS Recall, all adapters generally improve over the frozen baseline, indicating that adapter-trained embeddings are easier to index with IVF---this is the geometric notion of retrieval quality. On Label Precision, however, the picture inverts: ICon and SRL fall below the frozen CLIP baseline on every OOD dataset, with degradation reaching $-32$ to $-36$ percentage points on Food-101. This contrast reveals that global contrastive adaptation buys geometric indexability at the cost of semantic correctness---an adapter can make retrieval faster while making the retrieved neighbors less relevant. EGA, in contrast, simultaneously improves both metrics on CIFAR-10 and Aircraft. On the more challenging Food-101 (where 21 unseen classes share substantial visual overlap with the 80 seen classes), EGA retains the strongest Label Precision among all adapters with a bounded $-8$ pp degradation, while still leading on ANNS Recall.
+
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{fig/cifar10_generalization_recall.pdf}
-    \caption{Recall@K versus nprobe tradeoff on CIFAR-10. EGA maintains a consistent lead over baselines, demonstrating strong OOD generalization.}
+    \caption{ANNS Recall@$K$ versus nprobe on CIFAR-10. All adapters improve geometric retrieval over the frozen CLIP baseline, with EGA achieving the largest gain.}
     \label{fig:generalization_recall}
 \end{figure}
 
-To further validate the robustness of EGA under fine-grained domain shifts, we extend our evaluation to the FGVC-Aircraft and Food-101 datasets. In both settings, models are trained on known categories and tested on strictly unseen categories (20 unseen aircraft classes and 21 unseen food classes, respectively). For a fair comparison, all baseline methods are restricted to training identical lightweight MLP adapters on top of frozen CLIP features.
+To validate the tradeoff in Table~\ref{tab:ood_summary} under fine-grained domain shifts, we present per-dataset retrieval curves on FGVC-Aircraft (20 unseen classes) and Food-101 (21 unseen classes). For a fair comparison, all methods train identical lightweight adapters on top of frozen CLIP features and differ only in their loss functions.
 
-The empirical results reveal a consistent pattern. Global contrastive methods (ICon and SRL) suffer severe performance degradation when confined to a lightweight adapter bottleneck. On FGVC-Aircraft, their Recall@1 collapses to 0.422 and 0.440 respectively—well below the frozen CLIP baseline of 0.773. On Food-101, they drop to 0.811 and 0.827, falling below the frozen baseline of 0.842. This indicates that global contrastive objectives aggressively distort the latent manifold of unseen fine-grained categories when the representation capacity is constrained.
+\paragraph{The geometric story (ANNS Recall).}
+Across all three OOD benchmarks, every adapter---including ICon and SRL---improves or matches the frozen CLIP ANNS Recall@1 (Table~\ref{tab:ood_summary}). On Aircraft, ICon and SRL reach 0.875 and 0.863 respectively, both clearly above the frozen baseline of 0.773. On CIFAR-10, all three adapters substantially exceed CLIP. This confirms that adapter training does succeed at \emph{geometric} reorganization: the resulting embedding distribution is more amenable to IVF-based indexing.
 
-In contrast, EGA exhibits exceptional stability and generalization on both datasets. It achieves the highest Recall@1 of 0.898 on FGVC-Aircraft and 0.886 on Food-101 under the exact same adapter constraints. By leveraging local geometric anchors rather than forcing global distributions, EGA successfully compresses class-specific clusters while maintaining the structural integrity of the broader semantic space, significantly enhancing retrieval efficiency even on highly optimized baseline manifolds.
+\paragraph{The semantic story (Label Precision).}
+The same adapters tell a strikingly different story when measured by Label Precision. On Aircraft at $K=1$, $\text{nprobe}=1$, ICon and SRL drop to $0.423$ and $0.441$---a $9$--$13$ percentage-point degradation \emph{below} the frozen CLIP baseline of $0.512$. On Food-101, the gap widens dramatically: ICon and SRL fall to $0.557$ and $0.520$ from a frozen baseline of $0.881$, a $32$--$36$ percentage-point collapse. The retrieved neighbors are geometrically closer in the IVF index, but they belong to the wrong semantic class. EGA breaks this pattern: it improves Label Precision on Aircraft ($+3.6$ pp) and CIFAR-10 ($+0.6$ pp), and on the most challenging Food-101 setting it retains the strongest Label Precision among all adapters with a bounded $-8.3$ pp degradation, well above the $-32$ to $-36$ pp gap of global contrastive methods.
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{fig/aircraft_recall.pdf}
-    \caption{Recall versus nprobe tradeoff on 20 unseen FGVC-Aircraft classes.}
+    \caption{ANNS Recall@$K$ versus nprobe on 20 unseen FGVC-Aircraft classes.}
     \label{fig:aircraft}
 \end{figure}
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{fig/food_recall.pdf}
-    \caption{Recall versus nprobe tradeoff on 21 unseen Food-101 classes.}
+    \caption{ANNS Recall@$K$ versus nprobe on 21 unseen Food-101 classes.}
     \label{fig:food}
 \end{figure}
 
