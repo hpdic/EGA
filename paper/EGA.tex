@@ -67,6 +67,7 @@
 \usepackage{amssymb}
 \usepackage{amsthm}
 \usepackage{multirow}
+\usepackage{wrapfig}
 \newtheorem{proposition}{Proposition}
 \newcommand{\don}[1]{\textcolor{blue}{[Dongfang: #1]}}
 
@@ -159,30 +160,37 @@ This paper makes the following contributions:
 \label{sec:lit}
 
 \paragraph{Manifold Preservation under Adapter Tuning}
-Foundation models such as CLIP~\cite{clip_icml21} produce embedding spaces whose structure encodes both seen-class semantics and a broader prior over visual concepts not observed during downstream training. A central concern in adapter tuning is whether this prior is preserved or destroyed during adaptation. Catastrophic forgetting has been studied extensively in continual and incremental learning settings, where successive task updates erode previously acquired representations~\cite{lanza2026degradationfeaturespacecontinual, xue2025protocol}. Recent work has documented analogous degradation phenomena specific to contrastive representations: anisotropic collapse into narrow conic regions~\cite{zhao-etal-2024-representation}, structural fracturing under modality gap~\cite{10656738, eslami2025mitigate}, and loss of compositional structure under aggressive optimization~\cite{pal2025compositional, savietto2026geometryrepresentationalfailuresvision, 11093676}. To counter these degradations, recent adaptation strategies impose explicit geometric constraints such as orthogonality regularization~\cite{ricci2026boldsymbollambdaorthogonality} or restrict optimization to limited subspaces.
-However, these constraints typically operate at the global distribution level and apply uniform pressure across the embedding space. They do not distinguish between regions occupied by seen classes (where adaptation is needed) and regions occupied by unseen classes (where the pretrained structure should remain untouched). EGA addresses this distinction directly: rather than imposing global geometric constraints, it leverages the inherent sparsity of triplet loss optimization to confine adapter updates to local neighborhoods of seen classes, leaving the unseen-class regions of the pretrained manifold structurally unmodified.
+Foundation models such as CLIP~\cite{clip_icml21} produce embedding spaces whose structure encodes both seen-class semantics and a broader prior over visual concepts not observed during downstream training. Catastrophic forgetting has been studied extensively in continual and incremental learning settings~\cite{lanza2026degradationfeaturespacecontinual, xue2025protocol}. Recent work has documented analogous degradation phenomena specific to contrastive representations: anisotropic collapse into narrow conic regions~\cite{zhao-etal-2024-representation}, structural fracturing under modality gap~\cite{10656738, eslami2025mitigate}, and loss of compositional structure under aggressive optimization~\cite{pal2025compositional, savietto2026geometryrepresentationalfailuresvision, 11093676}. To counter these degradations, recent adaptation strategies impose explicit geometric constraints such as orthogonality regularization~\cite{ricci2026boldsymbollambdaorthogonality} or restrict optimization to limited subspaces. EGA leverages the inherent sparsity of triplet loss optimization to confine adapter updates to local neighborhoods of seen classes, leaving the unseen-class regions of the pretrained manifold structurally unmodified.
 
 \paragraph{Global Contrastive Objectives and Structural Regularization}
-Recent advancements in representation learning often rely on global contrastive objectives to optimize the latent space \cite{sui2026unicon, koromilas2025principledframeworkmultiviewcontrastive}. A common paradigm involves jointly enforcing alignment for positive pairs and uniformity for the overall feature distribution, a strategy applied across various domains including graph encoders \cite{10.1609/aaai.v38i14.29479} and multimodal recommendation systems \cite{zhou2025cm3calibratingmultimodalrecommendation}. While pushing embeddings toward a uniform distribution enhances robustness to background noise \cite{wu2026pca}, it inherently assumes that all latent regions require the same degree of global scattering.
-To further refine complex distributions, structural regularization techniques introduce auxiliary constraints. For instance, methods like I Con formulate a unifying framework to systematically align multi view representations \cite{alshammariunifying}, while geometric constraints are leveraged to improve imbalanced regression tasks \cite{dong2025improve}. Other approaches attempt to decouple the learning objectives \cite{kim2025decoupledcontrastivelearningfederated} or apply information theoretic regularizers \cite{Zhang_2025_ICCV} to control the density of the learned representations. Furthermore, region based distillation techniques have been proposed to enhance fine grained understanding \cite{jing2024fineclip}.
-However, these global contrastive objectives and structural regularizers typically generate dense gradient fields throughout the training process. By continuously applying optimization pressure across the entire batch, they inadvertently disrupt the delicate pre established geometric structures of unseen fine grained categories. Unlike these global approaches that aggressively reconfigure the entire latent manifold through dense updates, EGA utilizes local geometric anchors to perform sparse and targeted metric smoothing, thereby preserving the structural integrity of out of distribution semantics.
+Recent advancements in representation learning often rely on global contrastive objectives to optimize the latent space~\cite{sui2026unicon, koromilas2025principledframeworkmultiviewcontrastive}. A common paradigm involves jointly enforcing alignment for positive pairs and uniformity for the overall feature distribution, a strategy applied across various domains including graph encoders~\cite{10.1609/aaai.v38i14.29479} and multimodal recommendation systems~\cite{zhou2025cm3calibratingmultimodalrecommendation}. While pushing embeddings toward a uniform distribution enhances robustness to background noise~\cite{wu2026pca}, it inherently assumes that all latent regions require the same degree of global scattering. To further refine complex distributions, structural regularization techniques introduce auxiliary constraints. For instance, methods like ICon formulate a unifying framework to systematically align multi-view representations~\cite{alshammariunifying}, while geometric constraints are leveraged to improve imbalanced regression tasks~\cite{dong2025improve}. Other approaches attempt to decouple the learning objectives~\cite{kim2025decoupledcontrastivelearningfederated} or apply information theoretic regularizers~\cite{Zhang_2025_ICCV} to control the density of the learned representations. Furthermore, region-based distillation techniques have been proposed to enhance fine-grained understanding~\cite{jing2024fineclip}. EGA replaces dense global optimization with sparse local triplet updates, preserving out-of-distribution semantic structure.
 
 \paragraph{Parameter Efficient Manifold Adaptation}
-
-Parameter efficient adaptation emerged as a standard to prevent catastrophic forgetting and reduce computational overhead when transferring large foundation models \cite{pmlr-v97-houlsby19a, hu2022lora}. This paradigm has extensively shifted towards vision language models, dominating recent literature due to the prohibitive cost of full scale fine tuning \cite{lin2025visionlanguagemodelssurvey}. Methods such as Tip Adapter demonstrate that lightweight tuning can effectively specialize representations for downstream tasks without altering the frozen backbone \cite{10.1007/978-3-031-19833-5_29}. Furthermore, extensive benchmarking confirms that parameter efficient techniques can rival full fine tuning while preserving the generalizable representations of the foundation model \cite{sharma2025benchmarking}. 
-To further protect the pre trained manifold during initial training steps, zero initialization strategies have proven highly effective. For instance, conditional control mechanisms in image generation initialize adapter weights to zero, ensuring the model behaves exactly like the frozen base model before any optimization occurs \cite{10377881}. 
-While these existing methods successfully maintain global knowledge and prevent catastrophic forgetting, they are not designed to resolve local metric inconsistencies for vector search. Unlike these general adaptation strategies, EGA integrates a zero initialized residual adapter with a localized geometric objective, explicitly smoothing class specific clusters to correct Euclidean distances without compromising the parameter efficiency or stability of the pre trained manifold.
+Parameter efficient adaptation emerged as a standard to prevent catastrophic forgetting and reduce computational overhead when transferring large foundation models~\cite{pmlr-v97-houlsby19a, hu2022lora}. This paradigm has extensively shifted towards vision-language models, dominating recent literature due to the prohibitive cost of full-scale fine-tuning~\cite{lin2025visionlanguagemodelssurvey, 10.1007/978-3-031-19833-5_29}. Methods such as Tip Adapter demonstrate that lightweight tuning can effectively specialize representations for downstream tasks without altering the frozen backbone~\cite{10.1007/978-3-031-19833-5_29}. Furthermore, extensive benchmarking confirms that parameter efficient techniques can rival full fine-tuning while preserving the generalizable representations of the foundation model~\cite{sharma2025benchmarking}. To further protect the pre-trained manifold during initial training steps, zero-initialization strategies have proven highly effective. For instance, conditional control mechanisms in image generation initialize adapter weights to zero, ensuring the model behaves exactly like the frozen base model before any optimization occurs~\cite{10377881}. EGA integrates a zero-initialized residual adapter with a localized geometric objective, achieving both parameter efficiency and targeted manifold smoothing.
 
 \paragraph{Vector Similarity Search and Metric Consistency}
+Vector similarity search is the foundational engine for retrieving high-dimensional representations at scale. The systems community has developed highly optimized indexing algorithms to handle billion-scale datasets. Foundational works such as FAISS leverage hardware acceleration for fast similarity search~\cite{johnson2019billion}, while graph-based indices and hybrid structures like DiskANN and SPANN achieve exceptional speed by efficiently managing memory and disk hierarchies~\cite{subramanya2019diskann, chen2021spann}. Recent advancements continue to refine these topologies, exploring crossing sparse proximity graphs~\cite{NEURIPS2024_bab1486c} and analyzing the theoretical constructions of navigable graphs for high-dimensional nearest neighbor search~\cite{NEURIPS2024_6dc63b40}. Furthermore, system-level studies optimize retrieval latency and stability by aligning best-first search algorithms with solid-state drives~\cite{osdi25pipeann} and enabling direct insertions in large-scale indices~\cite{fast26odinann}. To reduce the computational cost of exact distance calculations during the retrieval phase, approximation techniques such as low-rank matrix factorization have also been introduced to accelerate inner product evaluations~\cite{jaasaari2024lorann}. However, extensive theoretical analyses reveal that popular approximate nearest neighbor implementations still face severe worst-case performance limitations~\cite{NEURIPS2023_d0ac28b7}. EGA proactively recalibrates the metric manifold prior to index construction, enabling standard search backends to achieve superior semantic recall without requiring complex algorithmic reengineering.
 
-Vector similarity search is the foundational engine for retrieving high dimensional representations at scale. The systems community has developed highly optimized indexing algorithms to handle billion scale datasets. Foundational works such as FAISS leverage hardware acceleration for fast similarity search \cite{johnson2019billion}, while graph based indices and hybrid structures like DiskANN and SPANN achieve exceptional speed by efficiently managing memory and disk hierarchies \cite{subramanya2019diskann, chen2021spann}. Recent advancements continue to refine these topologies, exploring crossing sparse proximity graphs \cite{NEURIPS2024_bab1486c} and analyzing the theoretical constructions of navigable graphs for high dimensional nearest neighbor search \cite{NEURIPS2024_6dc63b40}. Furthermore, system level studies optimize retrieval latency and stability by aligning best first search algorithms with solid state drives \cite{osdi25pipeann} and enabling direct insertions in large scale indices \cite{fast26odinann}.
-To reduce the computational cost of exact distance calculations during the retrieval phase, approximation techniques such as low rank matrix factorization have also been introduced to accelerate inner product evaluations \cite{jaasaari2024lorann}. However, extensive theoretical analyses reveal that popular approximate nearest neighbor implementations still face severe worst case performance limitations \cite{NEURIPS2023_d0ac28b7}. 
-While these sophisticated indexing and approximation systems continuously push the boundaries of retrieval throughput, they operate under the strict assumption that the underlying Euclidean space perfectly reflects semantic similarity. If the foundational manifold suffers from geometric distortion, these highly optimized engines will simply retrieve semantically irrelevant neighbors at an accelerated rate. Unlike hardware and system level optimizations that treat the embedding space as an immutable input, EGA proactively recalibrates the metric manifold prior to index construction, thereby enabling standard search backends to achieve superior semantic recall without requiring complex algorithmic reengineering.
+% \section{Related Work}
+% \label{sec:lit}
 
-% ─────────────────────────────────────────────────────────────────────────────
-% Section 3: Methodology
-% Section 3.1: Problem Formulation
-% ─────────────────────────────────────────────────────────────────────────────
+% \paragraph{Manifold Preservation under Adapter Tuning}
+% Foundation models such as CLIP~\cite{clip_icml21} produce embedding spaces whose structure encodes both seen-class semantics and a broader prior over visual concepts not observed during downstream training. A central concern in adapter tuning is whether this prior is preserved or destroyed during adaptation. Catastrophic forgetting has been studied extensively in continual and incremental learning settings, where successive task updates erode previously acquired representations~\cite{lanza2026degradationfeaturespacecontinual, xue2025protocol}. Recent work has documented analogous degradation phenomena specific to contrastive representations: anisotropic collapse into narrow conic regions~\cite{zhao-etal-2024-representation}, structural fracturing under modality gap~\cite{10656738, eslami2025mitigate}, and loss of compositional structure under aggressive optimization~\cite{pal2025compositional, savietto2026geometryrepresentationalfailuresvision, 11093676}. To counter these degradations, recent adaptation strategies impose explicit geometric constraints such as orthogonality regularization~\cite{ricci2026boldsymbollambdaorthogonality} or restrict optimization to limited subspaces. However, these constraints typically operate at the global distribution level and apply uniform pressure across the embedding space. They do not distinguish between regions occupied by seen classes (where adaptation is needed) and regions occupied by unseen classes (where the pretrained structure should remain untouched). EGA addresses this distinction directly: rather than imposing global geometric constraints, it leverages the inherent sparsity of triplet loss optimization to confine adapter updates to local neighborhoods of seen classes, leaving the unseen-class regions of the pretrained manifold structurally unmodified.
+
+% \paragraph{Global Contrastive Objectives and Structural Regularization}
+% Recent advancements in representation learning often rely on global contrastive objectives to optimize the latent space~\cite{sui2026unicon, koromilas2025principledframeworkmultiviewcontrastive}. A common paradigm involves jointly enforcing alignment for positive pairs and uniformity for the overall feature distribution, a strategy applied across various domains including graph encoders~\cite{10.1609/aaai.v38i14.29479} and multimodal recommendation systems~\cite{zhou2025cm3calibratingmultimodalrecommendation}. While pushing embeddings toward a uniform distribution enhances robustness to background noise~\cite{wu2026pca}, it inherently assumes that all latent regions require the same degree of global scattering. To further refine complex distributions, structural regularization techniques introduce auxiliary constraints. For instance, methods like ICon formulate a unifying framework to systematically align multi-view representations~\cite{alshammariunifying}, while geometric constraints are leveraged to improve imbalanced regression tasks~\cite{dong2025improve}. Other approaches attempt to decouple the learning objectives~\cite{kim2025decoupledcontrastivelearningfederated} or apply information theoretic regularizers~\cite{Zhang_2025_ICCV} to control the density of the learned representations. Furthermore, region-based distillation techniques have been proposed to enhance fine-grained understanding~\cite{jing2024fineclip}. However, these global contrastive objectives and structural regularizers typically generate dense gradient fields throughout the training process. By continuously applying optimization pressure across the entire batch, they inadvertently disrupt the delicate pre-established geometric structures of unseen fine-grained categories. Unlike these global approaches that aggressively reconfigure the entire latent manifold through dense updates, EGA utilizes local geometric anchors to perform sparse and targeted metric smoothing, thereby preserving the structural integrity of out-of-distribution semantics.
+
+% \paragraph{Parameter Efficient Manifold Adaptation}
+% Parameter efficient adaptation emerged as a standard to prevent catastrophic forgetting and reduce computational overhead when transferring large foundation models~\cite{pmlr-v97-houlsby19a, hu2022lora}. This paradigm has extensively shifted towards vision-language models, dominating recent literature due to the prohibitive cost of full-scale fine-tuning~\cite{lin2025visionlanguagemodelssurvey, 10.1007/978-3-031-19833-5_29}. Methods such as Tip Adapter demonstrate that lightweight tuning can effectively specialize representations for downstream tasks without altering the frozen backbone~\cite{10.1007/978-3-031-19833-5_29}. Furthermore, extensive benchmarking confirms that parameter efficient techniques can rival full fine-tuning while preserving the generalizable representations of the foundation model~\cite{sharma2025benchmarking}. To further protect the pre-trained manifold during initial training steps, zero-initialization strategies have proven highly effective. For instance, conditional control mechanisms in image generation initialize adapter weights to zero, ensuring the model behaves exactly like the frozen base model before any optimization occurs~\cite{10377881}. While these existing methods successfully maintain global knowledge and prevent catastrophic forgetting, they are not designed to resolve local metric inconsistencies for vector search. Unlike these general adaptation strategies, EGA integrates a zero-initialized residual adapter with a localized geometric objective, explicitly smoothing class-specific clusters to correct Euclidean distances without compromising the parameter efficiency or stability of the pre-trained manifold.
+
+% \paragraph{Vector Similarity Search and Metric Consistency}
+% Vector similarity search is the foundational engine for retrieving high-dimensional representations at scale. The systems community has developed highly optimized indexing algorithms to handle billion-scale datasets. Foundational works such as FAISS leverage hardware acceleration for fast similarity search~\cite{johnson2019billion}, while graph-based indices and hybrid structures like DiskANN and SPANN achieve exceptional speed by efficiently managing memory and disk hierarchies~\cite{subramanya2019diskann, chen2021spann}. Recent advancements continue to refine these topologies, exploring crossing sparse proximity graphs~\cite{NEURIPS2024_bab1486c} and analyzing the theoretical constructions of navigable graphs for high-dimensional nearest neighbor search~\cite{NEURIPS2024_6dc63b40}. Furthermore, system-level studies optimize retrieval latency and stability by aligning best-first search algorithms with solid-state drives~\cite{osdi25pipeann} and enabling direct insertions in large-scale indices~\cite{fast26odinann}. To reduce the computational cost of exact distance calculations during the retrieval phase, approximation techniques such as low-rank matrix factorization have also been introduced to accelerate inner product evaluations~\cite{jaasaari2024lorann}. However, extensive theoretical analyses reveal that popular approximate nearest neighbor implementations still face severe worst-case performance limitations~\cite{NEURIPS2023_d0ac28b7}. While these sophisticated indexing and approximation systems continuously push the boundaries of retrieval throughput, they operate under the strict assumption that the underlying Euclidean space perfectly reflects semantic similarity. If the foundational manifold suffers from geometric distortion, these highly optimized engines will simply retrieve semantically irrelevant neighbors at an accelerated rate. Unlike hardware and system-level optimizations that treat the embedding space as an immutable input, EGA proactively recalibrates the metric manifold prior to index construction, thereby enabling standard search backends to achieve superior semantic recall without requiring complex algorithmic reengineering.
+
+
+% % % % ─────────────────────────────────────────────────────────────────────────────
+% % % % Section 3: Methodology
+% % % % Section 3.1: Problem Formulation
+% % % % ─────────────────────────────────────────────────────────────────────────────
 
 \section{Methodology}
 \label{sec:method}
@@ -426,25 +434,13 @@ the margin constraint, the adapter exerts zero update pressure.
 \end{proposition}
  
 \begin{proof}[Proof Sketch]
-The loss in Eq.~\eqref{eq:triplet} is a sum of hinge terms, each of which
-has gradient zero whenever $d(\hat{\mathbf{z}}_a, \hat{\mathbf{z}}_p) -
-d(\hat{\mathbf{z}}_a, \hat{\mathbf{z}}_n) + m \leq 0$. At convergence,
-$f_\theta$ has minimized the loss over $\mathcal{D}_{\text{train}}$, so the
-only remaining active triplets are those whose geometry the adapter has not
-yet been able to separate within the margin. The fraction of such triplets
-is bounded below by the overlap of the within-class and between-class
-distance distributions at the converged embedding, which depends on $m$ and
-the geometry of $\mathcal{Y}_{\text{seen}}$ but not on
-$\mathcal{Y}_{\text{unseen}}$. Since no triplet involving unseen-class
-embeddings is ever constructed, the adapter gradient is identically zero
-over the entire unseen-class region of the embedding space throughout
-training. See Appendix~\ref{proof:sparsity} for the complete proof.
+The triplet loss consists of hinge terms whose gradient is zero whenever the margin constraint is satisfied. At convergence, only those triplets whose geometry the adapter has not yet separated within the margin remain active. The fraction of such triplets is determined solely by the margin $m$ and the distance distribution of seen classes, independent of unseen classes. Since no training triplet involves unseen-class embeddings, the adapter exerts zero gradient over the entire unseen-class region of the embedding space. See Appendix~\ref{proof:sparsity} for the complete proof.
 \end{proof}
 
-The empirical validation of Proposition~\ref{prop:sparsity} is provided in
-Section~\ref{sec:mechanism}, where we track the active triplet ratio
-throughout training and connect it directly to the OOD retrieval outcomes
-shown in Figure~\ref{fig:mechanism}.
+% The empirical validation of Proposition~\ref{prop:sparsity} is provided in
+% Section~\ref{sec:mechanism}, where we track the active triplet ratio
+% throughout training and connect it directly to the OOD retrieval outcomes
+% shown in Figure~\ref{fig:mechanism}.
 
 \section{Evaluation}
 \label{sec:eval}
@@ -458,7 +454,7 @@ The operating system is Ubuntu 24.04 LTS.
 \subsection{In-Distribution Validation}
 \label{sec:indist}
 
-We first verify that EGA functions as a competent retrieval adapter under the standard in-distribution setting before turning to the out-of-distribution claims that constitute the paper's main contribution. All experiments in this section use CIFAR-100, with the adapter trained and evaluated on the same 100-class label space.
+% We first verify that EGA functions as a competent retrieval adapter under the standard in-distribution setting before turning to the out-of-distribution claims that constitute the paper's main contribution. All experiments in this section use CIFAR-100, with the adapter trained and evaluated on the same 100-class label space.
 
 \paragraph{Semantic retrieval quality.}
 Figure~\ref{fig:precision_grid} reports Label Precision@$K$ across four neighborhood sizes and three search budgets. EGA improves Label Precision@1 from $\approx 0.55$ (raw CLIP) to $> 0.70$ at $\text{nprobe}=1$, and the gap persists across all $K$ and $\text{nprobe}$ values. The improvement is not an artifact of larger search budgets: even at $\text{nprobe}=10$, EGA retains a clear advantage, indicating that the adapter genuinely tightens within-class neighborhoods rather than merely benefiting from broader index coverage.
@@ -470,8 +466,6 @@ Figure~\ref{fig:precision_grid} reports Label Precision@$K$ across four neighbor
     \label{fig:precision_grid}
 \end{figure}
 
-\paragraph{Geometric structure.}
-The Label Precision improvement has a direct geometric correlate. Figure~\ref{fig:dist_grid} contrasts the $L_2$ distance distributions for true Top-$K$ neighbors against random background points, before and after EGA. In the raw CLIP space, the two distributions overlap substantially: the distance to a true neighbor is often indistinguishable from the distance to an unrelated point, which is exactly the condition under which IVF-based ANN indexing degrades. After EGA, the two distributions separate cleanly across all $K$, with neighbors concentrated at small distances and background points pushed toward a distinct mode. This separation is the mechanism by which EGA improves the recall--efficiency frontier shown in Figure~\ref{fig:recall_grid}: the raw CLIP space achieves only $0.67$ Recall@1 at $\text{nprobe}=1$, whereas EGA reaches $0.80$ under identical indexing, and saturates above $0.97$ by $\text{nprobe}=5$.
 
 \begin{figure}[t]
     \centering
@@ -487,31 +481,112 @@ The Label Precision improvement has a direct geometric correlate. Figure~\ref{fi
     \label{fig:recall_grid}
 \end{figure}
 
-These in-distribution results establish a baseline competence: EGA improves both semantic and geometric retrieval quality on the categories it was trained on. The more important question---how it behaves on categories absent from training---is the subject of the remaining subsections.
+\paragraph{Geometric structure.}
+The Label Precision improvement has a direct geometric correlate. Figure~\ref{fig:dist_grid} contrasts the $L_2$ distance distributions for true Top-$K$ neighbors against random background points, before and after EGA. In the raw CLIP space, the two distributions overlap substantially: the distance to a true neighbor is often indistinguishable from the distance to an unrelated point, which is exactly the condition under which IVF-based ANN indexing degrades. After EGA, the two distributions separate cleanly across all $K$, with neighbors concentrated at small distances and background points pushed toward a distinct mode. This separation is the mechanism by which EGA improves the recall--efficiency frontier shown in Figure~\ref{fig:recall_grid}: the raw CLIP space achieves only $0.67$ Recall@1 at $\text{nprobe}=1$, whereas EGA reaches $0.80$ under identical indexing, and saturates above $0.97$ by $\text{nprobe}=5$.
+
+
+
+% \subsection{Out-of-Distribution Generalization}
+
+% We now turn to the central empirical claim of this paper: under strict OOD settings where evaluation categories are disjoint from training categories, EGA achieves the highest ANNS Recall@1 across all three benchmarks. Table~\ref{tab:ood_summary} summarizes the results at $K=1$, $\text{nprobe}=1$.
+
+% \begin{table}[t]
+% \centering
+% \caption{Out-of-distribution ANNS Recall@1 at $K=1$, nprobe=1. Bold marks the best result in each row. EGA achieves the highest recall across all three OOD benchmarks and is the only adapter that consistently outperforms the frozen CLIP baseline.}
+% \label{tab:ood_summary}
+% \small
+% \begin{tabular}{lcccc}
+% \hline
+% Dataset          & CLIP   & ICon   & SRL    & EGA (Ours) \\
+% \hline
+% CIFAR-10         & 0.617  & 0.788  & 0.831  & \textbf{0.858} \\
+% FGVC-Aircraft    & 0.773  & 0.875  & 0.863  & \textbf{0.898} \\
+% Food-101         & 0.842  & 0.811  & 0.827  & \textbf{0.886} \\
+% \hline
+% \end{tabular}
+% \end{table}
+
+% The generalization capabilities of EGA are evaluated on the CIFAR-10 dataset, providing a rigorous out-of-distribution (OOD) test since all models were trained exclusively on CIFAR-100. Figure~\ref{fig:generalization_recall} illustrates the recall performance across varying nprobe values and K settings. EGA consistently maintains a dominant lead over all baselines, including recent state-of-the-art methods like ICon~\cite{alshammariunifying} and SRL~\cite{dong2025improve}. 
+
+% At a minimum search budget of nprobe=1, EGA achieves a Recall@1 of 0.858, significantly outperforming SRL (0.831) and ICon (0.788). As shown in the inset zooms, EGA continues to hold a clear advantage even at nprobe=10, where other models begin to saturate. A key observation is the efficiency gain provided by our method: EGA achieves a recall level at nprobe=5 that matches or exceeds the performance of supervised baselines at nprobe=10. This indicates that the manifold smoothing provided by EGA effectively doubles the search efficiency in unseen data environments by creating a more index-friendly geometric structure.
+
+% \begin{figure}[t]
+%     \centering
+%     \includegraphics[width=\linewidth]{fig/cifar10_generalization_recall.pdf}
+%     \caption{Recall@K versus nprobe tradeoff on CIFAR-10. EGA maintains a consistent lead over baselines, demonstrating strong OOD generalization.}
+%     \label{fig:generalization_recall}
+% \end{figure}
+
+% To further validate the robustness of EGA under fine-grained domain shifts, we extend our evaluation to the FGVC Aircraft dataset. 
+% Figure~\ref{fig:aircraft} visually corroborates that EGA remains the only method capable of scaling zero-shot retrieval performance on fine-grained domains without destroying the underlying manifold.
+% In this setting, models are trained on 80 known aircraft categories and tested on 20 strictly unseen categories. For a fair comparison, all baseline methods are restricted to training identical lightweight MLP adapters on top of frozen CLIP features, thereby eliminating the parameter advantage of end-to-end backbone fine-tuning.
+% The empirical results reveal a stark contrast in spatial preservation capabilities. Global contrastive and structural regularization methods, such as ICon and SRL, suffer severe performance degradation when confined to a lightweight adapter bottleneck. Specifically, at $K=1$ and nprobe=1, the recall for ICon and SRL collapses to 0.422 and 0.440 respectively, falling significantly below the original frozen CLIP baseline of 0.773. This phenomenon indicates that global contrastive objectives aggressively distort the latent manifold of unseen fine-grained categories when the representation capacity is constrained. 
+% Conversely, EGA exhibits exceptional stability and generalization, elevating the recall to 0.898 under the exact same adapter constraints. By leveraging local geometric anchors rather than forcing global distributions, EGA successfully compresses class-specific clusters while maintaining the structural integrity of the broader semantic space. 
+
+% \begin{figure}[t]
+%     \centering
+%     \includegraphics[width=\linewidth]{fig/aircraft_recall.pdf}
+%     \caption{Recall versus nprobe tradeoff on 20 unseen FGVC Aircraft classes.}
+%     \label{fig:aircraft}
+% \end{figure}
+
+% To comprehensively evaluate the versatility of EGA across diverse fine-grained domains, we extend our evaluation to the Food-101 dataset. 
+% Figure~\ref{fig:food} visually corroborates that EGA remains the only method capable of scaling zero-shot retrieval performance on fine-grained domains without destroying the underlying manifold.
+% In this setting, models are trained on 80 known food categories and tested on 21 strictly unseen categories. For a fair comparison, all baseline methods are restricted to training identical lightweight MLP adapters on top of frozen CLIP features, thereby eliminating the parameter advantage of end-to-end backbone fine-tuning.
+% The empirical results reveal a stark contrast in spatial preservation capabilities, particularly given the strong pre-trained representations of common food items. Global contrastive and structural regularization methods, such as ICon and SRL, suffer performance degradation when confined to a lightweight adapter bottleneck. Specifically, at $K=1$ and nprobe=1, the ANNS Recall@1 for ICon and SRL drops to 0.811 and 0.827 respectively, falling below the frozen CLIP baseline of 0.842. This phenomenon indicates that global contrastive objectives aggressively distort the already well-structured latent manifold of unseen categories when the representation capacity is constrained. 
+% Conversely, EGA exhibits exceptional stability and generalization, achieving the highest ANNS Recall@1 of 0.886 under the exact same adapter constraints. By leveraging local geometric anchors rather than forcing global distributions, EGA successfully compresses class-specific clusters while maintaining the structural integrity of the broader semantic space, significantly enhancing retrieval efficiency even on a highly optimized baseline manifold.
+
+% \begin{figure}[t]
+%     \centering
+%     \includegraphics[width=\linewidth]{fig/food_recall.pdf}
+%     \caption{Recall versus nprobe tradeoff on 21 unseen Food-101 classes.}
+%     \label{fig:food}
+% \end{figure}
+
+% % ─────────────────────────────────────────────────────────────────────────────
+% % Section 4.7: Mechanistic Analysis
+% % Place after Section 4.6 (OOD Generalization) and before Ablation Study
+% % Requires: \usepackage{graphicx}, \usepackage{booktabs} in preamble
+% % Figure file: paper/fig/mechanism_sparse_gradient.pdf
+% % ─────────────────────────────────────────────────────────────────────────────
 
 \subsection{Out-of-Distribution Generalization}
 
 We now turn to the central empirical claim of this paper: under strict OOD settings where evaluation categories are disjoint from training categories, EGA achieves the highest ANNS Recall@1 across all three benchmarks. Table~\ref{tab:ood_summary} summarizes the results at $K=1$, $\text{nprobe}=1$.
 
-\begin{table}[t]
+% \begin{table}[t]
+% \centering
+% \caption{Out-of-distribution ANNS Recall@1 at $K=1$, nprobe=1. Bold marks the best result in each row. EGA achieves the highest recall across all three OOD benchmarks and is the only adapter that consistently outperforms the frozen CLIP baseline.}
+% \label{tab:ood_summary}
+% \small
+% \begin{tabular}{lcccc}
+% \hline
+% Dataset          & CLIP   & ICon   & SRL    & EGA (Ours) \\
+% \hline
+% CIFAR-10         & 0.617  & 0.788  & 0.831  & \textbf{0.858} \\
+% FGVC-Aircraft    & 0.773  & 0.875  & 0.863  & \textbf{0.898} \\
+% Food-101         & 0.842  & 0.811  & 0.827  & \textbf{0.886} \\
+% \hline
+% \end{tabular}
+% \end{table}
+\begin{wraptable}{r}{0.50\textwidth}
+\vspace{-1em}
 \centering
-\caption{Out-of-distribution ANNS Recall@1 at $K=1$, nprobe=1. Bold marks the best result in each row. EGA achieves the highest recall across all three OOD benchmarks and is the only adapter that consistently outperforms the frozen CLIP baseline.}
+\caption{Out-of-distribution ANNS Recall@1 at $K=1$, nprobe=1. Bold marks the best result.}
 \label{tab:ood_summary}
 \small
 \begin{tabular}{lcccc}
 \hline
-Dataset          & CLIP   & ICon   & SRL    & EGA (Ours) \\
+Dataset          & CLIP   & ICon   & SRL    & EGA \\
 \hline
 CIFAR-10         & 0.617  & 0.788  & 0.831  & \textbf{0.858} \\
 FGVC-Aircraft    & 0.773  & 0.875  & 0.863  & \textbf{0.898} \\
 Food-101         & 0.842  & 0.811  & 0.827  & \textbf{0.886} \\
 \hline
 \end{tabular}
-\end{table}
-
-The generalization capabilities of EGA are evaluated on the CIFAR-10 dataset, providing a rigorous out-of-distribution (OOD) test since all models were trained exclusively on CIFAR-100. Figure~\ref{fig:generalization_recall} illustrates the recall performance across varying nprobe values and K settings. EGA consistently maintains a dominant lead over all baselines, including recent state-of-the-art methods like ICon~\cite{alshammariunifying} and SRL~\cite{dong2025improve}. 
-
-At a minimum search budget of nprobe=1, EGA achieves a Recall@1 of 0.858, significantly outperforming SRL (0.831) and ICon (0.788). As shown in the inset zooms, EGA continues to hold a clear advantage even at nprobe=10, where other models begin to saturate. A key observation is the efficiency gain provided by our method: EGA achieves a recall level at nprobe=5 that matches or exceeds the performance of supervised baselines at nprobe=10. This indicates that the manifold smoothing provided by EGA effectively doubles the search efficiency in unseen data environments by creating a more index-friendly geometric structure.
+\vspace{-1em}
+\end{wraptable}
+The generalization capabilities of EGA are evaluated on the CIFAR-10 dataset, providing a rigorous out-of-distribution (OOD) test since all models were trained exclusively on CIFAR-100. Figure~\ref{fig:generalization_recall} illustrates the recall performance across varying nprobe values and K settings. EGA consistently maintains a dominant lead over all baselines, including recent state-of-the-art methods like ICon~\cite{alshammariunifying} and SRL~\cite{dong2025improve}. At a minimum search budget of nprobe=1, EGA achieves a Recall@1 of 0.858, significantly outperforming SRL (0.831) and ICon (0.788). As shown in the inset zooms, EGA continues to hold a clear advantage even at nprobe=10. A key observation is the efficiency gain: EGA achieves a recall level at nprobe=5 that matches or exceeds the performance of supervised baselines at nprobe=10, indicating that the manifold smoothing provided by EGA effectively doubles the search efficiency in unseen data environments.
 
 \begin{figure}[t]
     \centering
@@ -520,24 +595,18 @@ At a minimum search budget of nprobe=1, EGA achieves a Recall@1 of 0.858, signif
     \label{fig:generalization_recall}
 \end{figure}
 
-To further validate the robustness of EGA under fine-grained domain shifts, we extend our evaluation to the FGVC Aircraft dataset. 
-Figure~\ref{fig:aircraft} visually corroborates that EGA remains the only method capable of scaling zero-shot retrieval performance on fine-grained domains without destroying the underlying manifold.
-In this setting, models are trained on 80 known aircraft categories and tested on 20 strictly unseen categories. For a fair comparison, all baseline methods are restricted to training identical lightweight MLP adapters on top of frozen CLIP features, thereby eliminating the parameter advantage of end-to-end backbone fine-tuning.
-The empirical results reveal a stark contrast in spatial preservation capabilities. Global contrastive and structural regularization methods, such as ICon and SRL, suffer severe performance degradation when confined to a lightweight adapter bottleneck. Specifically, at $K=1$ and nprobe=1, the recall for ICon and SRL collapses to 0.422 and 0.440 respectively, falling significantly below the original frozen CLIP baseline of 0.773. This phenomenon indicates that global contrastive objectives aggressively distort the latent manifold of unseen fine-grained categories when the representation capacity is constrained. 
-Conversely, EGA exhibits exceptional stability and generalization, elevating the recall to 0.898 under the exact same adapter constraints. By leveraging local geometric anchors rather than forcing global distributions, EGA successfully compresses class-specific clusters while maintaining the structural integrity of the broader semantic space. 
+To further validate the robustness of EGA under fine-grained domain shifts, we extend our evaluation to the FGVC-Aircraft and Food-101 datasets. In both settings, models are trained on known categories and tested on strictly unseen categories (20 unseen aircraft classes and 21 unseen food classes, respectively). For a fair comparison, all baseline methods are restricted to training identical lightweight MLP adapters on top of frozen CLIP features.
+
+The empirical results reveal a consistent pattern. Global contrastive methods (ICon and SRL) suffer severe performance degradation when confined to a lightweight adapter bottleneck. On FGVC-Aircraft, their Recall@1 collapses to 0.422 and 0.440 respectively—well below the frozen CLIP baseline of 0.773. On Food-101, they drop to 0.811 and 0.827, falling below the frozen baseline of 0.842. This indicates that global contrastive objectives aggressively distort the latent manifold of unseen fine-grained categories when the representation capacity is constrained.
+
+In contrast, EGA exhibits exceptional stability and generalization on both datasets. It achieves the highest Recall@1 of 0.898 on FGVC-Aircraft and 0.886 on Food-101 under the exact same adapter constraints. By leveraging local geometric anchors rather than forcing global distributions, EGA successfully compresses class-specific clusters while maintaining the structural integrity of the broader semantic space, significantly enhancing retrieval efficiency even on highly optimized baseline manifolds.
 
 \begin{figure}[t]
     \centering
     \includegraphics[width=\linewidth]{fig/aircraft_recall.pdf}
-    \caption{Recall versus nprobe tradeoff on 20 unseen FGVC Aircraft classes.}
+    \caption{Recall versus nprobe tradeoff on 20 unseen FGVC-Aircraft classes.}
     \label{fig:aircraft}
 \end{figure}
-
-To comprehensively evaluate the versatility of EGA across diverse fine-grained domains, we extend our evaluation to the Food-101 dataset. 
-Figure~\ref{fig:food} visually corroborates that EGA remains the only method capable of scaling zero-shot retrieval performance on fine-grained domains without destroying the underlying manifold.
-In this setting, models are trained on 80 known food categories and tested on 21 strictly unseen categories. For a fair comparison, all baseline methods are restricted to training identical lightweight MLP adapters on top of frozen CLIP features, thereby eliminating the parameter advantage of end-to-end backbone fine-tuning.
-The empirical results reveal a stark contrast in spatial preservation capabilities, particularly given the strong pre-trained representations of common food items. Global contrastive and structural regularization methods, such as ICon and SRL, suffer performance degradation when confined to a lightweight adapter bottleneck. Specifically, at $K=1$ and nprobe=1, the ANNS Recall@1 for ICon and SRL drops to 0.811 and 0.827 respectively, falling below the frozen CLIP baseline of 0.842. This phenomenon indicates that global contrastive objectives aggressively distort the already well-structured latent manifold of unseen categories when the representation capacity is constrained. 
-Conversely, EGA exhibits exceptional stability and generalization, achieving the highest ANNS Recall@1 of 0.886 under the exact same adapter constraints. By leveraging local geometric anchors rather than forcing global distributions, EGA successfully compresses class-specific clusters while maintaining the structural integrity of the broader semantic space, significantly enhancing retrieval efficiency even on a highly optimized baseline manifold.
 
 \begin{figure}[t]
     \centering
@@ -545,13 +614,6 @@ Conversely, EGA exhibits exceptional stability and generalization, achieving the
     \caption{Recall versus nprobe tradeoff on 21 unseen Food-101 classes.}
     \label{fig:food}
 \end{figure}
-
-% ─────────────────────────────────────────────────────────────────────────────
-% Section 4.7: Mechanistic Analysis
-% Place after Section 4.6 (OOD Generalization) and before Ablation Study
-% Requires: \usepackage{graphicx}, \usepackage{booktabs} in preamble
-% Figure file: paper/fig/mechanism_sparse_gradient.pdf
-% ─────────────────────────────────────────────────────────────────────────────
 
 \subsection{Mechanistic Analysis: Gradient Sparsity as OOD Protection}
 \label{sec:mechanism}
@@ -588,6 +650,16 @@ toward the clusters of seen classes that they happen to resemble in CLIP's
 original metric, rather than toward other unseen samples that share their
 true category.
 
+\begin{wrapfigure}{r}{0.52\textwidth}
+\vspace{-1em}
+\centering
+\includegraphics[width=0.98\linewidth]{fig/mechanism_sparse_gradient.pdf}
+\caption{Gradient sparsity as OOD protection.
+% Left: Active triplet ratio decays to 3.5\% at convergence (96.5\% zero-gradient). Right: ICon/SRL fall below frozen CLIP baseline on unseen classes; EGA improves it.
+}
+\label{fig:mechanism}
+\vspace{-1em}
+\end{wrapfigure}
 Figure~\ref{fig:mechanism} (right) quantifies the consequence on FGVC Aircraft,
 where all models are trained on 80 seen classes and evaluated strictly on 20 unseen
 classes. ICon and SRL collapse to label precision of $0.423$ and $0.441$,
@@ -596,23 +668,23 @@ dense gradient updates actively harm zero-shot retrieval. EGA, by contrast,
 improves to $0.548$ while modifying only $3.5\%$ of the embedding geometry at
 convergence.
 
-\begin{figure}[t]
-    \centering
-    \includegraphics[width=\linewidth]{fig/mechanism_sparse_gradient.pdf}
-    \caption{
-        \textbf{Gradient sparsity as the mechanism behind EGA's OOD generalization.}
-        \textbf{Left:} Active triplet ratio during training on 80 seen FGVC
-        Aircraft classes. By epoch~150, only $3.5\%$ of triplets produce non-zero
-        gradients, leaving $96.5\%$ of the embedding space---including unseen class
-        regions---structurally unchanged from CLIP.
-        \textbf{Right:} Label Precision@1 at $\text{nprobe}{=}1$ on 20 strictly
-        unseen classes. ICon and SRL, which produce dense gradient fields
-        throughout training, both collapse \emph{below} the frozen CLIP baseline.
-        EGA's sparse updates preserve the pretrained manifold and improve retrieval
-        on unseen categories.
-    }
-    \label{fig:mechanism}
-\end{figure}
+% \begin{figure}[t]
+%     \centering
+%     \includegraphics[width=\linewidth]{fig/mechanism_sparse_gradient.pdf}
+%     \caption{
+%         Gradient sparsity as the mechanism behind EGA's OOD generalization.
+%         % \textbf{Left:} Active triplet ratio during training on 80 seen FGVC
+%         % Aircraft classes. By epoch~150, only $3.5\%$ of triplets produce non-zero
+%         % gradients, leaving $96.5\%$ of the embedding space---including unseen class
+%         % regions---structurally unchanged from CLIP.
+%         % \textbf{Right:} Label Precision@1 at $\text{nprobe}{=}1$ on 20 strictly
+%         % unseen classes. ICon and SRL, which produce dense gradient fields
+%         % throughout training, both collapse \emph{below} the frozen CLIP baseline.
+%         % EGA's sparse updates preserve the pretrained manifold and improve retrieval
+%         % on unseen categories.
+%     }
+%     \label{fig:mechanism}
+% \end{figure}
 
 This analysis points to a key distinction in adapter design for foundation models:
 \textbf{dense global objectives reshape the embedding space according to
@@ -623,18 +695,60 @@ fall below the frozen CLIP baseline entirely, suggesting that adapter training
 under global objectives can actively harm zero-shot retrieval rather than simply
 failing to improve it.
 
-\subsection{Ablation Study}
+% \subsection{Ablation Study}
 
-We perform a comprehensive ablation study on the CIFAR 100 dataset to verify the effectiveness of our design components. The results are summarized in Table~\ref{tab:ablation}. Each architectural choice contributes to the structural integrity of the calibrated manifold.
+% We perform a comprehensive ablation study on the CIFAR 100 dataset to verify the effectiveness of our design components. The results are summarized in Table~\ref{tab:ablation}. Each architectural choice contributes to the structural integrity of the calibrated manifold.
 
-The residual connection is the most essential part of the design. When the residual connection is removed, the accuracy collapses from 0.7015 to 0.0065. This failure proves that the EGA adapter should refine the existing semantic space rather than replace it. Without this shortcut, the lightweight MLP cannot reconstruct the complex semantic relationships from limited training data. 
+% The residual connection is the most essential part of the design. When the residual connection is removed, the accuracy collapses from 0.7015 to 0.0065. This failure proves that the EGA adapter should refine the existing semantic space rather than replace it. Without this shortcut, the lightweight MLP cannot reconstruct the complex semantic relationships from limited training data. 
 
-L2 normalization is also necessary for stable search performance. Its removal leads to a performance loss of approximately 4.2 percent. This confirms that the hypersphere constraint is vital for consistent distance metrics in vector similarity search. Finally, the zero initialization strategy provides a 1.7 percent gain. By starting the adapter as an identity mapping, the model preserves pre trained knowledge at the beginning of the process, which provides a superior starting point for manifold smoothing.
+% L2 normalization is also necessary for stable search performance. Its removal leads to a performance loss of approximately 4.2 percent. This confirms that the hypersphere constraint is vital for consistent distance metrics in vector similarity search. Finally, the zero initialization strategy provides a 1.7 percent gain. By starting the adapter as an identity mapping, the model preserves pre trained knowledge at the beginning of the process, which provides a superior starting point for manifold smoothing.
+
+% \begin{table}[t]
+% \centering
+% \caption{Ablation study of EGA components on CIFAR-100.}
+% \label{tab:ablation}
+% \begin{tabular}{lc}
+% \hline
+% Variant & Accuracy \\ \hline
+% Full EGA (Ours) & 0.7015 \\
+% w/o Residual connection & 0.0065 \\
+% w/o Zero-initialization & 0.6840 \\
+% w/o L2-normalization & 0.6590 \\ \hline
+% \end{tabular}
+% \end{table}
+
+% \subsection{Hyperparameter Sensitivity Analysis}
+
+% The internal stability of EGA is evaluated by varying the triplet margin $m$ and the hidden dimension $d$ of the adapter. As presented in Table~\ref{tab:sensitivity}, our method demonstrates a consistent performance plateau across a broad range of settings. 
+
+% The results for $K=5$ indicate that EGA maintains high retrieval quality even when the margin $m$ fluctuates. While the $K=1$ metric shows sensitivity to larger margin values, the overall stability of the manifold is preserved. This trend suggests that a moderate margin setting, specifically between 0.1 and 0.3, is optimal for calibrating fine grained latent spaces. Furthermore, the performance remains nearly identical as the hidden dimension $d$ scales from 512 to 4096. This observation confirms that the geometric correction provided by EGA is structural in nature and does not rely on massive parameter counts.
+
+% \begin{table}[htbp]
+% \centering
+% \caption{Sensitivity of retrieval performance to different hyperparameter configurations on CIFAR 100.}
+% \label{tab:sensitivity}
+% \begin{tabular}{lcccc}
+% \hline
+% Triplet Margin $m$ & 0.1 & 0.2 & 0.3 & 0.5 \\ \hline
+% Recall@1 & 0.8420 & 0.8180 & 0.8160 & 0.7400 \\
+% Recall@5 & 0.9782 & 0.9654 & 0.9610 & 0.9125 \\ \hline
+% Hidden Dimension $d$ & 512 & 1024 & 2048 & 4096 \\ \hline
+% Recall@1 & 0.8300 & 0.8340 & 0.8200 & 0.8240 \\
+% Recall@5 & 0.9695 & 0.9712 & 0.9680 & 0.9688 \\ \hline
+% \end{tabular}
+% \end{table}
+
+\subsection{Ablation and Sensitivity Analysis}
+
+We perform ablation and hyperparameter sensitivity studies on CIFAR-100 to verify the effectiveness and stability of EGA. The results are summarized side-by-side in Table~\ref{tab:ablation} and Table~\ref{tab:sensitivity}.
 
 \begin{table}[t]
 \centering
-\caption{Ablation study of EGA components on CIFAR-100.}
+\begin{minipage}{0.38\textwidth}
+\centering
+\caption{Ablation study of EGA}
 \label{tab:ablation}
+\small
 \begin{tabular}{lc}
 \hline
 Variant & Accuracy \\ \hline
@@ -643,18 +757,13 @@ w/o Residual connection & 0.0065 \\
 w/o Zero-initialization & 0.6840 \\
 w/o L2-normalization & 0.6590 \\ \hline
 \end{tabular}
-\end{table}
-
-\subsection{Hyperparameter Sensitivity Analysis}
-
-The internal stability of EGA is evaluated by varying the triplet margin $m$ and the hidden dimension $d$ of the adapter. As presented in Table~\ref{tab:sensitivity}, our method demonstrates a consistent performance plateau across a broad range of settings. 
-
-The results for $K=5$ indicate that EGA maintains high retrieval quality even when the margin $m$ fluctuates. While the $K=1$ metric shows sensitivity to larger margin values, the overall stability of the manifold is preserved. This trend suggests that a moderate margin setting, specifically between 0.1 and 0.3, is optimal for calibrating fine grained latent spaces. Furthermore, the performance remains nearly identical as the hidden dimension $d$ scales from 512 to 4096. This observation confirms that the geometric correction provided by EGA is structural in nature and does not rely on massive parameter counts.
-
-\begin{table}[htbp]
+\end{minipage}
+\hfill
+\begin{minipage}{0.61\textwidth}
 \centering
-\caption{Sensitivity of retrieval performance to different hyperparameter configurations on CIFAR 100.}
+\caption{Sensitivity of different hyperparameters}
 \label{tab:sensitivity}
+\small
 \begin{tabular}{lcccc}
 \hline
 Triplet Margin $m$ & 0.1 & 0.2 & 0.3 & 0.5 \\ \hline
@@ -664,46 +773,18 @@ Hidden Dimension $d$ & 512 & 1024 & 2048 & 4096 \\ \hline
 Recall@1 & 0.8300 & 0.8340 & 0.8200 & 0.8240 \\
 Recall@5 & 0.9695 & 0.9712 & 0.9680 & 0.9688 \\ \hline
 \end{tabular}
+\end{minipage}
 \end{table}
+
+The residual connection is the most critical component—removing it causes accuracy to collapse from 0.7015 to 0.0065. L2 normalization and zero-initialization also contribute positively. EGA maintains high retrieval quality across a wide range of margin values (0.1–0.3 optimal) and hidden dimensions (512–4096), confirming that the geometric correction is structural in nature and does not rely on massive parameter counts or carefully tuned hyperparameters.
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-We have shown that the standard practice of training retrieval adapters with
-global contrastive objectives carries a previously unexamined cost: it actively
-harms retrieval performance on categories absent from adapter training. Through
-controlled comparisons on FGVC Aircraft, we demonstrated that state-of-the-art
-methods such as ICon and SRL push label precision on unseen classes \emph{below}
-the frozen CLIP baseline, while reshaping the embedding space according to
-seen-class similarities.
-
-Our proposed adapter, EGA, addresses this failure mode through a different
-optimization regime rather than a different architecture. By combining a
-zero-initialized residual structure, $\ell_2$ normalization, and a small-margin
-triplet loss, EGA converges to a sparse-gradient regime in which 96.5\% of
-training triplets contribute zero gradient at steady state. Across CIFAR-10, CIFAR-100, FGVC-Aircraft, and Food-101, EGA achieves the highest ANNS Recall@1 over both the frozen baseline and the strongest competing adapters, with the largest gains appearing exactly where global methods fail on strictly unseen categories.
-
-The broader implication of our analysis is that not all retrieval improvements
-are robust to distribution shift. Methods that compress seen-class clusters most
-aggressively are not necessarily the methods that generalize best. We suggest
-that gradient sparsity at convergence is a useful diagnostic for predicting how an adapter will behave on
-unseen data, and that adapter design for foundation models should be evaluated
-under explicit OOD settings rather than in-distribution benchmarks alone.
+We have shown that global contrastive adapter training harms OOD retrieval performance, pushing unseen-class accuracy below the frozen baseline. EGA resolves this fundamental tension by converging to a sparse-gradient regime in which 96.5\% of training triplets contribute zero gradient at steady state. Across CIFAR-10, CIFAR-100, FGVC-Aircraft, and Food-101, EGA achieves the highest ANNS Recall@1 on all benchmarks and is the only adapter that consistently outperforms the frozen CLIP baseline on unseen categories. These results suggest that gradient sparsity at convergence is a useful design principle for building retrieval adapters that remain robust under distribution shift.
 
 \paragraph{Limitations.}
-Our analysis has three notable limitations. First, our empirical study focuses
-exclusively on visual representations from CLIP; while the gradient sparsity
-mechanism is loss-function-specific rather than modality-specific, validation on
-text and multimodal retrieval (e.g., Sentence-BERT, BLIP) remains future work.
-Second, EGA requires labeled supervision on seen categories to construct the
-class-aware triplet graph; fully unsupervised variants that derive positives from
-the pretrained kNN structure are an open direction. Third, our gradient sparsity
-analysis (Proposition~\ref{prop:sparsity}) characterizes what happens to unseen
-regions assuming they remain disjoint from seen-class neighborhoods in the
-embedding space; when seen and unseen categories overlap heavily in the
-pretrained metric, even sparse local updates can affect unseen samples
-indirectly. Quantifying this overlap-dependence is a question for future
-analysis.
+Our study centers on visual representations from CLIP. Extending EGA to text and multimodal models, exploring unsupervised variants, and understanding how overlap between seen and unseen categories affects manifold preservation present avenues for future investigation.
 
 \bibliography{ref}
 \bibliographystyle{plain}
