@@ -542,17 +542,17 @@ updates actively harm zero-shot semantic retrieval. EGA, by contrast, improves
 on Aircraft and CIFAR-10 while modifying only $3.5\%$ of the embedding geometry
 at convergence.
 
-This analysis points to a key distinction in adapter design for foundation models:
-\textbf{when paired with sufficient capacity, dense global objectives reshape
-the embedding space according to seen-class similarities, projecting unseen
-samples onto the resulting structure; sparse local objectives leave the
-pretrained semantic relationships among unseen samples intact}. The contrast
-is dramatic on the high-capacity EGAMLP architecture: ICon and SRL fall well
-below the frozen CLIP baseline on Label Precision, while EGA preserves or
-improves it. As discussed in Section~\ref{sec:eval}, restricting adapter
-capacity (e.g., via low-rank LoRA) is an alternative way to mitigate the
-collapse, suggesting that capacity and loss sparsity are complementary
-mechanisms for OOD robustness.
+% This analysis points to a key distinction in adapter design for foundation models:
+% \textbf{when paired with sufficient capacity, dense global objectives reshape
+% the embedding space according to seen-class similarities, projecting unseen
+% samples onto the resulting structure; sparse local objectives leave the
+% pretrained semantic relationships among unseen samples intact}. The contrast
+% is dramatic on the high-capacity EGAMLP architecture: ICon and SRL fall well
+% below the frozen CLIP baseline on Label Precision, while EGA preserves or
+% improves it. As discussed in Section~\ref{sec:eval}, restricting adapter
+% capacity (e.g., via low-rank LoRA) is an alternative way to mitigate the
+% collapse, suggesting that capacity and loss sparsity are complementary
+% mechanisms for OOD robustness.
 
 \subsection{Ablation and Sensitivity Analysis}
 
@@ -697,10 +697,10 @@ split:
     \item \textbf{SRL}~\cite{dong2025improve}: a structural regularization
     objective jointly optimizing batch-wide uniformity and within-class
     homogeneity, also instantiated on the EGAMLP architecture.
-    \item \textbf{LoRA~+~InfoNCE}: a low-rank adapter (rank $r=8$,
+    \item \textbf{LoRA~+~InfoNCE}~\cite{hu2022lora,oord2018representation}: a low-rank adapter (rank $r=8$,
     $\alpha=16$, $\sim$8K parameters) with zero-initialized residual structure,
     trained with supervised InfoNCE---a standard global contrastive loss.
-    \item \textbf{LoRA~+~Triplet}: identical low-rank architecture as above,
+    \item \textbf{LoRA~+~Triplet}~\cite{hu2022lora}: identical low-rank architecture as above,
     but trained with the same small-margin ($m=0.2$) triplet loss as EGA.
 \end{itemize}
 The two LoRA configurations isolate the effect of architectural capacity vs.
