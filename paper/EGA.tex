@@ -39,14 +39,14 @@
 \maketitle
 
 \begin{abstract}
-	We study how lightweight adapters trained on top of frozen vision-language encoders behave under distribution shift, and identify a structural in-distribution/out-of-distribution (ID/OOD) tradeoff among existing adapter training paradigms.
-	Global contrastive objectives such as ICon and SRL, when paired with high-capacity adapters, achieve near-perfect in-distribution Label Precision on CIFAR-100 ($0.999$ and $0.992$ at $K=1$, $\text{nprobe}=1$) but collapse to $0.562$ and $0.552$ on the unseen classes of Food-101: a $44$ percentage point inversion between the two scenarios.
-	Low-capacity alternatives such as LoRA avoid this collapse but underperform substantially in-distribution.
-	We propose \emph{Euclidean Geodesic Alignment (EGA)}, a residual adapter trained with a small-margin triplet loss on the class-aware neighborhood graph of pre-trained embeddings.
-	EGA converges to a sparse-gradient scheme in which $96.5\%$ of training triplets produce zero gradient at steady state, thus preserving the pre-trained semantic structure for unseen categories while still permitting high-capacity in-distribution refinement.
-	Across CIFAR-100 (ID) and three OOD benchmarks (CIFAR-10, FGVC-Aircraft, Food-101), the six methods we evaluate trace out a Pareto frontier in the (ID, OOD) Label Precision plane.
-	EGA occupies a distinct operating point on this frontier, combining the highest in-distribution Label Precision among adapters that avoid OOD collapse with bounded OOD degradation across all three benchmarks.
-	Methods that exceed EGA's in-distribution precision (ICon, SRL) collapse on OOD by up to $33$ percentage points; low-capacity LoRA variants achieve competitive OOD on stable benchmarks but underperform EGA in-distribution by $4$ to $9$ percentage points.
+We study how lightweight adapters trained on top of frozen vision-language encoders behave under distribution shift, and identify a structural in-distribution/out-of-distribution (ID/OOD) tradeoff among existing adapter training paradigms.
+Global contrastive objectives such as ICon and SRL, when paired with high-capacity adapters, achieve near-perfect in-distribution Label Precision on CIFAR-100 ($0.999$ and $0.992$ at $K=1$, $\text{nprobe}=1$) but collapse to $0.562$ and $0.552$ on the unseen classes of Food-101: a $44$ percentage point inversion between the two scenarios.
+Low-capacity alternatives such as LoRA avoid this collapse but underperform substantially in-distribution.
+We propose \emph{Euclidean Geodesic Alignment (EGA)}, a residual adapter trained with a small-margin triplet loss on the class-aware neighborhood graph of pre-trained embeddings.
+EGA converges to a sparse-gradient scheme in which $96.5\%$ of training triplets produce zero gradient at steady state, thus preserving the pre-trained semantic structure for unseen categories while still permitting high-capacity in-distribution refinement.
+Across CIFAR-100 (ID) and three OOD benchmarks (CIFAR-10, FGVC-Aircraft, Food-101), the six methods we evaluate trace out a Pareto frontier in the (ID, OOD) Label Precision plane.
+EGA occupies a distinct operating point on this frontier, combining the highest in-distribution Label Precision among adapters that avoid OOD collapse with bounded OOD degradation across all three benchmarks.
+Methods that exceed EGA's in-distribution precision (ICon, SRL) collapse on OOD by up to $33$ percentage points; low-capacity LoRA variants achieve competitive OOD on stable benchmarks but underperform EGA in-distribution by $4$ to $9$ percentage points.
 \end{abstract}
 
 \section{Introduction}

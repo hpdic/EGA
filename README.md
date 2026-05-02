@@ -55,6 +55,7 @@ python ./scripts/SRL/03_eval_recall_srl_cifar10.py
 python ./scripts/09_visualize_transfer.py
 python ./scripts/10_ablation.py
 python ./scripts/11_sensitivity.py
+# There is an increasing list of scripts for more analyses, please check the `scripts` directory for the latest updates.
 
 ############
 # Aircraft #
