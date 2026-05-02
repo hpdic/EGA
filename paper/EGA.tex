@@ -23,7 +23,7 @@
 \newtheorem{proposition}{Proposition}
 \newcommand{\don}[1]{\textcolor{blue}{[Dongfang: #1]}}
 
-\title{When Adapter Training Hurts: Manifold Preservation for Vector Retrieval}
+\title{Euclidean Geodesic Alignment: Mitigating the ID-OOD Tradeoff in Adapter Tuning for Retrieval}
 
 \author{%
   Dongfang Zhao \\
@@ -605,7 +605,7 @@ Recall@5 & 0.9695 & 0.9712 & 0.9680 & 0.9688 \\ \hline
 \end{minipage}
 \end{table}
 
-Table~\ref{tab:ablation} isolates the contribution of each architectural component. The residual connection is the core element. Removing it causes accuracy to collapse from 0.7015 to 0.0065. This collapse indicates that the adapter cannot reconstruct semantic relationships from target data alone and must operate as a refinement over the pre-trained features. The L2 normalization ensures the transformed embeddings remain on the unit hypersphere. Removing this constraint decreases accuracy to 0.6590. Zero-initialization allows the adapter to begin training as an identity mapping. Removing it lowers accuracy to 0.6840.
+Table~\ref{tab:ablation} isolates the contribution of each architectural component. The residual connection is the core element. Removing it causes accuracy to collapse from 0.7015 to 0.0065. This indicates that the adapter cannot reconstruct semantic relationships from target data alone and must operate as a refinement over the pre-trained features. The L2 normalization ensures the transformed embeddings remain on the unit hypersphere. Removing it decreases accuracy to 0.6590. Zero-initialization allows the adapter to begin training as an identity mapping; removing it lowers accuracy to 0.6840.
 
 Table~\ref{tab:sensitivity} evaluates model stability across hyperparameter variations. EGA maintains consistent retrieval quality across margin values from 0.1 to 0.3. Increasing the margin to 0.5 degrades Recall@1 to 0.7400. A larger margin forces the adapter to update embeddings that already satisfy local neighborhood constraints, which reduces gradient sparsity and alters the pre-trained manifold. Furthermore, the model shows stable performance across hidden dimensions ranging from 512 to 4096. This stability confirms that EGA achieves metric correction through its structural design rather than specific parameter capacities.
 
@@ -614,10 +614,13 @@ Table~\ref{tab:sensitivity} evaluates model stability across hyperparameter vari
 
 We have shown that lightweight adapter training over frozen CLIP does not produce uniformly improved retrieval embeddings, but instead lands different methods at different points along an in-distribution/out-of-distribution Pareto frontier. High-capacity adapters trained with global contrastive objectives (ICon, SRL) reach near-perfect Label Precision on CIFAR-100 ($0.999$, $0.992$) but collapse below the frozen baseline by $32$ to $36$ percentage points on Food-101. Low-capacity LoRA adapters avoid this collapse but underperform substantially in-distribution. EGA, our proposed manifold-preserving adapter, occupies a balanced Pareto-optimal position: it reaches $0.851$ in-distribution Label Precision while improving over the frozen baseline on two of three OOD benchmarks and bounding the degradation on the third. The mechanism is gradient sparsity at convergence, i.e., $96.5\%$ of training triplets produce zero gradient at steady state, which permits high-capacity in-distribution refinement while leaving most of the embedding space, including regions occupied by unseen categories, largely unmodified.
 
-% The broader observation is that adapter design choices for foundation-model retrieval should be evaluated on the joint (ID, OOD) frontier rather than on either axis in isolation. Methods that compress seen-class clusters most aggressively are not necessarily the methods that generalize best, and methods that generalize best are not necessarily the methods that refine seen classes most precisely. Gradient sparsity at convergence is a measurable training-time property that predicts where an adapter will land on this frontier, and we suggest it as a useful diagnostic for future adapter design.
+The broader observation is that adapter design choices for foundation-model retrieval should be evaluated on the joint (ID, OOD) frontier rather than on either axis in isolation. 
+Methods that compress seen-class clusters most aggressively are not necessarily the methods that generalize best, and methods that generalize best are not necessarily the methods that refine seen classes most precisely. 
+Gradient sparsity at convergence is a measurable training-time property that predicts where an adapter will land on this frontier, and we suggest it as a useful diagnostic for future adapter design.
 
-\paragraph{Limitations.}
-This study focuses on visual representations from CLIP. Future work will extend EGA to text and multimodal models, explore unsupervised variants, and more rigorously disentangle the joint role of adapter capacity and loss sparsity in shaping the ID/OOD Pareto frontier.
+% \paragraph{Limitations.}
+% This study focuses on visual representations from CLIP. 
+% Future work will explore unsupervised variants and more rigorously disentangle the joint role of adapter capacity and loss sparsity in shaping the ID/OOD Pareto frontier.
 
 \bibliography{ref}
 \bibliographystyle{plain}
