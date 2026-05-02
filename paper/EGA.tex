@@ -38,25 +38,11 @@
 \maketitle
 
 \begin{abstract}
-Adapting pre-trained vision-language models for vector retrieval typically relies
-on global contrastive objectives, which optimize semantic alignment across all
-training categories simultaneously. We identify a fundamental limitation of this
-approach: when applied through lightweight adapters, global objectives produce
-dense gradient fields that systematically distort the latent manifold of unseen
-categories, causing out-of-distribution~(OOD) retrieval performance to collapse
-below the frozen baseline. To address this, we propose \textbf{Euclidean Geodesic
-Alignment~(EGA)}, a residual adapter trained with a small-margin triplet loss on
-the class-aware neighborhood graph of pre-trained embeddings. By operating locally
-rather than globally, EGA converges to a sparse-gradient regime in which 96.5\% of
-training triplets produce zero gradient at steady state, leaving the broader
-embedding space---including regions occupied by unseen categories---structurally
-intact. 
-Extensive evaluations on CIFAR-10, CIFAR-100, FGVC-Aircraft, and Food-101 demonstrate that EGA consistently outperforms global contrastive methods including ICon and SRL across both in-distribution and OOD settings. 
-On strictly unseen categories, EGA improves Label Precision over the frozen baseline on Aircraft and CIFAR-10 and bounds the degradation on Food-101, while ICon and SRL fall below the frozen baseline by up to $36$ percentage points.
+Adapting pre-trained vision-language models for vector retrieval typically relies on global contrastive objectives, which optimize semantic alignment across all training categories simultaneously. We identify a fundamental limitation of this approach: when applied through lightweight adapters, global objectives produce dense gradient fields that systematically distort the latent manifold of unseen categories, causing out-of-distribution (OOD) retrieval performance to collapse below the frozen baseline. Although parameter-efficient low-rank adapters such as LoRA largely preserve performance when trained with global losses like InfoNCE or triplet objectives due to their capacity bottleneck, they do not exploit local sparse updates to the same extent. To address this, we propose Euclidean Geodesic Alignment (EGA), a residual adapter trained with a small-margin triplet loss on the class-aware neighborhood graph of pre-trained embeddings. By operating locally rather than globally, EGA converges to a sparse-gradient state in which 96.5\% of training triplets produce zero gradient at steady state, leaving the broader embedding space, including regions occupied by unseen categories, structurally intact. Extensive evaluations on CIFAR-10, CIFAR-100, FGVC-Aircraft, and Food-101 demonstrate that EGA consistently outperforms global contrastive methods including ICon and SRL across both in-distribution and OOD settings while also surpassing or matching the LoRA+InfoNCE and LoRA+Triplet baselines. On strictly unseen categories, EGA improves Label Precision over the frozen baseline on Aircraft and CIFAR-10 and bounds the degradation on Food-101, while ICon and SRL fall below the frozen baseline by up to 36\%.
 \end{abstract}
 
 \section{Introduction}
-
+\don{TODO}
 Modern retrieval systems built on foundation models such as CLIP~\cite{clip_icml21}
 face a fundamental challenge: the pretrained encoder is general-purpose, but each
 downstream retrieval task requires embeddings tuned to its own category structure.
@@ -108,21 +94,21 @@ general design principle for retrieval adapters built on foundation models.
 This paper makes the following contributions:
 
 \begin{itemize}
-    \item \textbf{Phenomenon.} We identify a fundamental in-distribution/OOD
+    \item We identify a fundamental in-distribution/OOD
     tradeoff in global contrastive adapter training: while global objectives
     achieve higher geometric compression on seen categories, they produce
     dense gradient fields that systematically distort the pretrained manifold
     of unseen categories, causing retrieval performance to fall below the
     frozen CLIP baseline on out-of-distribution data.
 
-    \item \textbf{Method.} We propose EGA, a lightweight residual adapter
+    \item We propose EGA, a lightweight residual adapter
     combining zero initialization, $\ell_2$ normalization, and a small-margin
     triplet loss. By restricting optimization to locally violated neighborhood
     constraints, EGA refines the pretrained embedding space without destroying
     its global semantic structure, simultaneously improving retrieval quality
     on seen categories and preserving manifold integrity for unseen ones.
 
-    \item \textbf{Mechanism and evaluation.} We provide a mechanistic explanation grounded in gradient sparsity: EGA's triplet objective converges to a regime where $96.5\%$ of training triplets contribute zero gradient, leaving unseen class regions structurally unchanged from CLIP. We validate this mechanism empirically and demonstrate through evaluations on three OOD benchmarks (CIFAR-10, FGVC-Aircraft, Food-101) that ICon and SRL fall below the frozen CLIP baseline in Label Precision on every dataset---catastrophically so on Food-101, where they degrade by $32$--$36$ percentage points---while EGA improves Label Precision on Aircraft and CIFAR-10 with bounded degradation on Food-101.
+    \item We provide a mechanistic explanation grounded in gradient sparsity: EGA's triplet objective converges to a regime where $96.5\%$ of training triplets contribute zero gradient, leaving unseen class regions structurally unchanged from CLIP. We validate this mechanism empirically and demonstrate through evaluations on three OOD benchmarks (CIFAR-10, FGVC-Aircraft, Food-101) that ICon and SRL fall below the frozen CLIP baseline in Label Precision on every dataset---catastrophically so on Food-101, where they degrade by $32$--$36$ percentage points---while EGA improves Label Precision on Aircraft and CIFAR-10 with bounded degradation on Food-101.
 \end{itemize}
 
 \section{Related Work}
