@@ -1,0 +1,6 @@
+modifyLineBreaks:
+  oneSentencePerLine:
+    manipulateSentences: 1          # 开启句子换行
+    removeSentenceLineBreaks: 1     # 移除句子内部的换行
+    multipleSpacesToSingle: 1
+    textWrapSentences: 0            # 不要再按宽度自动折行
