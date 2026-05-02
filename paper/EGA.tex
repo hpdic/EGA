@@ -1,7 +1,7 @@
 \documentclass{article}
 
-\usepackage[preprint]{neurips_2026}
-% \usepackage{neurips_2026}
+% \usepackage[preprint]{neurips_2026}
+\usepackage{neurips_2026}
 \usepackage[utf8]{inputenc} % allow utf-8 input
 \usepackage[T1]{fontenc}    % use 8-bit T1 fonts
 \usepackage{hyperref}       % hyperlinks
@@ -438,10 +438,10 @@ ICon and SRL achieve near-perfect Label Precision on CIFAR-100 ($0.999$ and $0.9
 The frozen baseline and LoRA variants sit at the opposite extreme: modest in-distribution precision ($0.55$ to $0.67$) but stable performance under distribution shift.
 EGA occupies a balanced position: $0.705$ in-distribution and $0.791$ on Food-101, with $0.611$ on Aircraft and $0.810$ on CIFAR-10.
 
-The six methods we evaluate trace out a Pareto frontier in the (ID Label Precision, OOD Label Precision) plane (Figure~\ref{fig:pareto}).
+The six methods we evaluate trace out a Pareto frontier in the (ID Label Precision, OOD Label Precision) plane, in Figure~\ref{fig:pareto}.
+The dashed line interpolates between non-dominated points (those for which no other method achieves both higher ID and higher OOD Label Precision).
 ICon and SRL achieve the highest in-distribution precision but collapse on OOD; the LoRA variants achieve competitive OOD precision on Food-101 and CIFAR-10 but underperform EGA in-distribution by $4$ to $9$ percentage points.
-EGA occupies a distinct operating point on this frontier, combining the highest in-distribution precision among adapters that avoid OOD collapse with bounded OOD degradation across all three benchmarks.
-Different operating points on this frontier correspond to different practical tradeoffs.
+EGA occupies a distinct operating point on this frontier, combining the highest in-distribution precision among adapters that avoid OOD collapse with bounded OOD degradation.
 
 \begin{figure}[t]
     \centering
@@ -481,14 +481,14 @@ Both produce \emph{dense} gradient fields in every training step: every sample p
 This global optimization pressure shapes the entire embedding distribution based on seen-class similarities, even for regions of the space occupied by unseen-class samples.
 The result is not loss of geometric structure but rather loss of \emph{semantically correct} structure: unseen samples are pulled toward the clusters of seen classes that they happen to resemble in CLIP's original metric, rather than toward other unseen samples that share their true category.
 
-\begin{wrapfigure}{r}{0.57\textwidth}
-	% \vspace{-1em}
+\begin{wrapfigure}{r}{0.59\textwidth}
+	\vspace{-1em}
 	\centering
 	\includegraphics[width=1\linewidth]{fig/mechanism_sparse_gradient.pdf}
 	\caption{Gradient sparsity as OOD protection.
 	}
 	\label{fig:mechanism}
-	% \vspace{-1em}
+	\vspace{-1em}
 \end{wrapfigure}
 Figure~\ref{fig:mechanism} (right) and Table~\ref{tab:ood_summary} together quantify the consequence: across all three OOD benchmarks, ICon and SRL fall below the frozen CLIP baseline on Label Precision (e.g., on Aircraft, ICon collapses to $0.470$ from a baseline of $0.512$), confirming that combining dense gradient fields with high adapter capacity harms zero-shot semantic retrieval.
 EGA, by contrast, improves Label Precision over the frozen baseline on Aircraft and bounds the degradation on the other two OOD benchmarks, while only $3.5\%$ of training triplets contribute non-zero gradients at convergence.
@@ -539,6 +539,8 @@ EGA combines high capacity with sparse local updates, occupying a different poin
 			Recall@5             & 0.9695 & 0.9712 & 0.9680 & 0.9688 \\ \hline
 		\end{tabular}
 	\end{minipage}
+    	\vspace{-1em}
+
 \end{table}
 
 Table~\ref{tab:ablation} isolates the contribution of each architectural component.
