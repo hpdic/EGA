@@ -39,14 +39,10 @@
 \maketitle
 
 \begin{abstract}
-We study how lightweight adapters trained on top of frozen vision-language encoders behave under distribution shift, and identify a structural in-distribution/out-of-distribution (ID/OOD) tradeoff among existing adapter training paradigms.
-Global contrastive objectives such as ICon and SRL, when paired with high-capacity adapters, achieve near-perfect in-distribution Label Precision on CIFAR-100 ($0.999$ and $0.992$ at $K=1$, $\text{nprobe}=1$) but collapse to $0.562$ and $0.552$ on the unseen classes of Food-101: a $44$ percentage point inversion between the two scenarios.
-Low-capacity alternatives such as LoRA avoid this collapse but underperform substantially in-distribution.
-We propose \emph{Euclidean Geodesic Alignment (EGA)}, a residual adapter trained with a small-margin triplet loss on the class-aware neighborhood graph of pre-trained embeddings.
-EGA converges to a sparse-gradient scheme in which $96.5\%$ of training triplets produce zero gradient at steady state, thus preserving the pre-trained semantic structure for unseen categories while still permitting high-capacity in-distribution refinement.
-Across CIFAR-100 (ID) and three OOD benchmarks (CIFAR-10, FGVC-Aircraft, Food-101), the six methods we evaluate trace out a Pareto frontier in the (ID, OOD) Label Precision plane.
-EGA occupies a distinct operating point on this frontier, combining the highest in-distribution Label Precision among adapters that avoid OOD collapse with bounded OOD degradation across all three benchmarks.
-Methods that exceed EGA's in-distribution precision (ICon, SRL) collapse on OOD by up to $33$ percentage points; low-capacity LoRA variants achieve competitive OOD on stable benchmarks but underperform EGA in-distribution by $4$ to $9$ percentage points.
+We study how lightweight adapters trained on top of frozen vision-language encoders behave under distribution shift. We identify a structural in-distribution/out-of-distribution (ID/OOD) tradeoff among existing adapter training paradigms. Global contrastive objectives such as ICon and SRL, when paired with high-capacity adapters, achieve near-perfect in-distribution Label Precision on CIFAR-100 (0.999 and 0.992 at K=1, nprobe=1) but collapse to 0.562 and 0.552 on the unseen classes of Food-101, a 44 percentage point drop. Low-capacity alternatives such as LoRA avoid this collapse but underperform substantially in-distribution.
+We propose Euclidean Geodesic Alignment (EGA), a residual adapter trained with a small-margin triplet loss on the class-aware neighborhood graph of pre-trained embeddings. EGA converges to a sparse-gradient scheme in which 96.5 percent of training triplets produce zero gradient at steady state. This design preserves the pre-trained semantic structure for unseen categories while enabling high-capacity in-distribution refinement.
+Across CIFAR-100 (ID) and three OOD benchmarks (CIFAR-10, FGVC-Aircraft, Food-101), the six methods we evaluate trace out a Pareto frontier in the (ID, OOD) Label Precision plane. EGA occupies a distinct operating point on this frontier, offering the highest in-distribution Label Precision among adapters that avoid OOD collapse together with bounded OOD degradation. These benefits generalize to stronger backbones: on DINOv2-large and SigLIP SO400M, EGA improves Label Precision@1 by 4.75 and 8.55 percentage points.
+
 \end{abstract}
 
 \section{Introduction}
@@ -62,6 +58,7 @@ We propose Euclidean Geodesic Alignment (EGA), a manifold-preserving adapter tha
 We evaluate EGA on CIFAR-100 (in-distribution) and three OOD benchmarks (CIFAR-10, FGVC-Aircraft, Food-101), comparing against the frozen CLIP baseline, global contrastive adapters (ICon, SRL), and two LoRA configurations (LoRA+InfoNCE, LoRA+Triplet).
 The six methods trace out a Pareto frontier in the (ID, OOD) Label Precision plane.
 EGA occupies a distinct operating point on this frontier: it reaches $0.705$ in-distribution Label Precision (within $30$ percentage points of the ICon/SRL ceiling and $4$ to $9$ percentage points above the LoRA variants), while improving over the frozen baseline on Aircraft ($+9.9$ pp) and bounding the degradation on CIFAR-10 ($-7.0$ pp) and Food-101 ($-9.0$ pp, versus $-32$ to $-33$ pp for ICon and SRL on Food-101).
+These benefits generalize consistently from the classic CLIP model~\cite{clip_icml21} to more recentbackbones: on DINOv2-large~\cite{oquab2024dinov} and SigLIP~\cite{10377550}, EGA further improves Label Precision@1 by $4.75$ and $8.55$ percentage points, respectively.
 Different points on this frontier suit different deployment scenarios: applications that prioritize in-distribution precision benefit from EGA's balanced position, while applications dominated by OOD queries may prefer the higher OOD precision of low-capacity LoRA variants at the cost of in-distribution refinement.
 
 In summary, this work makes the following contributions:
@@ -75,40 +72,30 @@ In summary, this work makes the following contributions:
 \label{sec:lit}
 
 \paragraph{Manifold Preservation under Adapter Tuning}
-Foundation models such as CLIP~\cite{clip_icml21} produce embedding spaces whose structure encodes both seen class semantics and a broader prior over visual concepts not observed during downstream training.
-Catastrophic forgetting has been studied extensively in continual and incremental learning settings~\cite{lanza2026degradationfeaturespacecontinual, xue2025protocol}.
-Recent work has documented analogous degradation phenomena specific to contrastive representations: anisotropic collapse into narrow conic regions~\cite{zhao-etal-2024-representation, gao-etal-2021-simcse}, structural fracturing under modality gap~\cite{10656738, eslami2025mitigate}, and loss of compositional structure under aggressive optimization~\cite{pal2025compositional, savietto2026geometryrepresentationalfailuresvision, 11093676}.
-To counter these degradations, recent adaptation strategies impose explicit geometric constraints such as orthogonality regularization~\cite{ricci2026boldsymbollambdaorthogonality} or restrict optimization to limited subspaces.
+Foundation models such as CLIP~\cite{clip_icml21} produce embedding spaces that encode both seen-class semantics and broader priors over unseen visual concepts. 
+Catastrophic forgetting has been studied extensively in continual learning~\cite{lanza2026degradationfeaturespacecontinual, xue2025protocol}, while recent work documents analogous degradation in contrastive representations, including anisotropic collapse~\cite{zhao-etal-2024-representation, gao-etal-2021-simcse}, modality gap fracturing~\cite{10656738, eslami2025mitigate}, and loss of compositional structure~\cite{pal2025compositional, savietto2026geometryrepresentationalfailuresvision, 11093676}. 
+Recent strategies counter these issues with geometric constraints such as orthogonality regularization~\cite{ricci2026boldsymbollambdaorthogonality}.
 \emph{EGA leverages the inherent sparsity of triplet loss optimization to confine adapter updates to local neighborhoods of seen classes, leaving the unseen class regions of the pretrained manifold structurally unmodified.}
 
 \paragraph{Global Contrastive Objectives and Structural Regularization}
-Recent advancements in representation learning often rely on global contrastive objectives to optimize the latent space~\cite{sui2026unicon, koromilas2025principledframeworkmultiviewcontrastive}.
-A common paradigm involves jointly enforcing alignment for positive pairs and uniformity for the overall feature distribution~\cite{10.5555/3524938.3525859}, a strategy applied across various domains including graph encoders~\cite{10.1609/aaai.v38i14.29479} and multimodal recommendation systems~\cite{zhou2025cm3calibratingmultimodalrecommendation}.
-While pushing embeddings toward a uniform distribution enhances robustness to background noise~\cite{wu2026pca}, it inherently assumes that all latent regions require the same degree of global scattering.
-To further refine complex distributions, structural regularization techniques introduce auxiliary constraints.
-For instance, methods like ICon formulate a unifying framework to systematically align multi view representations~\cite{alshammariunifying}, while geometric constraints are leveraged to improve imbalanced regression tasks~\cite{dong2025improve}.
-Other approaches attempt to decouple the learning objectives~\cite{kim2025decoupledcontrastivelearningfederated} or apply information theoretic regularizers~\cite{Zhang_2025_ICCV} to control the density of the learned representations.
-Furthermore, region based distillation techniques have been proposed to enhance fine grained understanding~\cite{jing2024fineclip}.
+Recent representation learning frequently relies on global contrastive objectives to optimize the latent space~\cite{sui2026unicon, koromilas2025principledframeworkmultiviewcontrastive}. 
+A common paradigm jointly enforces alignment for positive pairs and uniformity across the feature distribution~\cite{10.5555/3524938.3525859}, a strategy applied in graph encoders~\cite{10.1609/aaai.v38i14.29479} and multimodal recommendation~\cite{zhou2025cm3calibratingmultimodalrecommendation}. 
+While uniformity improves robustness to noise~\cite{wu2026pca}, it assumes uniform treatment of all latent regions. 
+Auxiliary structural regularizers include unifying frameworks for multi-view alignment~\cite{alshammariunifying}, geometric constraints for imbalanced regression~\cite{dong2025improve}, decoupled objectives~\cite{kim2025decoupledcontrastivelearningfederated}, information-theoretic density control~\cite{Zhang_2025_ICCV}, and region-based distillation~\cite{jing2024fineclip}.
 \emph{EGA replaces dense global optimization with sparse local triplet updates, preserving out of distribution semantic structure.}
 
 \paragraph{Parameter-Efficient Manifold Adaptation}
-Parameter efficient adaptation emerged as a standard to prevent catastrophic forgetting and reduce computational overhead when transferring large foundation models~\cite{pmlr-v97-houlsby19a, hu2022lora}.
-This paradigm has extensively shifted towards vision language models, dominating recent literature due to the prohibitive cost of full scale fine tuning~\cite{lin2025visionlanguagemodelssurvey}.
-Methods such as Visual Prompt Tuning~\cite{10.1007/978-3-031-19827-4_41} and Tip Adapter demonstrate that lightweight tuning can effectively specialize representations for downstream tasks without altering the frozen backbone~\cite{10.1007/978-3-031-19833-5_29}.
-Furthermore, extensive benchmarking confirms that parameter efficient techniques can rival full fine tuning while preserving the generalizable representations of the foundation model~\cite{sharma2025benchmarking}.
-To further protect the pre trained manifold during initial training steps, zero initialization strategies have proven highly effective.
-For instance, conditional control mechanisms in image generation initialize adapter weights to zero, ensuring the model behaves exactly like the frozen base model before any optimization occurs~\cite{10377881}.
+Parameter-efficient adaptation has become the standard approach to prevent catastrophic forgetting and reduce computational cost when transferring large foundation models~\cite{pmlr-v97-houlsby19a, hu2022lora}. 
+This paradigm now dominates vision-language research due to the prohibitive cost of full fine-tuning~\cite{lin2025visionlanguagemodelssurvey}. 
+Lightweight methods such as Visual Prompt Tuning~\cite{10.1007/978-3-031-19827-4_41} and Tip Adapter~\cite{10.1007/978-3-031-19833-5_29} enable effective specialization without modifying the frozen backbone, and extensive benchmarks show they can rival full fine-tuning while preserving generalization~\cite{sharma2025benchmarking}. 
+Zero-initialization strategies further protect the pretrained manifold~\cite{10377881}.
 \emph{EGA integrates a zero initialized residual adapter with a localized geometric objective, achieving both parameter efficiency and targeted manifold smoothing.}
 
 \paragraph{Vector Similarity Search and Metric Consistency}
-Vector similarity search is the foundational engine for retrieving high dimensional representations at scale.
-The systems community has developed highly optimized indexing algorithms to handle billion scale datasets.
-Foundational works such as FAISS leverage hardware acceleration for fast similarity search~\cite{johnson2019billion}, and Hierarchical Navigable Small World graphs establish the core topology for efficient approximate retrieval~\cite{malkov2018efficient}.
-Meanwhile, hybrid structures like DiskANN and SPANN achieve exceptional speed by efficiently managing memory and disk hierarchies~\cite{subramanya2019diskann, chen2021spann}.
-Recent advancements continue to refine these topologies, exploring crossing sparse proximity graphs~\cite{NEURIPS2024_bab1486c} and analyzing the theoretical constructions of navigable graphs for high dimensional nearest neighbor search~\cite{NEURIPS2024_6dc63b40}.
-Furthermore, system level studies optimize retrieval latency and stability by aligning best first search algorithms with solid state drives~\cite{osdi25pipeann} and enabling direct insertions in large scale indices~\cite{fast26odinann}.
-To reduce the computational cost of exact distance calculations during the retrieval phase, approximation techniques such as low rank matrix factorization have also been introduced to accelerate inner product evaluations~\cite{jaasaari2024lorann}.
-However, extensive theoretical analyses reveal that popular approximate nearest neighbor implementations still face severe worst case performance limitations~\cite{NEURIPS2023_d0ac28b7}.
+Vector similarity search is the foundational engine for scalable high-dimensional retrieval. 
+The systems community has developed highly optimized indexing algorithms for billion-scale datasets, including FAISS~\cite{johnson2019billion}, Hierarchical Navigable Small World graphs~\cite{malkov2018efficient}, DiskANN~\cite{subramanya2019diskann}, and SPANN~\cite{chen2021spann}. 
+Recent work refines graph topologies~\cite{NEURIPS2024_bab1486c, NEURIPS2024_6dc63b40}, optimizes SSD-based search~\cite{osdi25pipeann, fast26odinann}, and accelerates distance computations~\cite{jaasaari2024lorann}. 
+Nevertheless, popular ANN implementations still suffer from severe worst-case limitations~\cite{NEURIPS2023_d0ac28b7}.
 \emph{EGA proactively recalibrates the metric manifold prior to index construction, enabling standard search backends to achieve superior semantic recall without requiring complex algorithmic reengineering.}
 
 \section{Methodology}
@@ -585,11 +572,12 @@ As shown in Table~\ref{tab:ega_backbones}, EGA delivers consistent improvements 
 \section{Conclusion}
 \label{sec:conclusion}
 
-Adapter training over frozen embedding model does not produce uniformly improved retrieval embeddings; it instead places different methods at different points on an in-distribution/out-of-distribution Pareto frontier.
-ICon and SRL reach near-perfect Label Precision on CIFAR-100 ($0.999$, $0.992$) but collapse $32$ to $33$ percentage points below the frozen baseline on Food-101, while low-capacity LoRA adapters avoid this collapse at the cost of substantial in-distribution underperformance.
-EGA occupies a distinct point on this frontier, reaching $0.705$ in-distribution Label Precision while bounding OOD degradation to $-7$ to $-9$ percentage points.
-The mechanism is gradient sparsity at convergence ($96.5\%$ of training triplets produce zero gradient at steady state), which we suggest as a useful diagnostic for future adapter design.
-A more rigorous disentanglement of capacity and sparsity contributions, along with extension to other backbones, is left for future work.
+Adapter training over frozen embedding models does not produce uniformly improved retrieval embeddings. Instead, different methods occupy different points on an in-distribution/out-of-distribution Pareto frontier. 
+ICon and SRL reach near-perfect Label Precision on CIFAR-100 ($0.999$, $0.992$) but collapse $32$ to $33$ percentage points below the frozen baseline on Food-101, while low-capacity LoRA adapters avoid this collapse at the cost of substantial in-distribution underperformance. 
+EGA occupies a distinct point on this frontier, reaching $0.705$ in-distribution Label Precision while bounding OOD degradation to $-7$ to $-9$ percentage points. 
+These benefits generalize consistently to stronger vision backbones: on DINOv2-large and SigLIP, EGA further improves Label Precision@1 by $4.75$ and $8.55$ percentage points, respectively. 
+The underlying mechanism is gradient sparsity at convergence ($96.5\%$ of training triplets produce zero gradient at steady state), which we suggest as a useful diagnostic for future adapter design. 
+A more rigorous disentanglement of capacity and sparsity contributions is left for future work.
 
 \bibliography{ref}
 \bibliographystyle{plain}
@@ -637,6 +625,12 @@ A more rigorous disentanglement of capacity and sparsity contributions, along wi
 
 \section{Experimental Setup Details}
 \label{sec:more_experiments}
+
+\paragraph{Backbones.}
+All experiments in the main paper use frozen CLIP ViT-B/32~\cite{clip_icml21} image embeddings as the base representation.
+To verify that EGA's benefits are not specific to this backbone, we further evaluate EGA on two stronger vision encoders: DINOv2-large~\cite{oquab2024dinov} and SigLIP~\cite{10377550}.
+DINOv2-large is a self-supervised vision transformer trained on 142M images, while SigLIP is a supervised vision transformer trained on 400M image-text pairs.
+Both models produce higher-quality embeddings than CLIP ViT-B/32, as reflected in their stronger raw retrieval performance, and EGA continues to provide meaningful improvements on top of these stronger backbones, as shown in Table~\ref{tab:ega_backbones} in Section~\ref{sec:ablation}.
 
 \paragraph{Datasets.}
 We evaluate on four datasets covering both in-distribution and OOD retrieval scenarios.
