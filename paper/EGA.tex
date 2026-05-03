@@ -493,10 +493,10 @@ The result is not loss of geometric structure but rather loss of \emph{semantica
 Figure~\ref{fig:mechanism} (right) and Table~\ref{tab:ood_summary} together quantify the consequence: across all three OOD benchmarks, ICon and SRL fall below the frozen CLIP baseline on Label Precision (e.g., on Aircraft, ICon collapses to $0.470$ from a baseline of $0.512$), confirming that combining dense gradient fields with high adapter capacity harms zero-shot semantic retrieval.
 EGA, by contrast, improves Label Precision over the frozen baseline on Aircraft and bounds the degradation on the other two OOD benchmarks, while only $3.5\%$ of training triplets contribute non-zero gradients at convergence.
 
-The LoRA variants in Section~\ref{sec:ood} reveal a complementary mechanism.
-LoRA~+~InfoNCE uses a dense global loss but pairs it with a rank-$8$ low-capacity adapter ($\sim$8K parameters); despite the dense gradient, it avoids the OOD collapse exhibited by ICon and SRL.
-This indicates that gradient sparsity is one of (at least) two mechanisms that prevent OOD collapse in adapter tuning: the other is restricting adapter capacity so that dense gradients have less room to reshape unseen-class geometry.
-EGA combines high capacity with sparse local updates, occupying a different point on the Pareto frontier than the low-capacity LoRA variants.
+% The LoRA variants in Section~\ref{sec:ood} reveal a complementary mechanism.
+% LoRA~+~InfoNCE uses a dense global loss but pairs it with a rank-$8$ low-capacity adapter ($\sim$8K parameters); despite the dense gradient, it avoids the OOD collapse exhibited by ICon and SRL.
+% This indicates that gradient sparsity is one of (at least) two mechanisms that prevent OOD collapse in adapter tuning: the other is restricting adapter capacity so that dense gradients have less room to reshape unseen-class geometry.
+% EGA combines high capacity with sparse local updates, occupying a different point on the Pareto frontier than the low-capacity LoRA variants.
 % We do not claim that gradient sparsity alone is necessary for
 % OOD stability; instead, we identify it as a measurable training-time
 % property that permits high-capacity in-distribution refinement while
@@ -557,6 +557,30 @@ Increasing the margin to 0.5 degrades Recall@1 to 0.7400.
 A larger margin forces the adapter to update embeddings that already satisfy local neighborhood constraints, which reduces gradient sparsity and alters the pre-trained manifold.
 Furthermore, the model shows stable performance across hidden dimensions from 512 to 4096.
 This stability confirms that EGA achieves metric correction through its structural design rather than specific parameters.
+
+\subsection{Generalization to Stronger Backbones}
+
+To verify that the benefits of EGA are not specific to the CLIP ViT-B/32 backbone used in our main experiments, we further evaluate EGA on two stronger and more recent vision encoders: DINOv2-large~\cite{oquab2024dinov} and SigLIP~\cite{10377550}.
+
+\begin{wraptable}{r}{0.58\textwidth}
+\centering
+\vspace{-0.3cm}
+\caption{Retrieval performance on more backbones.}
+\label{tab:ega_backbones}
+\small
+\begin{tabular}{lcccc}
+\toprule
+\multirow{2}{*}{Backbone} & \multicolumn{2}{c}{Label Precision@1} & \multicolumn{2}{c}{ANNS Recall@1} \\
+\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+ & Raw & +EGA & Raw & +EGA \\
+\midrule
+CLIP ViT-B/32     & 0.5560 & \textbf{0.6955} & 0.6665 & \textbf{0.7985} \\
+DINOv2-large      & 0.8530 & \textbf{0.9005} & 0.8785 & \textbf{0.9310} \\
+SigLIP SO400M     & 0.7740 & \textbf{0.8595} & 0.8015 & \textbf{0.9155} \\
+\bottomrule
+\end{tabular}
+\end{wraptable}
+As shown in Table~\ref{tab:ega_backbones}, EGA delivers consistent improvements across all three backbones. On the relatively weaker CLIP ViT-B/32, EGA achieves substantial gains of +13.95 percentage points in Label Precision@1 and +13.20 percentage points in Recall@1. Even on the much stronger DINOv2-large and SigLIP backbones, EGA continues to provide meaningful and stable improvements (+4.75pp and +8.55pp in Label Precision@1, respectively). These results demonstrate that EGA's manifold-preserving design generalizes robustly to modern, high-capacity vision models and is not merely an artifact of the original CLIP representation.
 
 \section{Conclusion}
 \label{sec:conclusion}

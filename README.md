@@ -18,6 +18,8 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 pip install git+https://github.com/openai/CLIP.git
 pip install faiss-cpu
 pip install scikit-learn matplotlib umap-learn
+pip install transformers
+pip install accelerate
 pip install --upgrade pip
 
 touch ~/hpdic/EGA/models/__init__.py
@@ -75,6 +77,22 @@ cd ~/hpdic/EGA
 export PYTHONPATH=$PYTHONPATH:$(pwd)
 python scripts/Food/train_eval_food.py
 python scripts/Food/plot_food.py
+
+#############
+# Backbones #
+#############
+
+cd ~/hpdic/EGA
+export PYTHONPATH=$PYTHONPATH:$(pwd)
+cd ~/hpdic/EGA/scripts/moreBackbones
+python 01_extract_features_backbone.py --backbone dinov2-large
+python 02_train_ega_backbone.py --backbone dinov2-large
+python 03_eval_label_precision_backbone.py --backbone dinov2-large
+python 04_eval_anns_recall_backbone.py --backbone dinov2-large
+python 01_extract_features_backbone.py --backbone siglip
+python 02_train_ega_backbone.py --backbone siglip
+python 03_eval_label_precision_backbone.py --backbone siglip
+python 04_eval_anns_recall_backbone.py --backbone siglip
 ```
 
 ## Contact
