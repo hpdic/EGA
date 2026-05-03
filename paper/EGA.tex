@@ -25,7 +25,7 @@
 \newtheorem{observation}{Observation}
 \newcommand{\don}[1]{\textcolor{blue}{[Dongfang: #1]}}
 
-\title{EGA: Adapting Frozen Encoders for Vector Search without Reshaping Unseen-Class Geometry}
+\title{EGA: Adapting Frozen Encoders for Vector Search with Bounded OOD Degradation}
 
 \author{%
   Dongfang Zhao \\
@@ -40,14 +40,14 @@
 \maketitle
 
 \begin{abstract}
-	Vector similarity search systems built on frozen vision-language encoders routinely face queries from classes absent at adapter training time, since both the indexed database and the live query stream contain categories that were never labeled.
-	We study how lightweight adapters behave under this distribution shift, and find a consistent in-distribution/out-of-distribution (ID/OOD) tradeoff among existing training paradigms.
-	Global contrastive objectives such as ICon and SRL, when paired with high-capacity adapters, achieve near-perfect in-distribution Label Precision on CIFAR-100 (0.999 and 0.992 at K=1, nprobe=1) but collapse to 0.562 and 0.552 on the unseen classes of Food-101, a drop of 44 percentage points.
-	Low-capacity LoRA variants avoid this collapse but underperform substantially in-distribution.
-	We propose Euclidean Geodesic Alignment (EGA), a residual adapter trained with a small-margin triplet loss on the class-aware neighborhood graph of pre-trained embeddings.
-	EGA induces gradient sparsity at convergence (96.5\% of triplets produce zero gradient), empirically leaving the unseen-class geometry largely intact while permitting high-capacity in-distribution refinement.
-	Across CIFAR-100 (ID) and three OOD benchmarks (CIFAR-10, FGVC-Aircraft, Food-101), EGA reaches the highest in-distribution Label Precision among adapters that avoid OOD collapse (0.705 versus 0.6176 for capacity-matched LoRA at r=128), with bounded OOD degradation (-7 to -9 pp, versus -32 to -33 pp for ICon and SRL).
-	The benefits transfer to stronger backbones: on DINOv2-large and SigLIP, EGA improves Label Precision@1 by 4.75 and 8.55 percentage points.
+Vector similarity search systems built on frozen vision-language encoders routinely face queries from classes absent at adapter training time, since both the indexed database and the live query stream contain categories that were never labeled.
+We study how lightweight adapters behave under this distribution shift, and find a consistent in-distribution/out-of-distribution (ID/OOD) tradeoff among existing training paradigms.
+Global contrastive objectives such as ICon and SRL, when paired with high-capacity adapters, achieve near-perfect in-distribution Label Precision on CIFAR-100 (0.999 and 0.992 at K=1, nprobe=1) but collapse to 0.562 and 0.552 on the unseen classes of Food-101, a drop of 44 percentage points.
+Low-capacity LoRA variants avoid this collapse but underperform substantially in-distribution.
+We propose Euclidean Geodesic Alignment (EGA), a residual adapter trained with a small-margin triplet loss on the class-aware neighborhood graph of pre-trained embeddings.
+EGA induces gradient sparsity at convergence (96.5\% of triplets produce zero gradient), empirically leaving the unseen-class geometry largely intact while permitting high-capacity in-distribution refinement.
+Across CIFAR-100 (ID) and three OOD benchmarks (CIFAR-10, FGVC-Aircraft, Food-101), EGA reaches the highest in-distribution Label Precision among adapters that avoid OOD collapse (0.705 versus 0.6176 for capacity-matched LoRA at r=128), with bounded OOD degradation (-7 to -9 pp, versus -32 to -33 pp for ICon and SRL).
+The benefits transfer to stronger backbones: on DINOv2-large and SigLIP, EGA improves Label Precision@1 by 4.75 and 8.55 percentage points.
 \end{abstract}
 
 \section{Introduction}
@@ -112,7 +112,7 @@ In summary, this work makes the following contributions:
 
 % \paragraph{Manifold Behavior under Adapter Tuning}
 Foundation models such as CLIP~\cite{clip_icml21} produce embedding spaces that encode both seen-class semantics and broader priors over unseen visual concepts.
-Catastrophic forgetting has been studied extensively in continual learning~\cite{lanza2026degradationfeaturespacecontinual, xue2025protocol}, and recent work documents analogous degradation in contrastive representations, including anisotropic collapse~\cite{zhao-etal-2024-representation, gao-etal-2021-simcse}, modality gap fracturing~\cite{10656738, eslami2025mitigate}, and loss of compositional structure~\cite{pal2025compositional, savietto2026geometryrepresentationalfailuresvision, 11093676}.
+Related work has documented degradation phenomena in adapted representations~\cite{lanza2026degradationfeaturespacecontinual, xue2025protocol}, and recent work documents analogous degradation in contrastive representations, including anisotropic collapse~\cite{zhao-etal-2024-representation, gao-etal-2021-simcse}, modality gap fracturing~\cite{10656738, eslami2025mitigate}, and loss of compositional structure~\cite{pal2025compositional, savietto2026geometryrepresentationalfailuresvision, 11093676}.
 Recent strategies counter these issues with geometric constraints such as orthogonality regularization~\cite{ricci2026boldsymbollambdaorthogonality}.
 \emph{EGA exploits the gradient sparsity of small-margin triplet losses
 	to keep adapter updates concentrated on seen-class neighborhoods,
@@ -438,7 +438,7 @@ ICon and SRL achieve near-perfect Label Precision on CIFAR-100 ($0.999$ and $0.9
 The frozen baseline and LoRA variants sit at the opposite extreme, with modest in-distribution precision ($0.55$ to $0.67$) but stable performance under distribution shift.
 EGA sits between these extremes: $0.705$ in-distribution and $0.791$ on Food-101, $0.611$ on Aircraft, and $0.810$ on CIFAR-10.
 The six methods occupy distinct operating points in the (ID, OOD) Label Precision plane, shown in Figure~\ref{fig:pareto}; the dashed line connects the points that are not strictly dominated.
-ICon and SRL achieve the highest in-distribution precision but collapse on OOD, while LoRA variants achieve competitive OOD precision on Food-101 and CIFAR-10 but trail EGA in-distribution by 4--9 percentage points.
+ICon and SRL achieve the highest in-distribution precision but collapse on OOD, while LoRA variants achieve competitive OOD precision on Food-101 and CIFAR-10 but trail EGA in-distribution by 8.7 percentage points.
 
 \begin{figure}[t]
 	\centering
@@ -533,7 +533,7 @@ Whether either route subsumes the other under stronger conditions, for example b
 		\begin{tabular}{lc}
 			\hline
 			Variant                 & Accuracy \\ \hline
-			Full EGA (Ours)         & 0.7015   \\
+			Full EGA (Ours)         & 0.705   \\
 			w/o Residual connection & 0.0065   \\
 			w/o Zero-initialization & 0.6840   \\
 			w/o L2-normalization    & 0.6590   \\ \hline
