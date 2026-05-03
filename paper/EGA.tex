@@ -25,7 +25,7 @@
 \newtheorem{observation}{Observation}
 \newcommand{\don}[1]{\textcolor{blue}{[Dongfang: #1]}}
 
-\title{Euclidean Geodesic Alignment: Mitigating the ID-OOD Tradeoff in Adapter Tuning for Retrieval}
+\title{EGA: Adapting Frozen Encoders for Vector Search without Reshaping Unseen-Class Geometry}
 
 \author{%
   Dongfang Zhao \\
@@ -40,62 +40,103 @@
 \maketitle
 
 \begin{abstract}
-We study how lightweight adapters trained on top of frozen vision-language encoders behave under distribution shift. We identify an empirical in-distribution/out-of-distribution (ID/OOD) tradeoff among existing adapter training paradigms. Global contrastive objectives such as ICon and SRL, when paired with high-capacity adapters, achieve near-perfect in-distribution Label Precision on CIFAR-100 (0.999 and 0.992 at K=1, nprobe=1) but collapse to 0.562 and 0.552 on the unseen classes of Food-101, a 44 percentage point drop. Low-capacity alternatives such as LoRA avoid this collapse but underperform substantially in-distribution.
-We propose Euclidean Geodesic Alignment (EGA), a residual adapter trained with a small-margin triplet loss on the class-aware neighborhood graph of pre-trained embeddings. EGA converges to a sparse-gradient scheme in which 96.5 percent of training triplets produce zero gradient at steady state. This design preserves the pre-trained semantic structure for unseen categories while enabling high-capacity in-distribution refinement.
-Across CIFAR-100 (ID) and three OOD benchmarks (CIFAR-10, FGVC-Aircraft, Food-101), the six methods we evaluate trace out a Pareto frontier in the (ID, OOD) Label Precision plane. EGA occupies a distinct operating point on this frontier, offering the highest in-distribution Label Precision among adapters that avoid OOD collapse together with bounded OOD degradation. Even when LoRA capacity is matched to EGA ($r=128$, $\sim$4.2M parameters), its best in-distribution performance reaches only 0.6176, still 8.7 percentage points below EGA. 
-These benefits generalize to stronger backbones: on DINOv2-large and SigLIP, EGA improves Label Precision@1 by 4.75 and 8.55 percentage points.
+	Vector similarity search systems built on frozen vision-language encoders routinely face queries from classes absent at adapter training time: both the indexed database and the live query stream contain categories that were never labeled.
+	We study how lightweight adapters behave under this deployment-induced distribution shift, and find a consistent in-distribution/out-of-distribution (ID/OOD) tradeoff among existing training paradigms.
+	Global contrastive objectives such as ICon and SRL, when paired with high-capacity adapters, achieve near-perfect in-distribution Label Precision on CIFAR-100 (0.999 and 0.992 at K=1, nprobe=1) but collapse to 0.562 and 0.552 on the unseen classes of Food-101, a 44 percentage point drop.
+	Low-capacity alternatives such as LoRA avoid this collapse but underperform substantially in-distribution.
+	We propose Euclidean Geodesic Alignment (EGA), a residual adapter trained with a small-margin triplet loss on the class-aware neighborhood graph of pre-trained embeddings.
+	EGA's design induces gradient sparsity at convergence (96.5\% of training triplets produce zero gradient), which empirically preserves the pre-trained semantic structure for unseen categories while permitting high-capacity in-distribution refinement.
+	Across CIFAR-100 (ID) and three OOD benchmarks (CIFAR-10, FGVC-Aircraft, Food-101), the six methods we evaluate occupy distinct operating points in the (ID, OOD) Label Precision plane.
+	EGA reaches the highest in-distribution Label Precision among adapters that avoid OOD collapse (0.705 on CIFAR-100, vs.
+	0.6176 for capacity-matched LoRA at r=128), with
+	bounded OOD degradation (-7 to -9 pp on CIFAR-10 and Food-101, vs. -32
+	to -33 pp for ICon and SRL).
+	The benefits transfer to stronger backbones: on DINOv2-large and SigLIP, EGA improves Label Precision@1 by 4.75 and 8.55 percentage points respectively.
 \end{abstract}
 
 \section{Introduction}
 
-Modern retrieval systems increasingly rely on embedding models such as CLIP~\cite{clip_icml21} for their remarkable zero-shot semantic capabilities. These models provide highly generalizable latent spaces that serve as excellent starting points for vector similarity search~\cite{johnson2019billion}. When deploying these systems to specialized domains, practitioners often seek to further align the embeddings with domain-specific category structures to maximize retrieval accuracy. However, full-scale fine-tuning is computationally prohibitive and risks destroying the foundational zero-shot knowledge. As a result, parameter-efficient adaptation, i.e., training lightweight adapters on a labeled subset while keeping the massive pre-trained backbone frozen, has become the prevailing paradigm.
+A vector similarity search system deployed in production rarely operates on a fixed label space.
+A retailer indexes product images today and adds a new category line next month; a content platform builds an index over existing tags and continually ingests media from emerging topics; a scientific image database is annotated for known phenotypes and queried for ones discovered later.
+In such scenarios, the index and the query stream together cover a label space strictly larger than what was available at the time any model was trained or adapted.
 
-Yet this paradigm harbors a fundamental limitation that is frequently overlooked: retrieval systems must serve queries from \emph{unseen} categories that never appeared during adapter training. Both the database and the query stream inevitably contain classes absent from the labeled subset, and the adapter is expected to support meaningful retrieval over these unseen classes. Existing methods fail to meet this requirement. Global contrastive objectives such as ICon~\cite{alshammariunifying} and SRL~\cite{dong2025improve} aggressively optimize for seen-class structure by computing losses over the full pairwise similarity matrix, with no mechanism to preserve the embedding geometry of unseen categories. Low-rank adapters such as LoRA~\cite{hu2022lora} avoid catastrophic collapse on unseen classes but are inherently capacity-limited, resulting in weak in-distribution performance. Together, these approaches reveal a structural in-distribution/out-of-distribution (ID/OOD) tradeoff rather than delivering uniformly improved adapters.
+This deployment reality, in many cases, sits awkwardly with how adapters over frozen vision-language encoders are currently trained.
+The dominant paradigm takes a labeled subset, optimizes the embedding geometry to separate those classes, and ships the resulting adapter as a drop-in replacement for the frozen encoder's output.
+The implicit assumption is that geometry tightened for seen classes will, at worst, leave unseen-class geometry unchanged.
+We show this assumption fails systematically: high-capacity adapters trained with global contrastive objectives reshape the entire embedding distribution, pulling unseen-class samples toward whichever seen-class clusters they happen to resemble in the pre-trained metric.
+The retrieval system inherits this distortion silently: approximate nearest neighbor indices are still well-behaved geometrically, but the neighbors they return belong to the wrong semantic class.
 
-We demonstrate this tradeoff empirically. On in-distribution data (CIFAR-100), high-capacity global contrastive adapters achieve near-perfect Label Precision: ICon reaches $0.999$ and SRL reaches $0.992$ at $K=1$, $\text{nprobe}=1$. On the strictly unseen classes of Food-101, however, the same adapters collapse to $0.562$ and $0.552$, a drop of $44$ percentage points from their in-distribution scores and $32$ to $33$ percentage points below the frozen CLIP baseline. LoRA variants avoid this collapse but suffer a different limitation: their in-distribution Label Precision is bounded around $0.61$--$0.67$, substantially below what high-capacity adapters can achieve when overfitting is not penalized by distribution shift.
+Two design choices in current adapter training are responsible for this distortion.
+First, the loss function: global contrastive objectives such as ICon~\cite{alshammariunifying} and SRL~\cite{dong2025improve} compute gradients over the full pairwise similarity matrix in every step, so seen-class supervision exerts pressure across the entire embedding distribution rather than only on the regions occupied by labeled samples.
+Second, the adapter capacity: a sufficiently expressive adapter has the representational room to comply with that pressure, and zero-initialized residual designs do not by themselves prevent the cumulative perturbation from reaching unseen-class regions.
+Existing alternatives address one factor at a time.
+Low-rank adapters such as LoRA~\cite{hu2022lora} cap the second factor, which avoids the worst out-of-distribution (OOD) failures but limits in-distribution (ID) refinement, while keeping the global loss leaves the first factor untouched.
+We argue that adapters intended to operate under unseen-class queries should be designed against both factors at once.
 
-We propose Euclidean Geodesic Alignment (EGA), a residual adapter that strikes a Pareto-optimal balance between in-distribution precision and out-of-distribution robustness through sparse local updates. EGA admits three design choices: a zero-initialized residual structure, $\ell_2$ normalization, and a small-margin triplet loss on the class-aware neighborhood graph. The small-margin triplet loss induces a self-limiting dynamic: as the adapter converges on seen classes, the fraction of margin-violating triplets decays rapidly, reaching $96.5\%$ zero-gradient triplets at steady state. This allows the high-capacity architecture to tightly refine seen-class regions while staying largely inactive elsewhere, thereby protecting the pre-trained semantic structure of unseen categories from the dense global reshaping that causes ICon and SRL to fail on OOD data.
+The cost of failing on either factor is large.
+On in-distribution data (CIFAR-100), high-capacity global contrastive adapters achieve near-perfect Label Precision: ICon reaches $0.999$ and SRL reaches $0.992$ at $K=1$, $\text{nprobe}=1$.
+On the strictly unseen classes of Food-101, however, the same adapters collapse to $0.562$ and $0.552$, which is $44$ percentage points below their in-distribution scores and between $32$ and $33$ percentage points below the frozen CLIP baseline.
+LoRA variants avoid this collapse but pay for it in-distribution: their Label Precision is bounded between $0.61$ and $0.67$, well below what a high-capacity adapter can achieve when the loss does not over-extend into unseen-class regions.
 
-We evaluate EGA on CIFAR-100 (in-distribution) and three OOD benchmarks (CIFAR-10, FGVC-Aircraft, Food-101), comparing against the frozen CLIP baseline, global contrastive adapters (ICon, SRL), and LoRA configurations with ranks $r=64$ and $r=128$ (capacity-matched to EGA).
-The six methods trace out a Pareto frontier in the (ID, OOD) Label Precision plane.
-EGA occupies a distinct operating point on this frontier: it reaches $0.705$ in-distribution Label Precision (within $30$ percentage points of the ICon/SRL ceiling), while improving over the frozen baseline on Aircraft ($+9.9$ pp) and bounding the degradation on CIFAR-10 ($-7.0$ pp) and Food-101 ($-9.0$ pp, versus $-32$ to $-33$ pp for ICon and SRL on Food-101).
-Even when LoRA's capacity is matched to EGA ($r=128$, $\sim$4.2M trainable parameters), its best in-distribution performance (LoRA+InfoNCE) reaches only $0.6176$, still $8.7$ percentage points below EGA.
-Different points on this frontier suit different deployment scenarios: applications that prioritize in-distribution precision benefit from EGA's balanced position, while applications dominated by OOD queries may prefer the higher OOD precision of LoRA variants at the cost of in-distribution refinement.
+We propose Euclidean Geodesic Alignment (EGA), a residual adapter designed to address both factors simultaneously.
+EGA pairs a high-capacity zero-initialized residual architecture with a small-margin triplet loss on the class-aware neighborhood graph of pre-trained embeddings, together with $\ell_2$ projection back onto the unit hypersphere.
+The triplet loss with a small margin induces a self-limiting training dynamic: as the adapter converges on seen classes, the fraction of margin-violating triplets decays rapidly, reaching $96.5\%$ zero-gradient triplets at steady state.
+The capacity to refine seen-class neighborhoods is therefore preserved, but the loss stops applying pressure once seen-class neighborhoods are locally separated, so the global reshaping that destroys unseen-class geometry under ICon and SRL never accumulates.
+
+We evaluate EGA on CIFAR-100 (in-distribution) and three OOD benchmarks (CIFAR-10, FGVC-Aircraft, Food-101), comparing against the frozen CLIP baseline, global contrastive adapters (ICon, SRL), and LoRA configurations with ranks $r=64$ and $r=128$ that are capacity-matched to EGA.
+The six methods occupy distinct operating points in the (ID, OOD) Label Precision plane.
+EGA reaches the highest in-distribution Label Precision among adapters that avoid OOD collapse, achieving $0.705$ on CIFAR-100 versus $0.6176$ for capacity-matched LoRA at $r=128$, while bounding OOD degradation between $-7$ and $-9$ percentage points on CIFAR-10 and Food-101 (compared to between $-32$ and $-33$ percentage points for ICon and SRL) and improving by $9.9$ percentage points on FGVC-Aircraft.
+The benefits transfer to stronger backbones, with EGA improving Label Precision@1 by $4.75$ and $8.55$ percentage points on DINOv2-large and SigLIP respectively.
+EGA does not dominate every method on every axis: on CIFAR-10 and Food-101, capacity-matched LoRA variants achieve higher OOD Label Precision than EGA, and deployments dominated by OOD queries on these distributions may prefer LoRA over EGA at the cost of weaker in-distribution refinement.
 
 In summary, this work makes the following contributions:
 \begin{itemize}
-    \item We identify an ID/OOD tradeoff in adapter tuning for retrieval: high-capacity global contrastive objectives achieve near-perfect in-distribution precision but collapse on unseen classes, while low-capacity alternatives avoid collapse but underperform in-distribution.
-    \item We propose Euclidean Geodesic Alignment (EGA), a residual adapter trained with a small-margin triplet loss that converges to a sparse-gradient scheme, preserving unseen-class geometry while refining seen-class structure.
-    \item Across CIFAR-100 and three OOD benchmarks, EGA occupies a distinct Pareto-optimal point that balances in-distribution precision and out-of-distribution robustness, outperforming both global contrastive methods and low-capacity LoRA variants on respective axes.
+	\item We frame adapter tuning over frozen vision-language encoders
+	      from a vector search deployment perspective, in which the index and
+	      the query stream together cover a label space larger than the
+	      labeled subset available for adapter training, and we characterize
+	      the failure modes of existing adapter paradigms under this lens.
+
+	\item We propose Euclidean Geodesic Alignment (EGA), a residual
+	      adapter that combines a high-capacity zero-initialized architecture
+	      with a small-margin triplet objective.
+	      The triplet loss converges to a sparse-gradient regime ($96.5\%$ of training triplets produce zero gradient at steady state), which empirically preserves unseen-class geometry while permitting in-distribution refinement.
+
+	\item Across CIFAR-100 and three OOD benchmarks, and across three
+	      backbones (CLIP ViT-B/32, DINOv2-large, SigLIP), EGA occupies a
+	      distinct operating point in the (ID, OOD) Label Precision plane,
+	      achieving the highest in-distribution Label Precision among adapters
+	      that avoid OOD collapse.
+	      We position this against capacity-matched LoRA variants, which preserve OOD precision better on two of three benchmarks at the cost of $8.7$ percentage points in-distribution.
 \end{itemize}
 
 \section{Related Work}
 \label{sec:lit}
 
 \paragraph{Manifold Preservation under Adapter Tuning}
-Foundation models such as CLIP~\cite{clip_icml21} produce embedding spaces that encode both seen-class semantics and broader priors over unseen visual concepts. 
-Catastrophic forgetting has been studied extensively in continual learning~\cite{lanza2026degradationfeaturespacecontinual, xue2025protocol}, while recent work documents analogous degradation in contrastive representations, including anisotropic collapse~\cite{zhao-etal-2024-representation, gao-etal-2021-simcse}, modality gap fracturing~\cite{10656738, eslami2025mitigate}, and loss of compositional structure~\cite{pal2025compositional, savietto2026geometryrepresentationalfailuresvision, 11093676}. 
+Foundation models such as CLIP~\cite{clip_icml21} produce embedding spaces that encode both seen-class semantics and broader priors over unseen visual concepts.
+Catastrophic forgetting has been studied extensively in continual learning~\cite{lanza2026degradationfeaturespacecontinual, xue2025protocol}, while recent work documents analogous degradation in contrastive representations, including anisotropic collapse~\cite{zhao-etal-2024-representation, gao-etal-2021-simcse}, modality gap fracturing~\cite{10656738, eslami2025mitigate}, and loss of compositional structure~\cite{pal2025compositional, savietto2026geometryrepresentationalfailuresvision, 11093676}.
 Recent strategies counter these issues with geometric constraints such as orthogonality regularization~\cite{ricci2026boldsymbollambdaorthogonality}.
 \emph{EGA leverages the inherent sparsity of triplet loss optimization to confine adapter updates to local neighborhoods of seen classes, leaving the unseen classes of the pretrained manifold unmodified.}
 
 \paragraph{Global Contrastive Objectives and Structural Regularization}
-Recent representation learning frequently relies on global contrastive objectives to optimize the latent space~\cite{sui2026unicon, koromilas2025principledframeworkmultiviewcontrastive}. 
-A common paradigm jointly enforces alignment for positive pairs and uniformity across the feature distribution~\cite{10.5555/3524938.3525859}, a strategy applied in graph encoders~\cite{10.1609/aaai.v38i14.29479} and multimodal recommendation~\cite{zhou2025cm3calibratingmultimodalrecommendation}. 
-While uniformity improves robustness to noise~\cite{wu2026pca}, it assumes uniform treatment of all latent regions. 
+Recent representation learning frequently relies on global contrastive objectives to optimize the latent space~\cite{sui2026unicon, koromilas2025principledframeworkmultiviewcontrastive}.
+A common paradigm jointly enforces alignment for positive pairs and uniformity across the feature distribution~\cite{10.5555/3524938.3525859}, a strategy applied in graph encoders~\cite{10.1609/aaai.v38i14.29479} and multimodal recommendation~\cite{zhou2025cm3calibratingmultimodalrecommendation}.
+While uniformity improves robustness to noise~\cite{wu2026pca}, it assumes uniform treatment of all latent regions.
 Auxiliary structural regularizers include unifying frameworks for multi-view alignment~\cite{alshammariunifying}, geometric constraints for imbalanced regression~\cite{dong2025improve}, decoupled objectives~\cite{kim2025decoupledcontrastivelearningfederated}, information-theoretic density control~\cite{Zhang_2025_ICCV}, and region-based distillation~\cite{jing2024fineclip}.
 \emph{EGA replaces dense global optimization with sparse local triplet updates, preserving out of distribution semantic structure.}
 
 \paragraph{Parameter-Efficient Manifold Adaptation}
-Parameter-efficient adaptation has become the standard approach to prevent catastrophic forgetting and reduce computational cost when transferring large foundation models~\cite{pmlr-v97-houlsby19a, hu2022lora}. 
-This paradigm now dominates vision-language research due to the prohibitive cost of full fine-tuning~\cite{lin2025visionlanguagemodelssurvey}. 
-Lightweight methods such as Visual Prompt Tuning~\cite{10.1007/978-3-031-19827-4_41} and Tip Adapter~\cite{10.1007/978-3-031-19833-5_29} enable effective specialization without modifying the frozen backbone, and extensive benchmarks show they can rival full fine-tuning while preserving generalization~\cite{sharma2025benchmarking}. 
+Parameter-efficient adaptation has become the standard approach to prevent catastrophic forgetting and reduce computational cost when transferring large foundation models~\cite{pmlr-v97-houlsby19a, hu2022lora}.
+This paradigm now dominates vision-language research due to the prohibitive cost of full fine-tuning~\cite{lin2025visionlanguagemodelssurvey}.
+Lightweight methods such as Visual Prompt Tuning~\cite{10.1007/978-3-031-19827-4_41} and Tip Adapter~\cite{10.1007/978-3-031-19833-5_29} enable effective specialization without modifying the frozen backbone, and extensive benchmarks show they can rival full fine-tuning while preserving generalization~\cite{sharma2025benchmarking}.
 Zero-initialization strategies further protect the pretrained manifold~\cite{10377881}.
 \emph{EGA integrates a zero initialized residual adapter with a localized geometric objective, achieving both parameter efficiency and targeted manifold smoothing.}
 
 \paragraph{Vector Similarity Search and Metric Consistency}
-Vector similarity search is the foundational engine for scalable high-dimensional retrieval. 
-The systems community has developed highly optimized indexing algorithms for billion-scale datasets, including FAISS~\cite{johnson2019billion}, Hierarchical Navigable Small World graphs~\cite{malkov2018efficient}, DiskANN~\cite{subramanya2019diskann}, and SPANN~\cite{chen2021spann}. 
-Recent work refines graph topologies~\cite{NEURIPS2024_bab1486c, NEURIPS2024_6dc63b40}, optimizes SSD-based search~\cite{osdi25pipeann, fast26odinann}, and accelerates distance computations~\cite{jaasaari2024lorann}. 
+Vector similarity search is the foundational engine for scalable high-dimensional retrieval.
+The systems community has developed highly optimized indexing algorithms for billion-scale datasets, including FAISS~\cite{johnson2019billion}, Hierarchical Navigable Small World graphs~\cite{malkov2018efficient}, DiskANN~\cite{subramanya2019diskann}, and SPANN~\cite{chen2021spann}.
+Recent work refines graph topologies~\cite{NEURIPS2024_bab1486c, NEURIPS2024_6dc63b40}, optimizes SSD-based search~\cite{osdi25pipeann, fast26odinann}, and accelerates distance computations~\cite{jaasaari2024lorann}.
 Nevertheless, popular ANN implementations still suffer from severe worst-case limitations~\cite{NEURIPS2023_d0ac28b7}.
 \emph{EGA proactively recalibrates the metric manifold prior to index construction, enabling standard search backends to achieve superior semantic recall without requiring complex algorithmic reengineering.}
 
@@ -244,41 +285,35 @@ The gradient sparsity mechanism enforces this locality: once seen-class neighbor
 
 We formalize these intuitions in the following observation, which characterizes the steady-state behavior of triplet-trained adapters and its implications for manifold preservation.
 
-\begin{observation}[Gradient Sparsity at Convergence]
-	\label{prop:sparsity}
-	Let $f_\theta$ be trained with the triplet loss in Eq.~\eqref{eq:triplet} with margin $m > 0$ on a dataset $\mathcal{D}_{\text{train}}$ drawn from seen classes $\mathcal{Y}_{\text{seen}}$.
-	Define the \emph{active triplet
-		ratio} at training step $t$ as
-	\begin{equation}
-		\rho(t) = \Pr_{(a,p,n)\sim\mathcal{B}}\!\left[
-		d\!\left(\hat{\mathbf{z}}_a^{(t)}, \hat{\mathbf{z}}_p^{(t)}\right)
-		- d\!\left(\hat{\mathbf{z}}_a^{(t)}, \hat{\mathbf{z}}_n^{(t)}\right)
-		+ m > 0
-		\right].
-		\label{eq:active_ratio}
-	\end{equation}
-	As $f_\theta$ converges, $\rho(t) \to \rho^*$, where
-	\begin{equation}
-		\rho^* = \Pr_{(a,p,n)}\!\left[
-			d\!\left(\hat{\mathbf{z}}_a^*, \hat{\mathbf{z}}_p^*\right)
-			- d\!\left(\hat{\mathbf{z}}_a^*, \hat{\mathbf{z}}_n^*\right)
-			+ m > 0
-			\right]
-		\label{eq:rho_star}
-	\end{equation}
-	is determined solely by the margin $m$ and the within-class distance
-	distribution of the converged embeddings.
-	Furthermore, $\nabla_\theta \mathcal{L} = \mathbf{0}$ for all triplets $(a,p,n)$ with $d(\hat{\mathbf{z}}_a^*, \hat{\mathbf{z}}_p^*) - d(\hat{\mathbf{z}}_a^*, \hat{\mathbf{z}}_n^*) + m \leq 0$, so the adapter gradient is supported only on the fraction $\rho^*$ of the training distribution.
-	For embeddings whose local geometry already satisfies the margin constraint, the adapter exerts zero update pressure.
-\end{observation}
+\paragraph{Gradient sparsity at convergence.}
+The triplet loss in Eq.~\eqref{eq:triplet} consists of hinge terms whose
+subgradient with respect to $\theta$ is exactly zero whenever the margin
+constraint is satisfied:
+\begin{equation}
+	\nabla_\theta \ell_{apn} =
+	\mathbf{1}\!\left[d(\hat{\mathbf{z}}_a, \hat{\mathbf{z}}_p) -
+		d(\hat{\mathbf{z}}_a, \hat{\mathbf{z}}_n) + m > 0\right]
+	\cdot \nabla_\theta \delta_{apn},
+	\label{eq:hinge_grad}
+\end{equation}
+where $\delta_{apn} = d(\hat{\mathbf{z}}_a, \hat{\mathbf{z}}_p) -
+	d(\hat{\mathbf{z}}_a, \hat{\mathbf{z}}_n)$. Define the \emph{active
+	triplet ratio} at training step $t$ as
+\begin{equation}
+	\rho(t) = \Pr_{(a,p,n)\sim\mathcal{B}}\!\left[
+	d(\hat{\mathbf{z}}_a^{(t)}, \hat{\mathbf{z}}_p^{(t)}) -
+	d(\hat{\mathbf{z}}_a^{(t)}, \hat{\mathbf{z}}_n^{(t)}) + m > 0
+	\right].
+	\label{eq:active_ratio}
+\end{equation}
+Under the standard assumption that training converges to a stationary point of $\mathcal{L}$, $\rho(t)$ converges to a steady-state value $\rho^* \in [0, 1]$ determined by the margin $m$ and the within-class distance distribution of the converged embeddings.
+We measure $\rho^* \approx 3.5\%$ at convergence on FGVC-Aircraft (Section~\ref{sec:mechanism}), meaning that $96.5\%$ of training triplets contribute zero gradient at steady state.
 
-\begin{proof}[Justification]
-	The triplet loss consists of hinge terms whose gradient is zero whenever the margin constraint is satisfied.
-	At convergence, only those triplets whose geometry the adapter has not yet separated within the margin remain active.
-	The fraction of such triplets is determined solely by the margin $m$ and the distance distribution of seen classes, independent of unseen classes.
-	Since no training triplet involves unseen-class embeddings, the adapter exerts zero gradient over the entire unseen-class region of the embedding space.
-	See Appendix~\ref{proof:sparsity} for the complete argument.
-\end{proof}
+\paragraph{From sparsity to OOD locality: an empirical claim.}
+Strictly speaking, sparse seen-class gradients do not formally imply that $f_\theta$ leaves unseen-class regions unchanged: the adapter is a parametric MLP, not a locally supported transformation, so any update to $\theta$ propagates globally.
+We therefore make the weaker, empirical claim that the residual zero-initialized architecture combined with gradient sparsity keeps the cumulative perturbation in unseen-class regions small enough to preserve their pretrained semantic structure for retrieval.
+The OOD measurements in Section~\ref{sec:ood} are the evidence: EGA preserves or improves Label Precision on three unseen-class benchmarks, while ICon and SRL lack the gradient sparsity property and fall below the frozen baseline.
+A formal Lipschitz-based bound on the unseen-class perturbation is left for future work; we discuss the relevant technical conditions in Appendix~\ref{proof:sparsity}.
 
 \section{Evaluation}
 \label{sec:eval}
@@ -374,10 +409,10 @@ Section~\ref{sec:ood} will show the same property allowing ICon and SRL to domin
 \label{sec:ood}
 
 Under strict OOD settings where evaluation categories are disjoint from training categories, the two retrieval metrics tell different stories about adapter quality, and EGA is the only method that performs well on both.
-Table~\ref{tab:ood_summary} reports headline numbers at $K=1$, $\text{nprobe}=1$. Figure~\ref{fig:pareto} visualizes the joint (ID, OOD) tradeoff across all six methods, and Appendix~\ref{sec:more_results} verifies that the pattern is robust across search budgets ($\text{nprobe} \in \{1, 5, 10\}$).
+Table~\ref{tab:ood_summary} reports headline numbers at $K=1$, $\text{nprobe}=1$.
+Figure~\ref{fig:pareto} visualizes the joint (ID, OOD) tradeoff across all six methods, and Appendix~\ref{sec:more_results} verifies that the pattern is robust across search budgets ($\text{nprobe} \in \{1, 5, 10\}$).
 We evaluate on three benchmarks: CIFAR-10 (trained on CIFAR-100), FGVC-Aircraft (80 seen / 20 unseen classes), and Food-101 (80 seen / 21 unseen classes).
 For a fair comparison, all methods train identical lightweight adapters on top of frozen CLIP features and differ only in their loss functions.
-
 
 \begin{table}[!t]
 	\centering
@@ -415,13 +450,15 @@ For a fair comparison, all methods train identical lightweight adapters on top o
 % 	\label{fig:ood_lp}
 % \end{figure}
 
-On ANNS Recall, the adapters either match or exceed the frozen CLIP baseline on Aircraft and Food-101, indicating that adapter training succeeds at geometric reorganization on these two benchmarks. On Label Precision, however, the picture inverts.
+On ANNS Recall, the adapters either match or exceed the frozen CLIP baseline on Aircraft and Food-101, indicating that adapter training succeeds at geometric reorganization on these two benchmarks.
+On Label Precision, however, the picture inverts.
 ICon and SRL fall \emph{below} the frozen CLIP baseline on every dataset, with degradation reaching $-32$ to $-33$ percentage points on Food-101.
 The retrieved neighbors are geometrically closer in the IVF index, but they belong to the wrong semantic class.
 EGA improves Label Precision over the frozen baseline on Aircraft ($+9.9$ pp), with bounded degradation on CIFAR-10 ($-7.0$ pp) and Food-101 ($-9.0$ pp).
 The corresponding collapse for ICon and SRL is much larger: $-32$ to $-33$ pp on Food-101 and $-32$ to $-34$ pp on CIFAR-10.
 
-EGA's relative advantage over global methods ranges from $14$ pp on Aircraft to $23$ pp on Food-101 and $25$ pp on CIFAR-10, and tracks the difficulty of the OOD shift: when seen and unseen classes are visually similar (as in Food-101's fine-grained dishes), the dense gradient updates of ICon and SRL pull unseen samples most aggressively into the wrong seen-class clusters. Robustness across search budgets ($\text{nprobe} \in \{1, 5, 10\}$) is reported in Appendix~\ref{sec:more_results}.
+EGA's relative advantage over global methods ranges from $14$ pp on Aircraft to $23$ pp on Food-101 and $25$ pp on CIFAR-10, and tracks the difficulty of the OOD shift: when seen and unseen classes are visually similar (as in Food-101's fine-grained dishes), the dense gradient updates of ICon and SRL pull unseen samples most aggressively into the wrong seen-class clusters.
+Robustness across search budgets ($\text{nprobe} \in \{1, 5, 10\}$) is reported in Appendix~\ref{sec:more_results}.
 
 Cross-referencing Table~\ref{tab:indist_summary} and Table~\ref{tab:ood_summary} reveals a structural tradeoff among adapter training paradigms.
 ICon and SRL achieve near-perfect Label Precision on CIFAR-100 ($0.999$ and $0.992$) but collapse to $0.562$ and $0.552$ on Food-101.
@@ -434,42 +471,45 @@ ICon and SRL achieve the highest in-distribution precision but collapse on OOD; 
 EGA occupies a distinct operating point on this frontier, combining the highest in-distribution precision among adapters that avoid OOD collapse with bounded OOD degradation.
 
 \begin{figure}[t]
-    \centering
-    \includegraphics[width=\linewidth]{fig/pareto_frontier.pdf}
-    \caption{ID/OOD Pareto frontier of adapter training paradigms. 
-    % Each panel plots in-distribution Label Precision on CIFAR-100 (x-axis) against out-of-distribution Label Precision on a different OOD benchmark (y-axis). The dashed line connects non-dominated points. EGA appears on the frontier in all three panels, occupying a balanced operating point. ICon and SRL achieve the highest in-distribution precision but drop to the right-bottom corner under distribution shift; LoRA variants and the frozen CLIP baseline cluster in the upper-left region with strong OOD but weak in-distribution.
-    }
-    \label{fig:pareto}
+	\centering
+	\includegraphics[width=\linewidth]{fig/pareto_frontier.pdf}
+	\caption{ID/OOD Pareto frontier of adapter training paradigms.
+		% Each panel plots in-distribution Label Precision on CIFAR-100 (x-axis) against out-of-distribution Label Precision on a different OOD benchmark (y-axis). The dashed line connects non-dominated points. EGA appears on the frontier in all three panels, occupying a balanced operating point. ICon and SRL achieve the highest in-distribution precision but drop to the right-bottom corner under distribution shift; LoRA variants and the frozen CLIP baseline cluster in the upper-left region with strong OOD but weak in-distribution.
+	}
+	\label{fig:pareto}
 \end{figure}
 
-Table~\ref{tab:lora_capacity} shows that EGA outperforms capacity-matched LoRA (r=64 and r=128) on in-distribution Label Precision while maintaining competitive out-of-distribution performance. On CIFAR-100, EGA achieves 0.705 LP@1, exceeding the best capacity-matched LoRA by 7.9 percentage points. Across OOD benchmarks, EGA either matches or exceeds LoRA on Aircraft and remains within 7--9 percentage points on Food-101 and CIFAR-10. LoRA's in-distribution performance slightly decreases with increasing rank, which we attribute to the low-rank constraint acting as an implicit regularizer.
+Table~\ref{tab:lora_capacity} shows that EGA outperforms capacity-matched LoRA (r=64 and r=128) on in-distribution Label Precision while maintaining competitive out-of-distribution performance.
+On CIFAR-100, EGA achieves 0.705 LP@1, exceeding the best capacity-matched LoRA by 7.9 percentage points.
+Across OOD benchmarks, EGA either matches or exceeds LoRA on Aircraft and remains within 7--9 percentage points on Food-101 and CIFAR-10.
+LoRA's in-distribution performance slightly decreases with increasing rank, which we attribute to the low-rank constraint acting as an implicit regularizer.
 
 \begin{table}[!t]
-\centering
-\caption{Performance of EGA versus capacity-matched LoRA ($K=1$, nprobe=1).}
-\label{tab:lora_capacity}
-\small
-\begin{tabular}{llccccc}
-\toprule
-Dataset & Metric & EGA & \makecell{InfoNCE \\ r=64} & \makecell{InfoNCE \\ r=128} & \makecell{Triplet \\ r=64} & \makecell{Triplet \\ r=128} \\
-\midrule
-\multirow{2}{*}{CIFAR-100 (ID)}
-& LP@1 & \textbf{0.705} & 0.6256 & 0.6176 & 0.5568 & 0.5472 \\
-& AR@1 & \textbf{0.825} & 0.879 & 0.879 & 0.908 & 0.908 \\
-\midrule
-\multirow{2}{*}{Aircraft (OOD)}
-& LP@1 & \textbf{0.611} & 0.5417 & 0.5298 & 0.5833 & 0.5417 \\
-& AR@1 & \textbf{0.905} & 0.6190 & 0.6131 & 0.6667 & 0.6726 \\
-\midrule
-\multirow{2}{*}{Food-101 (OOD)}
-& LP@1 & 0.791 & \textbf{0.8667} & \textbf{0.8599} & \textbf{0.8599} & 0.8568 \\
-& AR@1 & \textbf{0.879} & 0.6504 & 0.6702 & 0.6756 & 0.6740 \\
-\midrule
-\multirow{2}{*}{CIFAR-10 (OOD)}
-& LP@1 & 0.810 & \textbf{0.8788} & \textbf{0.8728} & \textbf{0.8768} & 0.8756 \\
-& AR@1 & \textbf{0.833} & 0.6008 & 0.5940 & 0.6216 & 0.6096 \\
-\bottomrule
-\end{tabular}
+	\centering
+	\caption{Performance of EGA versus capacity-matched LoRA ($K=1$, nprobe=1).}
+	\label{tab:lora_capacity}
+	\small
+	\begin{tabular}{llccccc}
+		\toprule
+		Dataset & Metric & EGA            & \makecell{InfoNCE                                              \\ r=64} & \makecell{InfoNCE \\ r=128} & \makecell{Triplet \\ r=64} & \makecell{Triplet \\ r=128} \\
+		\midrule
+		\multirow{2}{*}{CIFAR-100 (ID)}
+		        & LP@1   & \textbf{0.705} & 0.6256            & 0.6176          & 0.5568          & 0.5472 \\
+		        & AR@1   & \textbf{0.825} & 0.879             & 0.879           & 0.908           & 0.908  \\
+		\midrule
+		\multirow{2}{*}{Aircraft (OOD)}
+		        & LP@1   & \textbf{0.611} & 0.5417            & 0.5298          & 0.5833          & 0.5417 \\
+		        & AR@1   & \textbf{0.905} & 0.6190            & 0.6131          & 0.6667          & 0.6726 \\
+		\midrule
+		\multirow{2}{*}{Food-101 (OOD)}
+		        & LP@1   & 0.791          & \textbf{0.8667}   & \textbf{0.8599} & \textbf{0.8599} & 0.8568 \\
+		        & AR@1   & \textbf{0.879} & 0.6504            & 0.6702          & 0.6756          & 0.6740 \\
+		\midrule
+		\multirow{2}{*}{CIFAR-10 (OOD)}
+		        & LP@1   & 0.810          & \textbf{0.8788}   & \textbf{0.8728} & \textbf{0.8768} & 0.8756 \\
+		        & AR@1   & \textbf{0.833} & 0.6008            & 0.5940          & 0.6216          & 0.6096 \\
+		\bottomrule
+	\end{tabular}
 \end{table}
 
 \subsection{Two Mechanisms for OOD Stability}
@@ -552,7 +592,7 @@ EGA, by contrast, improves Label Precision over the frozen baseline on Aircraft 
 			Recall@5             & 0.9695 & 0.9712 & 0.9680 & 0.9688 \\ \hline
 		\end{tabular}
 	\end{minipage}
-    	\vspace{-1em}
+	\vspace{-1em}
 
 \end{table}
 
@@ -576,34 +616,48 @@ This stability confirms that EGA achieves metric correction through its structur
 To verify that the benefits of EGA are not specific to the CLIP ViT-B/32 backbone used in our main experiments, we further evaluate EGA on two stronger and more recent vision encoders: DINOv2-large~\cite{oquab2024dinov} and SigLIP~\cite{10377550}.
 
 \begin{wraptable}{r}{0.58\textwidth}
-\centering
-\vspace{-0.3cm}
-\caption{Retrieval performance on more backbones.}
-\label{tab:ega_backbones}
-\small
-\begin{tabular}{lcccc}
-\toprule
-\multirow{2}{*}{Backbone} & \multicolumn{2}{c}{Label Precision@1} & \multicolumn{2}{c}{ANNS Recall@1} \\
-\cmidrule(lr){2-3} \cmidrule(lr){4-5}
- & Raw & +EGA & Raw & +EGA \\
-\midrule
-CLIP ViT-B/32     & 0.5560 & \textbf{0.6955} & 0.6665 & \textbf{0.7985} \\
-DINOv2-large      & 0.8530 & \textbf{0.9005} & 0.8785 & \textbf{0.9310} \\
-SigLIP SO400M     & 0.7740 & \textbf{0.8595} & 0.8015 & \textbf{0.9155} \\
-\bottomrule
-\end{tabular}
+	\centering
+	\vspace{-0.3cm}
+	\caption{Retrieval performance on more backbones.}
+	\label{tab:ega_backbones}
+	\small
+	\begin{tabular}{lcccc}
+		\toprule
+		\multirow{2}{*}{Backbone} & \multicolumn{2}{c}{Label Precision@1} & \multicolumn{2}{c}{ANNS Recall@1}                            \\
+		\cmidrule(lr){2-3} \cmidrule(lr){4-5}
+		                          & Raw                                   & +EGA                              & Raw    & +EGA            \\
+		\midrule
+		CLIP ViT-B/32             & 0.5560                                & \textbf{0.6955}                   & 0.6665 & \textbf{0.7985} \\
+		DINOv2-large              & 0.8530                                & \textbf{0.9005}                   & 0.8785 & \textbf{0.9310} \\
+		SigLIP SO400M             & 0.7740                                & \textbf{0.8595}                   & 0.8015 & \textbf{0.9155} \\
+		\bottomrule
+	\end{tabular}
 \end{wraptable}
-As shown in Table~\ref{tab:ega_backbones}, EGA delivers consistent improvements across all three backbones. On the relatively weaker CLIP ViT-B/32, EGA achieves substantial gains of +13.95 percentage points in Label Precision@1 and +13.20 percentage points in Recall@1. Even on the much stronger DINOv2-large and SigLIP backbones, EGA continues to provide meaningful and stable improvements (+4.75pp and +8.55pp in Label Precision@1, respectively). These results demonstrate that EGA's manifold-preserving design generalizes robustly to modern, high-capacity vision models and is not merely an artifact of the original CLIP representation.
+As shown in Table~\ref{tab:ega_backbones}, EGA delivers consistent improvements across all three backbones.
+On the relatively weaker CLIP ViT-B/32, EGA achieves substantial gains of +13.95 percentage points in Label Precision@1 and +13.20 percentage points in Recall@1.
+Even on the much stronger DINOv2-large and SigLIP backbones, EGA continues to provide meaningful and stable improvements (+4.75pp and +8.55pp in Label Precision@1, respectively).
+These results demonstrate that EGA's manifold-preserving design generalizes robustly to modern, high-capacity vision models and is not merely an artifact of the original CLIP representation.
 
 \section{Conclusion}
 \label{sec:conclusion}
 
-Adapter training over frozen embedding models does not produce uniformly improved retrieval embeddings. Instead, different methods occupy different points on an empirical in-distribution/out-of-distribution Pareto frontier. 
-ICon and SRL reach near-perfect Label Precision on CIFAR-100 (0.999, 0.992) but collapse 32 to 33 percentage points below the frozen baseline on Food-101, while LoRA adapters (even when capacity-matched to EGA at $r=128$) underperform substantially in-distribution. 
-EGA occupies a distinct point on this frontier, reaching 0.705 in-distribution Label Precision while bounding OOD degradation to $-7$ to $-9$ percentage points. Even under capacity-matched conditions, LoRA+InfoNCE reaches only 0.6176 on CIFAR-100, still 8.7 percentage points below EGA. 
-These benefits generalize consistently to stronger vision backbones: on DINOv2-large and SigLIP, EGA further improves Label Precision@1 by 4.75 and 8.55 percentage points, respectively. 
-The underlying mechanism is gradient sparsity at convergence (96.5\% of training triplets produce zero gradient at steady state), which we suggest as a useful diagnostic for future adapter design. 
-A more rigorous disentanglement of capacity and sparsity contributions is left for future work.
+We approached adapter training from a vector search deployment perspective, where the index and query stream together cover a label space larger than the labeled subset available at adapter training time.
+Under this lens, adapter training does not produce uniformly improved retrieval embeddings.
+Different paradigms occupy different operating points in the (ID, OOD) Label Precision plane, and the choice among them reflects which slice of the deployed query distribution one is willing to serve poorly.
+
+Within this space, EGA offers a specific tradeoff: 0.705 in-distribution Label Precision on CIFAR-100, with OOD degradation bounded at $-7$ to $-9$ percentage points on CIFAR-10 and Food-101 and an improvement of $+9.9$ percentage points on FGVC-Aircraft.
+ICon and SRL achieve higher in-distribution numbers (0.999, 0.992) but fall $32$ to $33$ percentage points below the frozen baseline on Food-101; capacity-matched LoRA ($r=128$) preserves OOD precision better on two of three benchmarks but trails EGA by $8.7$ percentage points in-distribution.
+The benefits transfer to stronger backbones: on DINOv2-large and SigLIP, EGA improves Label Precision@1 by $4.75$ and $8.55$ percentage points respectively.
+The mechanism we associate with EGA's behavior is gradient sparsity at convergence ($96.5\%$ of training triplets produce zero gradient), which we suggest as one useful diagnostic for adapter designs intended to operate under unseen-class queries.
+
+\paragraph{Limitations.}
+Three limitations are worth stating explicitly.
+First, our analysis of gradient sparsity (Observation~\ref{prop:sparsity}) is empirical rather than formal: parameter updates from seen-class triplets affect $f_\theta$ globally, and we do not provide a Lipschitz-based bound on the resulting perturbation in unseen-class regions.
+The locality property is supported by OOD measurements, not by analysis.
+Second, EGA does not dominate every competitor on every axis.
+On CIFAR-10 and Food-101, capacity-matched LoRA variants achieve higher OOD Label Precision; deployments dominated by OOD queries on these distributions may prefer LoRA over EGA.
+Third, our experiments hold the loss family and architecture varying together in some comparisons, which prevents a clean disentanglement of how much of EGA's behavior is attributable to the triplet objective versus the residual gating architecture.
+Controlled sweeps over capacity and loss under matched conditions are the natural next step.
 
 \bibliography{ref}
 \bibliographystyle{plain}
@@ -614,40 +668,38 @@ A more rigorous disentanglement of capacity and sparsity contributions is left f
 \clearpage
 \appendix
 
-\section{Justification of Observation~\ref{prop:sparsity}}
+\section{Technical Conditions for the Sparsity-Locality Claim}
 \label{proof:sparsity}
 
-\begin{proof}
-	We justify each claim in turn.
+This appendix elaborates on the technical conditions underlying the empirical claim made in Section~\ref{sec:training}.
 
-	\textbf{(1) Gradient support.}
-	The triplet loss in Eq.~\eqref{eq:triplet} can be written as $\mathcal{L} = \frac{1}{|\mathcal{B}|}\sum_{(a,p,n)\in\mathcal{B}} \ell_{apn}$, where $\ell_{apn} = \max(0, \delta_{apn} + m)$ and $\delta_{apn} = d(\hat{\mathbf{z}}_a, \hat{\mathbf{z}}_p) - d(\hat{\mathbf{z}}_a, \hat{\mathbf{z}}_n)$.
-	The subgradient with respect to $\theta$ is
-	\begin{equation}
-		\nabla_\theta \ell_{apn} =
-		\mathbf{1}[\delta_{apn} + m > 0]\cdot
-		\nabla_\theta \delta_{apn},
-	\end{equation}
-	which is exactly zero whenever $\delta_{apn} + m \leq 0$.
-	Therefore, $\nabla_\theta \mathcal{L}$ receives contributions only from active triplets satisfying Eq.~\eqref{eq:active}.
+\paragraph{(1) Gradient support.}
+The triplet loss in Eq.~\eqref{eq:triplet} can be written as $\mathcal{L} = \frac{1}{|\mathcal{B}|}\sum_{(a,p,n)\in\mathcal{B}} \ell_{apn}$, where $\ell_{apn} = \max(0, \delta_{apn} + m)$ and $\delta_{apn} = d(\hat{\mathbf{z}}_a, \hat{\mathbf{z}}_p) - d(\hat{\mathbf{z}}_a, \hat{\mathbf{z}}_n)$.
+The subgradient with respect to $\theta$ is
+\begin{equation}
+	\nabla_\theta \ell_{apn} =
+	\mathbf{1}[\delta_{apn} + m > 0]\cdot
+	\nabla_\theta \delta_{apn},
+\end{equation}
+which is exactly zero whenever $\delta_{apn} + m \leq 0$.
+Therefore, $\nabla_\theta \mathcal{L}$ receives contributions only from active triplets satisfying Eq.~\eqref{eq:active}.
 
-	\textbf{(2) Convergence of $\rho(t)$.}
-	Under mild regularity conditions (Lipschitz continuity of $f_\theta$ and bounded embedding norms), the sequence $\{\hat{\mathbf{z}}^{(t)}\}$ converges to a stationary point $\hat{\mathbf{z}}^*$ of $\mathcal{L}$.
-	At stationarity, $\rho(t)$ converges to $\rho^*$ as defined in Eq.~\eqref{eq:rho_star}, since $\rho(t)$ is a continuous functional of the embedding distribution and the embeddings converge.
+\paragraph{(2) Convergence of $\rho(t)$.}
+Under mild regularity conditions (Lipschitz continuity of $f_\theta$ and bounded embedding norms), the sequence $\{\hat{\mathbf{z}}^{(t)}\}$ converges to a stationary point $\hat{\mathbf{z}}^*$ of $\mathcal{L}$.
+At stationarity, $\rho(t)$ converges to $\rho^*$ as defined in Eq.~\eqref{eq:rho_star}, since $\rho(t)$ is a continuous functional of the embedding distribution and the embeddings converge.
 
-\textbf{(3) Empirical locality.}
+\paragraph{(3) Empirical locality.}
 Strictly speaking, parameter updates $\nabla_\theta \delta_{apn}$ computed on seen-class triplets affect $f_\theta$ globally (including its behavior on unseen-class inputs) since $f_\theta$ is a parametric MLP and is not locally supported on the input manifold.
 We therefore do not claim formal zero-gradient over unseen regions.
 Instead, we observe an empirical locality property: when (i) the residual structure with zero initialization keeps the cumulative perturbation magnitude bounded by the sum of training gradients, and (ii) gradient sparsity at convergence ($\rho^* \approx 3.5\%$ on FGVC-Aircraft) attenuates this sum, the resulting perturbation in unseen-class regions is small enough to preserve the pretrained semantic structure for retrieval purposes.
 This observation is empirically supported by the OOD Label Precision results in Section~\ref{sec:ood} and Figure~\ref{fig:ood_lp}, where EGA preserves or improves Label Precision on unseen categories while ICon and SRL, which lack the gradient sparsity property, collapse below the frozen baseline.
 A formal Lipschitz-based bound on this perturbation is left for future work.
 
-	\textbf{(4) Dependence on $m$.}
-	The residual distance gap $\delta^*_{apn}$ at convergence is bounded by the within-class diameter $\Delta_c = \max_{x,x' \in c} d(\hat{\mathbf{z}}, \hat{\mathbf{z}}')$ for seen class $c$.
-	For $m \leq \min_c \Delta_c$, the adapter can drive all within-class distances below the threshold, pushing $\rho^*$ toward zero.
-	For $m > \min_c \Delta_c$, some triplets remain active at convergence because the within-class spread exceeds the margin, resulting in a strictly positive $\rho^*$.
-	This explains the empirically observed increase in $\rho^*$ with larger $m$ reported in Table~\ref{tab:sensitivity}.
-\end{proof}
+\paragraph{(4) Dependence on $m$.}
+The residual distance gap $\delta^*_{apn}$ at convergence is bounded by the within-class diameter $\Delta_c = \max_{x,x' \in c} d(\hat{\mathbf{z}}, \hat{\mathbf{z}}')$ for seen class $c$.
+For $m \leq \min_c \Delta_c$, the adapter can drive all within-class distances below the threshold, pushing $\rho^*$ toward zero.
+For $m > \min_c \Delta_c$, some triplets remain active at convergence because the within-class spread exceeds the margin, resulting in a strictly positive $\rho^*$.
+This explains the empirically observed increase in $\rho^*$ with larger $m$ reported in Table~\ref{tab:sensitivity}.
 
 \section{Experimental Setup Details}
 \label{sec:more_experiments}
@@ -669,7 +721,7 @@ sharing the same training data, evaluation protocol, and 75/25 retrieval split:
 	\item \textbf{SRL}~\cite{dong2025improve}: a structural regularization
 	      objective jointly optimizing batch-wide uniformity and within-class
 	      homogeneity, also instantiated on the EGAMLP architecture.
- 	\item \textbf{LoRA~+~InfoNCE}~\cite{hu2022lora,oord2018representation}: a capacity-matched low-rank adapter (rank $r=64$ and $r=128$, $\sim$2.6M--4.2M parameters) with zero-initialized residual structure, trained with supervised InfoNCE, which is a standard global contrastive loss.
+	\item \textbf{LoRA~+~InfoNCE}~\cite{hu2022lora,oord2018representation}: a capacity-matched low-rank adapter (rank $r=64$ and $r=128$, $\sim$2.6M--4.2M parameters) with zero-initialized residual structure, trained with supervised InfoNCE, which is a standard global contrastive loss.
 	\item \textbf{LoRA~+~Triplet}~\cite{hu2022lora}: identical capacity-matched low-rank architecture as above (rank $r=64$ and $r=128$), but trained with the same small-margin ($m=0.2$) triplet loss as EGA.
 \end{itemize}
 The two LoRA configurations isolate the effect of architectural capacity vs.
@@ -710,7 +762,9 @@ The operating system is Ubuntu 24.04 LTS.
 \label{sec:more_results}
 
 \paragraph{Robustness across search budgets.}
-Figure~\ref{fig:ood_lp} traces Label Precision@1 across three OOD benchmarks and three search budgets ($\text{nprobe} \in \{1, 5, 10\}$). The collapse pattern of ICon and SRL persists across all $18$ measurement points ($3$ datasets $\times$ $3$ budgets $\times$ $2$ methods), ruling out the possibility that the degradation is an artifact of any particular benchmark or indexing configuration. EGA's relative ordering against other methods is also stable across budgets.
+Figure~\ref{fig:ood_lp} traces Label Precision@1 across three OOD benchmarks and three search budgets ($\text{nprobe} \in \{1, 5, 10\}$).
+The collapse pattern of ICon and SRL persists across all $18$ measurement points ($3$ datasets $\times$ $3$ budgets $\times$ $2$ methods), ruling out the possibility that the degradation is an artifact of any particular benchmark or indexing configuration.
+EGA's relative ordering against other methods is also stable across budgets.
 
 \begin{figure}[t]
 	\centering
