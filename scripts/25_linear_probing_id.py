@@ -123,7 +123,7 @@ if __name__ == '__main__':
 
 
 # (venv) cc@uc-a100:~/hpdic/EGA$ 
-# (venv) cc@uc-a100:~/hpdic/EGA$ python scripts/25_linear_probing.py 
+# (venv) cc@uc-a100:~/hpdic/EGA$ python scripts/25_linear_probing_id.py 
 
 # === Linear Probing on CIFAR-100 (75/25 split, 3 seeds) ===
 

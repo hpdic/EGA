@@ -339,7 +339,8 @@ All of these datasets can be directly downloaded from the Pytorch library.
 The backbone models include ClIP ViT-B/32~\cite{clip_icml21}, DINOv2-large~\cite{oquab2024dinov}, and SigLIP~\cite{10377550}.
 We compare our method against four adapter models: ICon~\cite{alshammariunifying}, SRL~\cite{dong2025improve}, LoRA + InfoNCE~\cite{hu2022lora,oord2018representation}, and LoRA + Triplet~\cite{hu2022lora};
 We compare our method against four adapter models: ICon~\cite{alshammariunifying}, SRL~\cite{dong2025improve}, LoRA + InfoNCE~\cite{hu2022lora,oord2018representation}, and LoRA + Triplet~\cite{hu2022lora}. We omit Linear Probing, Tip-Adapter~\cite{tipadapter_eccv22}, and prompt tuning methods (CoOp/CoCoOp~\cite{kzhou_ijcv22,zhou2022conditional}) because they are not compatible with our cross-dataset OOD setting.
-Extended experimental details can be found in Appendix~\ref{sec:more_experiments}.
+Additional experimental setup details are in Appendix~\ref{sec:more_experiments};
+extended experimental results, including incomplete baselines, can be found in Appendix~\ref{sec:more_results}.
 
 \subsection{In-Distribution Validation}
 \label{sec:indist}
@@ -742,5 +743,39 @@ EGA's relative ordering against other methods is also stable across budgets.
 	\caption{Label Precision@1 across three OOD benchmarks and three search budgets ($\text{nprobe} \in \{1, 5, 10\}$).}
 	\label{fig:ood_lp}
 \end{figure}
+
+\paragraph{Linear Probing Baseline Analysis}
+\label{sec:linear_probing}
+To address potential concerns about additional baselines, we also evaluated Linear Probing as an example. As shown in Table~\ref{tab:linear_probing_id} and Table~\ref{tab:linear_probing_ood}, Linear Probing achieves reasonable in-distribution performance (0.5112 LP@1 on CIFAR-100) but completely collapses on out-of-distribution benchmarks (0.0065--0.0133 LP@1). This confirms that Linear Probing is not a meaningful comparison in our cross-dataset OOD setting due to class semantic mismatch.
+
+\begin{table}[h]
+\centering
+\caption{Linear Probing in-distribution performance on CIFAR-100 (75/25 split, mean $\pm$ std over 3 seeds).}
+\label{tab:linear_probing_id}
+\small
+\begin{tabular}{lcc}
+\toprule
+Method & LP@1 & AR@1 \\
+\midrule
+Linear Probing & 0.5112 $\pm$ 0.0020 & 0.7533 $\pm$ 0.0025 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[h]
+\centering
+\caption{Linear Probing OOD performance (mean $\pm$ std over 3 seeds).}
+\label{tab:linear_probing_ood}
+\small
+\begin{tabular}{lcccc}
+\toprule
+Dataset & LP@1 & AR@1 \\
+\midrule
+Aircraft & 0.0133 $\pm$ 0.0038 & 0.4401 $\pm$ 0.0254 \\
+Food-101 & 0.0077 $\pm$ 0.0019 & 0.5162 $\pm$ 0.0228 \\
+CIFAR-10 & 0.0065 $\pm$ 0.0005 & 0.6454 $\pm$ 0.0096 \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \end{document}

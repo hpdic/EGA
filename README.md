@@ -93,6 +93,14 @@ python 01_extract_features_backbone.py --backbone siglip
 python 02_train_ega_backbone.py --backbone siglip
 python 03_eval_label_precision_backbone.py --backbone siglip
 python 04_eval_anns_recall_backbone.py --backbone siglip
+
+# ImageNet
+
+pip install kaggle
+sudo apt install unzip
+cd ~/hpdic
+kaggle datasets download -d ifigotin/imagenetmini-1000
+unzip imagenetmini-1000.zip -d ~/hpdic/EGA/data/imagenet100/
 ```
 
 ## Contact
