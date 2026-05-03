@@ -669,11 +669,8 @@ sharing the same training data, evaluation protocol, and 75/25 retrieval split:
 	\item \textbf{SRL}~\cite{dong2025improve}: a structural regularization
 	      objective jointly optimizing batch-wide uniformity and within-class
 	      homogeneity, also instantiated on the EGAMLP architecture.
-	\item \textbf{LoRA~+~InfoNCE}~\cite{hu2022lora,oord2018representation}: a low-rank adapter (rank $r=8$,
-	      $\alpha=16$, $\sim$8K parameters) with zero-initialized residual structure,
-	      trained with supervised InfoNCE, which is a standard global contrastive loss.
-	\item \textbf{LoRA~+~Triplet}~\cite{hu2022lora}: identical low-rank architecture as above,
-	      but trained with the same small-margin ($m=0.2$) triplet loss as EGA.
+ 	\item \textbf{LoRA~+~InfoNCE}~\cite{hu2022lora,oord2018representation}: a capacity-matched low-rank adapter (rank $r=64$ and $r=128$, $\sim$2.6M--4.2M parameters) with zero-initialized residual structure, trained with supervised InfoNCE, which is a standard global contrastive loss.
+	\item \textbf{LoRA~+~Triplet}~\cite{hu2022lora}: identical capacity-matched low-rank architecture as above (rank $r=64$ and $r=128$), but trained with the same small-margin ($m=0.2$) triplet loss as EGA.
 \end{itemize}
 The two LoRA configurations isolate the effect of architectural capacity vs.
 loss function: comparing LoRA~+~InfoNCE against ICon/SRL holds the loss family
