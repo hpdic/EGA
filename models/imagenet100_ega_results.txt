@@ -1,0 +1,2 @@
+Label Precision@1: 1.0000
+ANNS Recall@1: 1.0000

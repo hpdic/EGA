@@ -100,7 +100,7 @@ pip install kaggle
 sudo apt install unzip
 cd ~/hpdic
 kaggle datasets download -d ifigotin/imagenetmini-1000
-unzip imagenetmini-1000.zip -d ~/hpdic/EGA/data/imagenet100/
+unzip -q imagenetmini-1000.zip
 ```
 
 ## Contact

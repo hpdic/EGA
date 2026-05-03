@@ -129,7 +129,7 @@ Other structural regularizers include unifying frameworks for multi-view alignme
 
 % \paragraph{Parameter-Efficient Adapter Design}
 Parameter-efficient adaptation is an approach for transferring large foundation models without full fine-tuning~\cite{pmlr-v97-houlsby19a, hu2022lora}, which dominates vision-language research~\cite{lin2025visionlanguagemodelssurvey}.
-Lightweight methods, e.g., Visual Prompt Tuning~\cite{10.1007/978-3-031-19827-4_41} and Tip Adapter~\cite{10.1007/978-3-031-19833-5_29},
+Lightweight methods, e.g., Visual Prompt Tuning~\cite{10.1007/978-3-031-19827-4_41} and Tip Adapter~\cite{tipadapter_eccv22},
 specialize the model without modifying the frozen backbone and rival full fine-tuning on many tasks~\cite{sharma2025benchmarking}, while zero-initialization strategies further constrain the magnitude of pretrained-manifold perturbation~\cite{10377881}.
 \emph{EGA admits a zero-initialized
 	residual adapter, localized triplet objective, and parameter
@@ -238,7 +238,7 @@ embedding $\mathbf{z} \in \mathbb{S}^{d-1}$ is:
 	\right).
 	\label{eq:forward}
 \end{equation}
-The total number of trainable parameters is approximately $4.2M$ for $d = 512$ and hidden dimension $2048$, which is negligible compared to the frozen CLIP backbone ($\sim$150M parameters).
+The total number of trainable parameters is approximately $4.2M$ for $d = 512$ and hidden dimension $2048$, which is negligible compared to the frozen CLIP backbone ($\sim$88M parameters).
 
 \subsection{Local Triplet Training}
 \label{sec:training}
@@ -338,7 +338,7 @@ Evaluation datasets include CIFAR-100 for in-distribution scenarios, CIFAR-10 fo
 All of these datasets can be directly downloaded from the Pytorch library.
 The backbone models include ClIP ViT-B/32~\cite{clip_icml21}, DINOv2-large~\cite{oquab2024dinov}, and SigLIP~\cite{10377550}.
 We compare our method against four adapter models: ICon~\cite{alshammariunifying}, SRL~\cite{dong2025improve}, LoRA + InfoNCE~\cite{hu2022lora,oord2018representation}, and LoRA + Triplet~\cite{hu2022lora};
-We compare our method against four adapter models: ICon~\cite{alshammariunifying}, SRL~\cite{dong2025improve}, LoRA + InfoNCE~\cite{hu2022lora,oord2018representation}, and LoRA + Triplet~\cite{hu2022lora}. We omit Linear Probing, Tip-Adapter~\cite{tipadapter_eccv22}, and prompt tuning methods (CoOp/CoCoOp~\cite{kzhou_ijcv22,zhou2022conditional}) because they are not compatible with our cross-dataset OOD setting.
+We omit Linear Probing, Tip-Adapter~\cite{tipadapter_eccv22}, and prompt tuning methods (CoOp/CoCoOp~\cite{kzhou_ijcv22,zhou2022conditional}) because they are not compatible with our cross-dataset OOD setting.
 Additional experimental setup details are in Appendix~\ref{sec:more_experiments};
 extended experimental results, including incomplete baselines, can be found in Appendix~\ref{sec:more_results}.
 
