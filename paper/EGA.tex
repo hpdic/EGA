@@ -55,11 +55,11 @@ We demonstrate this tradeoff empirically. On in-distribution data (CIFAR-100), h
 
 We propose Euclidean Geodesic Alignment (EGA), a manifold-preserving adapter that strikes a Pareto-optimal balance between in-distribution precision and out-of-distribution robustness. EGA admits three design choices: a zero-initialized residual structure, $\ell_2$ normalization, and a small-margin triplet loss on the class-aware neighborhood graph. The small-margin triplet loss induces a self-limiting dynamic: as the adapter converges on seen classes, the fraction of margin-violating triplets decays rapidly, reaching $96.5\%$ zero-gradient triplets at steady state. This allows the high-capacity architecture to tightly refine seen-class regions while staying largely inactive elsewhere, thereby protecting the pre-trained semantic structure of unseen categories from the dense global reshaping that causes ICon and SRL to fail on OOD data.
 
-We evaluate EGA on CIFAR-100 (in-distribution) and three OOD benchmarks (CIFAR-10, FGVC-Aircraft, Food-101), comparing against the frozen CLIP baseline, global contrastive adapters (ICon, SRL), and two LoRA configurations (LoRA+InfoNCE, LoRA+Triplet).
+We evaluate EGA on CIFAR-100 (in-distribution) and three OOD benchmarks (CIFAR-10, FGVC-Aircraft, Food-101), comparing against the frozen CLIP baseline, global contrastive adapters (ICon, SRL), and LoRA configurations with ranks $r=64$ and $r=128$ (capacity-matched to EGA).
 The six methods trace out a Pareto frontier in the (ID, OOD) Label Precision plane.
-EGA occupies a distinct operating point on this frontier: it reaches $0.705$ in-distribution Label Precision (within $30$ percentage points of the ICon/SRL ceiling and $4$ to $9$ percentage points above the LoRA variants), while improving over the frozen baseline on Aircraft ($+9.9$ pp) and bounding the degradation on CIFAR-10 ($-7.0$ pp) and Food-101 ($-9.0$ pp, versus $-32$ to $-33$ pp for ICon and SRL on Food-101).
-These benefits generalize consistently from the classic CLIP model~\cite{clip_icml21} to more recentbackbones: on DINOv2-large~\cite{oquab2024dinov} and SigLIP~\cite{10377550}, EGA further improves Label Precision@1 by $4.75$ and $8.55$ percentage points, respectively.
-Different points on this frontier suit different deployment scenarios: applications that prioritize in-distribution precision benefit from EGA's balanced position, while applications dominated by OOD queries may prefer the higher OOD precision of low-capacity LoRA variants at the cost of in-distribution refinement.
+EGA occupies a distinct operating point on this frontier: it reaches $0.705$ in-distribution Label Precision (within $30$ percentage points of the ICon/SRL ceiling), while improving over the frozen baseline on Aircraft ($+9.9$ pp) and bounding the degradation on CIFAR-10 ($-7.0$ pp) and Food-101 ($-9.0$ pp, versus $-32$ to $-33$ pp for ICon and SRL on Food-101).
+Even when LoRA's capacity is matched to EGA ($r=128$, $\sim$4.2M trainable parameters), its best in-distribution performance (LoRA+InfoNCE) reaches only $0.6176$, still $8.7$ percentage points below EGA.
+Different points on this frontier suit different deployment scenarios: applications that prioritize in-distribution precision benefit from EGA's balanced position, while applications dominated by OOD queries may prefer the higher OOD precision of LoRA variants at the cost of in-distribution refinement.
 
 In summary, this work makes the following contributions:
 \begin{itemize}
@@ -439,12 +439,26 @@ EGA occupies a distinct operating point on this frontier, combining the highest 
     \label{fig:pareto}
 \end{figure}
 
-We evaluate LoRA~\cite{hu2022lora} as a parameter-efficient baseline (rank $r=8$, $\sim$8K trainable parameters vs.
-$\sim$4.2M for the EGAMLP architecture
-used by EGA, ICon, and SRL).
-Two configurations are included: LoRA~+~InfoNCE (a global contrastive loss) and LoRA~+~Triplet (the same loss as EGA).
-Both LoRA configurations avoid the Label Precision collapse exhibited by ICon and SRL even when paired with a global loss: LoRA~+~InfoNCE on Food-101 reaches LP $0.883$, statistically indistinguishable from the frozen baseline ($0.881$, std $0.004$).
-This suggests that the failure of ICon and SRL arises from the \emph{combination} of (i) full-capacity adapter and (ii) dense global gradients.
+\begin{wraptable}{r}{0.58\textwidth}
+\centering
+\vspace{-0.3cm}
+\caption{EGA versus capacity-matched LoRA}
+\label{tab:lora_capacity}
+\small
+\begin{tabular}{lcc}
+\toprule
+Method                  & Trainable Params & LP@1 \\
+\midrule
+EGA (Ours)              & 4.2M             & \textbf{0.705} \\
+LoRA+InfoNCE (r=64)     & 2.6M             & 0.6256 \\
+LoRA+InfoNCE (r=128)    & 4.2M             & 0.6176 \\
+LoRA+Triplet (r=64)     & 2.6M             & 0.5568 \\
+LoRA+Triplet (r=128)    & 4.2M             & 0.5472 \\
+\bottomrule
+\end{tabular}
+\end{wraptable}
+We evaluate LoRA~\cite{hu2022lora} as a capacity-matched baseline (rank $r=64$ and $r=128$, resulting in $\sim$2.6M--4.2M trainable parameters, comparable to EGA's 4.2M parameters). We include both LoRA+InfoNCE (global contrastive loss) and LoRA+Triplet (same loss as EGA). 
+As shown in Table~\ref{tab:lora_capacity}, even under capacity-matched conditions, LoRA underperforms EGA on in-distribution Label Precision: the best LoRA+InfoNCE reaches only $0.6256$ ($r=64$) and $0.6176$ ($r=128$), still $7.9$--$8.7$ percentage points below EGA's $0.705$. LoRA+Triplet performs even lower ($0.5568$ at $r=64$, $0.5472$ at $r=128$). This indicates that EGA's advantage is not solely due to higher capacity, but also stems from its sparse-gradient residual design.
 
 \subsection{Two Mechanisms for OOD Stability}
 \label{sec:mechanism}
@@ -545,7 +559,7 @@ A larger margin forces the adapter to update embeddings that already satisfy loc
 Furthermore, the model shows stable performance across hidden dimensions from 512 to 4096.
 This stability confirms that EGA achieves metric correction through its structural design rather than specific parameters.
 
-\subsection{Generalization to Stronger Backbones}
+\subsection{Generalization to More Backbones}
 
 To verify that the benefits of EGA are not specific to the CLIP ViT-B/32 backbone used in our main experiments, we further evaluate EGA on two stronger and more recent vision encoders: DINOv2-large~\cite{oquab2024dinov} and SigLIP~\cite{10377550}.
 
