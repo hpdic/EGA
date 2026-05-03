@@ -337,7 +337,8 @@ Experiments were conducted on a server with 256 AMD EPYC-7763 CPU cores, 512 GiB
 Evaluation datasets include CIFAR-100 for in-distribution scenarios, CIFAR-10 for cross-dataset OOD settings, and FGVC-Aircraft and Food-101 for unseen-class OOD evaluations.
 All of these datasets can be directly downloaded from the Pytorch library.
 The backbone models include ClIP ViT-B/32~\cite{clip_icml21}, DINOv2-large~\cite{oquab2024dinov}, and SigLIP~\cite{10377550}.
-We compare our method against four adapter models: ICon~\cite{alshammariunifying}, SRL~\cite{dong2025improve}, LoRA + InfoNCE~\cite{hu2022lora,oord2018representation}, and LoRA + Triplet~\cite{hu2022lora}.
+We compare our method against four adapter models: ICon~\cite{alshammariunifying}, SRL~\cite{dong2025improve}, LoRA + InfoNCE~\cite{hu2022lora,oord2018representation}, and LoRA + Triplet~\cite{hu2022lora};
+We compare our method against four adapter models: ICon~\cite{alshammariunifying}, SRL~\cite{dong2025improve}, LoRA + InfoNCE~\cite{hu2022lora,oord2018representation}, and LoRA + Triplet~\cite{hu2022lora}. We omit Linear Probing, Tip-Adapter~\cite{tipadapter_eccv22}, and prompt tuning methods (CoOp/CoCoOp~\cite{kzhou_ijcv22,zhou2022conditional}) because they are not compatible with our cross-dataset OOD setting.
 Extended experimental details can be found in Appendix~\ref{sec:more_experiments}.
 
 \subsection{In-Distribution Validation}
@@ -374,7 +375,7 @@ After EGA, the two distributions separate cleanly across all $K$, and this separ
 
 \begin{table}[!t]
 	\centering
-	\caption{In-distribution retrieval performance on CIFAR-100 at $K=1$, $\text{nprobe}=1$.}
+	\caption{In-distribution retrieval performance on CIFAR-100 at $K=1$, $\text{nprobe}=1$. Standard errors are below $0.01$ and omitted for clarity.}
 	\label{tab:indist_summary}
 	\small
 	\setlength{\tabcolsep}{4pt}
