@@ -25,7 +25,7 @@
 \newtheorem{observation}{Observation}
 \newcommand{\don}[1]{\textcolor{blue}{[Dongfang: #1]}}
 
-\title{EGA: Adapting Frozen Encoders for Vector Search with Bounded OOD Degradation}
+\title{EGA: Adapting Frozen Encoders for Vector Search with Bounded Out-of-Distribution Degradation}
 
 \author{%
   Dongfang Zhao \\
@@ -40,15 +40,15 @@
 \maketitle
 
 \begin{abstract}
-	Vector similarity search systems built on frozen vision-language encoders routinely face queries from classes absent at adapter training time, since both the indexed database and the live query stream contain categories that were never labeled.
-	We study how lightweight adapters behave under this distribution shift, where the relevant criterion is the worst-case Label Precision across the deployment-induced query distributions, not optimality on any single one.
-	Global contrastive objectives such as ICon and SRL, when paired with high-capacity adapters, achieve near-perfect in-distribution Label Precision on CIFAR-100 (0.999 and 0.992 at K=1, nprobe=1) but collapse to 0.562 and 0.552 on the unseen classes of Food-101, a drop of 44 percentage points.
-	LoRA variants avoid this collapse but underperform in-distribution.
-	We propose Euclidean Geodesic Alignment (EGA), a residual adapter trained with a small-margin triplet loss on the class-aware neighborhood graph of pre-trained embeddings.
-	EGA induces gradient sparsity at convergence (96.5\% of triplets produce zero gradient), empirically leaving the unseen-class geometry largely intact while permitting high-capacity in-distribution refinement.
-	Across four out-of-distribution (OOD) benchmarks (CIFAR-10, FGVC-Aircraft, Food-101, ImageNet-1K held-out classes), EGA achieves the highest worst-case Label Precision@1 (0.611) among six evaluated methods, exceeding the next-best alternative (LoRA+Triplet at 0.569) by $4.2$ percentage points.
-	EGA is the only method whose Label Precision exceeds $0.6$ on every evaluated OOD benchmark.
-	The benefits transfer to stronger backbones: on DINOv2-large and SigLIP, EGA improves Label Precision@1 by 4.75 and 8.55 percentage points, respectively.
+Vector similarity search systems built on frozen vision-language encoders routinely face queries from classes absent at adapter training time, since both the indexed database and the live query stream contain categories that were never labeled.
+We study how lightweight adapters behave under this distribution shift, where the relevant criterion is the worst-case Label Precision across the deployment-induced query distributions, not optimality on any single one.
+Global contrastive objectives such as ICon and SRL, when paired with high-capacity adapters, achieve near-perfect in-distribution Label Precision on CIFAR-100 (0.999 and 0.992 at K=1, nprobe=1) but collapse to 0.562 and 0.552 on the unseen classes of Food-101, a drop of 44 percentage points.
+LoRA variants avoid this collapse but underperform in-distribution.
+We propose Euclidean Geodesic Alignment (EGA), a residual adapter trained with a small-margin triplet loss on the class-aware neighborhood graph of pre-trained embeddings.
+EGA induces gradient sparsity at convergence (96.5\% of triplets produce zero gradient), empirically leaving the unseen-class geometry largely intact while permitting high-capacity in-distribution refinement.
+Across four out-of-distribution (OOD) benchmarks (CIFAR-10, FGVC-Aircraft, Food-101, ImageNet-1K held-out classes), EGA achieves the highest worst-case Label Precision@1 (0.611) among six evaluated methods, exceeding the next-best alternative (LoRA+Triplet at 0.569) by $4.2$ percentage points.
+EGA is the only method whose Label Precision exceeds $0.6$ on every evaluated OOD benchmark.
+The benefits transfer to stronger backbones: on DINOv2-large and SigLIP, EGA improves Label Precision@1 by 4.75 and 8.55 percentage points, respectively.
 \end{abstract}
 
 \section{Introduction}
@@ -304,7 +304,7 @@ A Lipschitz-based bound on the unseen-class perturbation is left for future work
 
 Experiments were conducted on Chameleon Cloud~\cite{keahey2020lessons} with 256 AMD EPYC-7763 CPU cores, 512 GiB RAM, and an NVIDIA A100 GPU of 80 GB HBM2e.
 Datasets include CIFAR-100 and ImageNet-1K for in-distribution scenarios, CIFAR-10 for cross-dataset OOD settings, and FGVC-Aircraft, Food-101, and ImageNet-1K held-out classes for unseen-class OOD evaluations.
-All datasets can be directly downloaded from Pytorch or Hugging Face.
+All datasets can be downloaded from Pytorch or Kaggle.
 The backbone models include ClIP ViT-B/32~\cite{clip_icml21}, DINOv2-large~\cite{oquab2024dinov}, and SigLIP~\cite{10377550}.
 We compare our method against four adapter models: ICon~\cite{alshammariunifying}, SRL~\cite{dong2025improve}, LoRA + InfoNCE~\cite{hu2022lora,oord2018representation}, and LoRA + Triplet~\cite{hu2022lora}, with LoRA rank $r=128$ as the default capacity-matched configuration; We omit baselines Linear Probing, Tip-Adapter~\cite{tipadapter_eccv22}, and prompt tuning methods (CoOp/CoCoOp~\cite{kzhou_ijcv22,zhou2022conditional}) because they are not compatible with our cross-dataset OOD setting.
 Additional experimental setup details are in Appendix~\ref{sec:more_experiments}; extended experimental results, including incomplete baselines, can be found in Appendix~\ref{sec:more_results}.
