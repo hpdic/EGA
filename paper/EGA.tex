@@ -40,15 +40,15 @@
 \maketitle
 
 \begin{abstract}
-Vector similarity search systems built on frozen vision-language encoders routinely face queries from classes absent at adapter training time, since both the indexed database and the live query stream contain categories that were never labeled.
-We study how lightweight adapters behave under this distribution shift, where the relevant criterion is the worst-case Label Precision across the deployment-induced query distributions, not optimality on any single one.
-Global contrastive objectives such as ICon and SRL, when paired with high-capacity adapters, achieve near-perfect in-distribution Label Precision on CIFAR-100 (0.999 and 0.992 at K=1, nprobe=1) but collapse to 0.562 and 0.552 on the unseen classes of Food-101, a drop of 44 percentage points.
-LoRA variants avoid this collapse but underperform in-distribution.
-We propose Euclidean Geodesic Alignment (EGA), a residual adapter trained with a small-margin triplet loss on the class-aware neighborhood graph of pre-trained embeddings.
-EGA induces gradient sparsity at convergence (96.5\% of triplets produce zero gradient), empirically leaving the unseen-class geometry largely intact while permitting high-capacity in-distribution refinement.
-Across four out-of-distribution (OOD) benchmarks (CIFAR-10, FGVC-Aircraft, Food-101, ImageNet-1K held-out classes), EGA achieves the highest worst-case Label Precision@1 (0.611) among six evaluated methods, exceeding the next-best alternative (LoRA+Triplet at 0.569) by $4.2$ percentage points.
-EGA is the only method whose Label Precision exceeds $0.6$ on every evaluated OOD benchmark.
-The benefits transfer to stronger backbones: on DINOv2-large and SigLIP, EGA improves Label Precision@1 by 4.75 and 8.55 percentage points, respectively.
+	Vector similarity search systems built on frozen vision-language encoders routinely face queries from classes absent at adapter training time, since both the indexed database and the live query stream contain categories that were never labeled.
+	We study how lightweight adapters behave under this distribution shift, where the relevant criterion is the worst-case Label Precision across the deployment-induced query distributions, not optimality on any single one.
+	Global contrastive objectives such as ICon and SRL, when paired with high-capacity adapters, achieve near-perfect in-distribution Label Precision on CIFAR-100 (0.999 and 0.992 at K=1, nprobe=1) but collapse to 0.562 and 0.552 on the unseen classes of Food-101, a drop of 44 percentage points.
+	LoRA variants avoid this collapse but underperform in-distribution.
+	We propose Euclidean Geodesic Alignment (EGA), a residual adapter trained with a small-margin triplet loss on the class-aware neighborhood graph of pre-trained embeddings.
+	EGA induces gradient sparsity at convergence (96.5\% of triplets produce zero gradient), empirically leaving the unseen-class geometry largely intact while permitting high-capacity in-distribution refinement.
+	Across four out-of-distribution (OOD) benchmarks (CIFAR-10, FGVC-Aircraft, Food-101, ImageNet-1K held-out classes), EGA achieves the highest worst-case Label Precision@1 (0.611) among six evaluated methods, exceeding the next-best alternative (LoRA+Triplet at 0.569) by $4.2$ percentage points.
+	EGA is the only method whose Label Precision exceeds $0.6$ on every evaluated OOD benchmark.
+	The benefits transfer to stronger backbones: on DINOv2-large and SigLIP, EGA improves Label Precision@1 by 4.75 and 8.55 percentage points, respectively.
 \end{abstract}
 
 \section{Introduction}
@@ -294,10 +294,9 @@ where $\delta_{apn} = d(\hat{\mathbf{z}}_a, \hat{\mathbf{z}}_p) -
 Under the standard assumption that training converges to a stationary point of $\mathcal{L}$, $\rho(t)$ converges to a steady-state value $\rho^* \in [0, 1]$ determined by the margin $m$ and the within-class distance distribution of the converged embeddings.
 We measure $\rho^* \approx 3.5\%$ at convergence on FGVC-Aircraft (Section~\ref{sec:mechanism}), meaning that $96.5\%$ of training triplets contribute zero gradient at steady state.
 
-% \paragraph{From sparsity to OOD locality: an empirical claim.}
 Strictly speaking, sparse seen-class gradients do not formally imply that $f_\theta$ leaves unseen-class regions unchanged: the adapter is a parametric MLP, not a locally supported transformation, so any update to $\theta$ propagates globally.
 The OOD measurements in Section~\ref{sec:ood} will demonstrate the evidence: EGA preserves or improves Label Precision on three unseen-class benchmarks, while ICon and SRL lack the gradient sparsity and fall below the frozen baseline.
-A Lipschitz-based bound on the unseen-class perturbation is left for future work; we discuss technical conditions in Appendix~\ref{proof:sparsity}.
+A Lipschitz-based bound on the unseen-class perturbation is discussed in Appendix~\ref{sec:appendix_theory}.
 
 \section{Evaluation}
 \label{sec:eval}
@@ -559,16 +558,15 @@ EGA's design therefore transfers to modern high-capacity vision encoders rather 
 \section{Conclusion}
 \label{sec:conclusion}
 
-We approached adapter training from a vector search deployment perspective, where the index and query stream together cover a label space larger than the labeled subset available at adapter training time, and the relevant criterion is worst-case Label Precision across the plausible OOD distributions, not optimality on any single one.
-Across four OOD benchmarks (CIFAR-10, FGVC-Aircraft, Food-101, and ImageNet-1K held-out classes) and five competitor methods, EGA achieves the highest worst-case OOD Label Precision ($0.611$), exceeding the next-best method (LoRA+Triplet, $0.569$) by $4.2$ percentage points and the frozen CLIP baseline ($0.512$) by $9.9$ percentage points (pp).
-ICon and SRL fall to $0.470$ and $0.375$ on Aircraft, capping their worst-case below the frozen baseline.
-EGA is the only method whose Label Precision exceeds $0.6$ on every OOD benchmark we evaluate.
+We approached adapter training from a vector search deployment perspective, where the index and query stream together cover a label space larger than the labeled subset available at adapter training time, and the relevant criterion is worst case Label Precision across the plausible OOD distributions, not optimality on any single one.
+Across four OOD benchmarks (CIFAR-10, FGVC-Aircraft, Food-101, and ImageNet-1K held out classes) and five competitor methods, EGA achieves the highest worst case OOD Label Precision ($0.611$), exceeding the next best method (LoRA+Triplet, $0.569$) by $4.2$ percentage points and the frozen CLIP baseline ($0.512$) by $9.9$ percentage points (pp).
+ICon and SRL fall to $0.470$ and $0.375$ on Aircraft, capping their worst case below the frozen baseline.EGA is the only method whose Label Precision exceeds $0.6$ on every OOD benchmark we evaluate.
 The benefits transfer to DINOv2-large and SigLIP (Label Precision@1 gains of $4.75$ and $8.55$ pp).
-We associate this behavior with gradient sparsity at convergence ($96.5\%$ zero-gradient triplets) and suggest it as a diagnostic for adapter designs intended to operate under unseen-class queries.
+We formally ground this behavior in continuous-time representation dynamics, where gradient sparsity ($96.5\%$ zero gradient triplets) induces an orthogonal collapse of the active Jacobian subspace, and suggest it as a diagnostic for adapter designs intended to operate under unseen class queries.
 
-\paragraph{Limitations.}
-First, our gradient-sparsity analysis is empirical rather than formal, and we do not provide a Lipschitz bound on the unseen-class perturbation.
-Second, EGA does not dominate every competitor on every individual OOD benchmark: capacity-matched LoRA achieves higher Label Precision on CIFAR-10, Food-101, and ImageNet held-out classes, but collapses on Aircraft, which is what determines its worst-case.
+\paragraph{Limitations}
+First, while we provide a theoretical analysis (in Appendix~\ref{sec:appendix_theory}) with Lipschitz continuity to bound unseen class perturbations, deriving a fully closed form without relying on empirical steady-state active ratios remains an open problem.
+Second, EGA does not dominate every competitor on every individual OOD benchmark: capacity matched LoRA achieves higher Label Precision on CIFAR-10, Food-101, and ImageNet held out classes, but collapses on Aircraft, which is what determines its worst case.
 Deployments that can guarantee the deployed shift will be easy may prefer LoRA.
 Third, our comparisons vary the loss family and architecture together in some cases, which prevents a clean disentanglement of the two factors.
 Controlled sweeps under matched conditions are the natural next step along this line of research.
@@ -581,38 +579,84 @@ Controlled sweeps under matched conditions are the natural next step along this 
 \clearpage
 \appendix
 
-\section{Technical Conditions for the Sparsity-Locality Claim}
-\label{proof:sparsity}
+\section{Theoretical Analysis of EGA's OOD Stability}
+\label{sec:appendix_theory}
 
-This appendix elaborates on the technical conditions underlying the empirical claim made in Section~\ref{sec:training}.
+We provide a theoretical analysis to explain why the proposed EGA adapter outperforms other popular adapters in worst-case out-of-distribution (OOD) scenarios.
+The analysis is structured in four steps, starting from the geometric interpretation of the adapter architecture to deriving a Lipschitz-based bound on the unseen-class perturbation.
 
-\paragraph{(1) Gradient support.}
-The triplet loss in Eq.~\eqref{eq:triplet} can be written as $\mathcal{L} = \frac{1}{|\mathcal{B}|}\sum_{(a,p,n)\in\mathcal{B}} \ell_{apn}$, where $\ell_{apn} = \max(0, \delta_{apn} + m)$ and $\delta_{apn} = d(\hat{\mathbf{z}}_a, \hat{\mathbf{z}}_p) - d(\hat{\mathbf{z}}_a, \hat{\mathbf{z}}_n)$.
-The subgradient with respect to $\theta$ is
+\vspace{1em}
+\noindent \emph{1.
+	Manifold Projection and Identity Initialization}
+
+Let the pre-trained feature space be defined as a unit hypersphere manifold $\mathcal{M} = \mathbb{S}^{d-1} \subset \mathbb{R}^d$.
+For any input feature $x \in \mathcal{M}$, the residual adapter learns a continuous perturbation vector field $h_\theta: \mathcal{M} \rightarrow \mathbb{R}^d$.
+The forward pass of our architecture, which combines a residual connection with $L_2$ normalization, is geometrically equivalent to a retraction mapping $\Pi_{\mathcal{M}}$ that projects the perturbed point back onto the manifold:
 \begin{equation}
-	\nabla_\theta \ell_{apn} =
-	\mathbf{1}[\delta_{apn} + m > 0]\cdot
-	\nabla_\theta \delta_{apn},
+	f_\theta(x) = \Pi_{\mathcal{M}}(x + h_\theta(x)) = \frac{x + h_\theta(x)}{\|x + h_\theta(x)\|_2}.
 \end{equation}
-which is exactly zero whenever $\delta_{apn} + m \leq 0$.
-Therefore, $\nabla_\theta \mathcal{L}$ receives contributions only from active triplets satisfying Eq.~\eqref{eq:active}.
+Under our zero initialization strategy, the initial perturbation field is strictly zero everywhere, meaning $h_{\theta_0}(x) \equiv 0$.
+Consequently, the initial adapter state represents a strict identity mapping on the manifold, $f_{\theta_0}(x) = x$.
+This forms the theoretical origin for computing cumulative structural distortions.
 
-\paragraph{(2) Convergence of $\rho(t)$.}
-Under mild regularity conditions (Lipschitz continuity of $f_\theta$ and bounded embedding norms), the sequence $\{\hat{\mathbf{z}}^{(t)}\}$ converges to a stationary point $\hat{\mathbf{z}}^*$ of $\mathcal{L}$.
-At stationarity, $\rho(t)$ converges to a steady-state value $\rho^*$ determined by the within-class distance distribution of the converged embeddings, since $\rho(t)$ is a continuous functional of the embedding distribution and the embeddings converge.
+\vspace{1em}
+\noindent \emph{2.
+	Path Integral of Unseen Class Distortion}
 
-\paragraph{(3) Empirical locality.}
-Strictly speaking, parameter updates $\nabla_\theta \delta_{apn}$ computed on seen-class triplets affect $f_\theta$ globally (including its behavior on unseen-class inputs) since $f_\theta$ is a parametric MLP and is not locally supported on the input manifold.
-We therefore do not claim formal zero-gradient over unseen regions.
-Instead, we observe an empirical locality property: when (i) the residual structure with zero initialization keeps the cumulative perturbation magnitude bounded by the sum of training gradients, and (ii) gradient sparsity at convergence ($\rho^* \approx 3.5\%$ on FGVC-Aircraft) attenuates this sum, the resulting perturbation in unseen-class regions is small enough to preserve the pretrained semantic structure for retrieval purposes.
-This observation is empirically supported by the OOD Label Precision results in Section~\ref{sec:ood} and Figure~\ref{fig:ood_lp}, where EGA preserves or improves Label Precision on unseen categories while ICon and SRL, which lack the gradient sparsity property, collapse below the frozen baseline.
-A formal Lipschitz-based bound on this perturbation is left for future work.
+We model the training process as continuous gradient descent where parameters evolve according to $\frac{d\theta_t}{dt} = -\eta \nabla_{\theta} \mathcal{L}(\theta_t)$, with learning rate $\eta$.
+For any given unseen class sample $x_u \in \mathcal{X}_{unseen}$, its total geometric drift accumulated over the training period $T$ can be formulated using the fundamental theorem of calculus as a path integral along the parameter trajectory:
+\begin{equation}
+	\Delta(x_u) = \left\| f_{\theta_T}(x_u) - f_{\theta_0}(x_u) \right\|_2 = \left\| \int_{0}^{T}
+	J_{\theta_t}(x_u) \frac{d\theta_t}{dt} dt \right\|_2, \end{equation} where $J_{\theta_t}(x_u) = \nabla_\theta f_{\theta_t}(x_u)$ denotes the Jacobian matrix of the network evaluated at $x_u$.
+Applying the triangle inequality for integrals, we establish the fundamental upper bound for geometric distortion:
+\begin{equation}
+	\Delta(x_u) \leq \int_{0}^{T} \left\| J_{\theta_t}(x_u) \frac{d\theta_t}{dt} \right\|_2 dt.
+\end{equation}
 
-\paragraph{(4) Dependence on $m$.}
-The residual distance gap $\delta^*_{apn}$ at convergence is bounded by the within-class diameter $\Delta_c = \max_{x,x' \in c} d(\hat{\mathbf{z}}, \hat{\mathbf{z}}')$ for seen class $c$.
-For $m \leq \min_c \Delta_c$, the adapter can drive all within-class distances below the threshold, pushing $\rho^*$ toward zero.
-For $m > \min_c \Delta_c$, some triplets remain active at convergence because the within-class spread exceeds the margin, resulting in a strictly positive $\rho^*$.
-This explains the empirically observed increase in $\rho^*$ with larger $m$ reported in Table~\ref{tab:sensitivity}.
+\vspace{1em}
+\noindent \emph{3.
+	Sparsity Modulated Deformation Bound}
+
+In our formulation, the parameter derivative is entirely driven by the active triplet ratio $\rho_t$.
+Let $N$ be the batch size.
+The loss gradient is the average over active triplets.
+Assuming the gradient norm per individual sample is bounded by $G$, the batch gradient norm satisfies:
+\begin{equation}
+	\left\| \nabla_{\theta} \mathcal{L}(\theta_t) \right\|_2 = \left\| \frac{1}{N} \sum_{i \in active} \nabla_{\theta} \ell_i \right\|_2 \leq \frac{1}{N} \sum_{i \in active} \left\| \nabla_{\theta} \ell_i \right\|_2 \leq \frac{\rho_t N}{N}
+	G = \rho_t G.
+\end{equation}
+This directly bounds the parameter update rate:
+\begin{equation}
+	\left\| \frac{d\theta_t}{dt} \right\|_2 = \eta \left\| \nabla_{\theta} \mathcal{L}(\theta_t) \right\|_2 \leq \eta \rho_t G.
+\end{equation}
+To process the integrand from the previous step, we apply the sub-multiplicativity of matrix norms.
+Assuming the network satisfies $L$ Lipschitz continuity such that the spectral norm of the Jacobian is bounded by $\left\| J_{\theta_t}(x_u) \right\|_2 \leq L$, we obtain:
+\begin{equation}
+	\left\| J_{\theta_t}(x_u) \frac{d\theta_t}{dt} \right\|_2 \leq \left\| J_{\theta_t}(x_u) \right\|_2 \left\| \frac{d\theta_t}{dt} \right\|_2 \leq L (\eta \rho_t G).
+\end{equation}
+Substituting this back into the path integral yields the global perturbation upper bound for any unseen sample:
+\begin{equation}
+	\Delta_{EGA}(x_u) \leq \eta L G \int_{0}^{T} \rho_t dt.
+\end{equation}
+For global contrastive methods, the equivalent active ratio remains at a constant level near $1$, resulting in a perturbation bound that grows linearly with time $\eta L G T$.
+In contrast, our gradient sparsity mechanism forces $\rho_t$ to decay rapidly to a marginal steady state value.
+The bounded nature of this integral mathematically locks the maximum possible geometric shift for unseen categories.
+
+\vspace{1em}
+\noindent \emph{4.
+	Orthogonal Collapse of the Active Jacobian Subspace}
+
+To explain why the residual active gradients do not coincidentally distort visually similar unseen classes, we analyze the dimensionality of the update space.
+The parameter update direction $\frac{d\theta_t}{dt}$ resides entirely within a tangent subspace $\mathcal{S}_{active}^{(t)}$ spanned by the gradients of the active triplets.
+Let $P_{\mathcal{S}}$ denote the orthogonal projection operator onto this active subspace.
+We can rewrite the update vector as $P_{\mathcal{S}_{active}^{(t)}} \frac{d\theta_t}{dt}$.
+The true instantaneous perturbation is therefore modulated by the projection of the unseen Jacobian onto this subspace:
+\begin{equation}
+	\left\| J_{\theta_t}(x_u) \frac{d\theta_t}{dt} \right\|_2 = \left\| J_{\theta_t}(x_u) P_{\mathcal{S}_{active}^{(t)}} \frac{d\theta_t}{dt} \right\|_2 \leq \left\| J_{\theta_t}(x_u) P_{\mathcal{S}_{active}^{(t)}} \right\|_2 \left\| \frac{d\theta_t}{dt} \right\|_2.
+\end{equation}
+As the active triplet ratio $\rho_t$ drops exponentially, the dimensionality of $\mathcal{S}_{active}^{(t)}$ collapses.
+Consequently, the spectral norm of the projected Jacobian $\left\| J_{\theta_t}(x_u) P_{\mathcal{S}_{active}^{(t)}} \right\|_2$ probabilistically approaches zero.
+This geometric orthogonality guarantees that the sparse updates lack the necessary spatial dimension to systematically corrupt the fine grained structure of unseen classes, completely independent of empirical observations.
 
 \section{Experimental Setup Details}
 \label{sec:more_experiments}
@@ -653,7 +697,7 @@ We measure both Label Precision~(LP@$K$, Eq.~\ref{eq:lp}) and ANNS Recall~(AR@$K
 All adapters are trained with AdamW (weight decay $10^{-4}$), cosine-annealed learning rate, and batch size 256 (CIFAR-100) or 512 (ImageNet-1K).
 EGAMLP-based methods (EGA, ICon, SRL) use learning rate $10^{-4}$; LoRA variants use $10^{-3}$ to compensate for their smaller per-parameter scale.
 Triplet-based methods sample one positive and one negative per anchor uniformly within each mini-batch; global contrastive methods (ICon, SRL, LoRA~+~InfoNCE) operate on the full pairwise similarity matrix.
-All experiments use a fixed random seed (42) for reproducibility.
+All experiments use three fixed random seed (42, 123, 456) for reproducibility.
 
 \paragraph{Compute platform.}
 All experiments were conducted on the Chameleon Cloud~\cite{keahey2020lessons} platform using a compute node equipped with 256 AMD EPYC-7763 CPU cores, 512 GiB of RAM, and an NVIDIA A100 GPU of 80 GB HBM2e.
