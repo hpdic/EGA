@@ -101,9 +101,10 @@ sudo apt install unzip
 cd ~/hpdic
 kaggle datasets download -d ifigotin/imagenetmini-1000
 unzip -q imagenetmini-1000.zip
-python scripts/28_imagenet_extract_features.py
-python scripts/29_imagenet_train_ega.py
-python scripts/31_imagenet_eval_clip.py
+python scripts/35_imagenet_all.py --mode ood --seed 42
+python scripts/35_imagenet_all.py --mode ood --seed 123
+python scripts/35_imagenet_all.py --mode ood --seed 456
+python scripts/35_imagenet_all.py --mode id
 ```
 
 ## Contact
