@@ -1,4 +1,5 @@
 # Latex
+*.txt
 *.aux
 *.log
 *.out
