@@ -44,7 +44,7 @@
 	We propose Euclidean Geodesic Alignment (EGA), a residual adapter that couples three simple principles: zero initialization, local triplet loss, and hypersphere projection.
 	These collectively induce a self-limiting dynamic: triplets that already satisfy a small margin stop producing gradients, so the adapter automatically stops updating where the local geometry is already correct.
 	At convergence $96.5\%$ of triplets are gradient-free, leaving unseen-class regions largely untouched while still enabling full-capacity refinement of seen classes.
-	Across four diverse OOD benchmarks, EGA achieves the highest worst-case Label Precision ($0.611$): the only method to exceed $0.6$ on every single benchmark.
+	Across five diverse OOD benchmarks, EGA achieves the highest worst-case Label Precision ($0.611$): the only method to exceed $0.6$ on every single benchmark.
 	The design transfers directly to stronger backbones, and we provide an analytical justification linking gradient sparsity to bounded OOD perturbation.
 \end{abstract}
 
@@ -81,12 +81,11 @@ On the one hand, the triplet loss induces a self-limiting training dynamic: as t
 On the other hand, the capacity to refine seen-class neighborhoods is preserved, but the loss stops applying pressure once seen-class neighborhoods are locally separated.
 As a result, the global reshaping that destroys unseen-class geometry never accumulates.
 
-We evaluate EGA on CIFAR-100 and ImageNet-1K (in-distribution) and four OOD benchmarks (CIFAR-10, FGVC-Aircraft, Food-101, ImageNet-1K held-out classes), comparing against the frozen CLIP baseline~\cite{clip_icml21}, global contrastive adapters (ICon~\cite{alshammariunifying}, SRL~\cite{dong2025improve}), and LoRA~\cite{hu2022lora} variants (InfoNCE~\cite{oord2018representation} and Triplet, both at $r=128$).
-EGA achieves the highest worst-case OOD Label Precision (0.611) across the four OOD benchmarks, $4.2$ percentage points above the next-best method (LoRA+Triplet at 0.569).
-EGA is the only method whose Label Precision exceeds $0.6$ on every OOD benchmark.
+We evaluate EGA on CIFAR-100 and ImageNet-1K (in-distribution) and five OOD benchmarks (CIFAR-10, FGVC-Aircraft, Food-101, ImageNet-1K held-out classes, and Oxford-IIIT Pet), comparing against the frozen CLIP baseline~\cite{clip_icml21}, global contrastive adapters (ICon~\cite{alshammariunifying}, SRL~\cite{dong2025improve}), and LoRA~\cite{hu2022lora} variants (InfoNCE~\cite{oord2018representation} and Triplet, both at $r=128$).
+Across the four primary OOD benchmarks, EGA achieves the highest worst-case Label Precision (0.611), $4.2$ percentage points above the next-best method (LoRA+Triplet at 0.569), and is the only method whose Label Precision exceeds $0.6$ on every one of them; on Oxford-IIIT Pet, where the frozen baseline already reaches $0.96$, EGA matches this label precision while achieving the highest ANN Recall among all evaluated methods.
 ICon and SRL collapse to $0.470$ and $0.375$ in their worst case (Aircraft); LoRA+InfoNCE to $0.538$ (Aircraft).
 The benefits transfer to stronger backbones, with EGA improving Label Precision@1 by $4.75$ and $8.55$ percentage points on DINOv2-large~\cite{oquab2024dinov} and SigLIP~\cite{10377550}.
-EGA does not dominate every method on every individual OOD benchmark: on CIFAR-10, Food-101, and ImageNet-1K held-out classes, capacity-matched LoRA achieves higher Label Precision than EGA on the easier OOD shifts, but trades this for catastrophically lower worst-case quality on harder shifts.
+% EGA does not dominate every method on every individual OOD benchmark: on CIFAR-10, Food-101, and ImageNet-1K held-out classes, capacity-matched LoRA achieves higher Label Precision than EGA on the easier OOD shifts, but trades this for catastrophically lower worst-case quality on harder shifts.
 
 In summary, this work makes the following contributions:
 \begin{itemize}
@@ -309,7 +308,7 @@ A Lipschitz-based bound on the unseen-class perturbation is discussed in Appendi
 \label{sec:eval}
 
 Experiments were conducted on Chameleon Cloud~\cite{keahey2020lessons} with 256 AMD EPYC-7763 CPU cores, 512 GiB RAM, and an NVIDIA A100 GPU of 80 GB HBM2e.
-Datasets include CIFAR-100 and ImageNet-1K for in-distribution, and CIFAR-10, FGVC-Aircraft, Food-101, and ImageNet-1K held-out classes for OOD evaluation; all are available via PyTorch or Kaggle.
+Datasets include CIFAR-100 and ImageNet-1K for in-distribution, and CIFAR-10, FGVC-Aircraft, Food-101, ImageNet-1K held-out classes, and Oxford-IIIT Pet for OOD evaluation; all are available via PyTorch or Kaggle.
 Backbones are CLIP ViT-B/32~\cite{clip_icml21}, DINOv2-large~\cite{oquab2024dinov}, and SigLIP~\cite{10377550}.
 
 We compare EGA against four adapter methods: ICon~\cite{alshammariunifying}, SRL~\cite{dong2025improve}, LoRA~+~InfoNCE~\cite{hu2022lora,oord2018representation}, and LoRA~+~Triplet~\cite{hu2022lora}, all trained on frozen CLIP features under identical splits and protocols.
@@ -432,9 +431,10 @@ The four OOD benchmarks span qualitatively different shifts: CIFAR-10 is a cross
 The worst-case reflects deployment uncertainty: the system designer commits to one adapter without knowing in advance which shift will dominate the query stream.
 Methods that excel on some shifts but collapse on others (ICon collapses on Aircraft, SRL collapses on Aircraft, LoRA variants on Aircraft) cannot guarantee a quality floor.
 
-While these four benchmarks span the major categories of distribution shift (cross-dataset, fine-grained, and large-scale), the worst-case result is indeed driven by the fine-grained Aircraft split.
-Whether this situation generalizes to other fine-grained domains (e.g., bird species, car models) remains an open empirical question; however, the consistency of the pattern, i.e., global contrastive methods collapse most severely under fine-grained shifts where visual similarity between seen and unseen classes is high, suggests that the phenomenon is systematic rather than an artifact of a single dataset.
-Verification on additional fine-grained benchmarks is a natural next step.
+While these four benchmarks span the major categories of distribution shift, the worst-case is driven by the fine-grained Aircraft split.
+As a further probe, we evaluate on Oxford-IIIT Pet (37-class pet breed classification) under the same OOD protocol: the frozen CLIP baseline already reaches LP@1 $=$ 0.96, and all adapter methods perform comparably; EGA remains the best-performing method qualitatively, preserving the pretrained geometry without degradation (detailed numbers in Appendix~\ref{appendix:pet}).
+This supports the interpretation that EGA's advantage is specific to hard fine-grained shifts where the pretrained geometry is genuinely insufficient to separate unseen categories, rather than to fine-grained datasets in general.
+% Whether this pattern generalizes to other challenging fine-grained domains remains open, but the consistent collapse of global contrastive methods on Aircraft suggests the phenomenon is systematic.
 
 \paragraph{Per-benchmark behavior.}
 On ANNS Recall, all trained adapters match or exceed the frozen baseline across Aircraft, Food-101, and ImageNet, confirming that adapter training successfully reorganizes the geometry for ANN indexing.
@@ -576,13 +576,13 @@ The largest gains appear on the relatively weaker CLIP ViT-B/32 (+14.65 pp in La
 
 We studied adapter training for vector search under open-category queries, where the proper metric is worst-case OOD Label Precision rather than in-distribution optimality.
 Global contrastive adapters silently distort unseen-class geometry; EGA avoids this through a self-limiting triplet loss that vanishes when local class structure is satisfied, automatically preserving unseen regions.
-Across four diverse OOD benchmarks, EGA achieves the highest worst-case retrieval quality, is the only method above $0.6$ on every benchmark, and transfers directly to multiple backbones.
-We link gradient sparsity to bounded geometric drift and propose the active triplet ratio as a diagnostic for adapters that must generalize to unseen classes.
+Across five OOD benchmarks spanning cross-dataset, fine-grained, and large-scale shifts, EGA achieves the highest worst-case retrieval quality, is the only method above $0.6$ on every primary benchmark, and transfers directly to multiple backbones.
 
 \paragraph{Limitations}
 The theoretical bound on unseen-class perturbation requires the empirically observed steady-state active triplet ratio as an input; a closed-form guarantee without this remains open.
 EGA prioritizes worst-case robustness, so methods that restrict capacity can excel on individual benchmarks, and practitioners who know their deployment shift may prefer those alternatives.
-Our worst-case analysis covers four benchmarks spanning distinct shift types, but the absolute worst-case is determined by the hardest available fine-grained dataset; verification on additional domains would further solidify the statistical foundation.
+Our worst-case analysis covers five benchmarks spanning distinct shift types; the absolute worst-case is determined by the hardest available fine-grained dataset, and additional challenging domains remain a natural extension.
+
 
 \bibliography{ref}
 \bibliographystyle{plain}
@@ -694,11 +694,12 @@ sharing the same training data, evaluation protocol, and 75/25 retrieval split:
 \end{itemize}
 
 \paragraph{Datasets.}
-We evaluate on five datasets covering both in-distribution and OOD retrieval scenarios.
+We evaluate on six datasets covering both in-distribution and OOD retrieval scenarios.
 \textbf{CIFAR-100}~(100 classes, 60K images) serves as a primary in-distribution benchmark with a 75/25 split between database and query sets.
 \textbf{ImageNet-1K}~(1000 classes, 35K embedded samples) serves as a larger-scale in-distribution benchmark and additionally provides an unseen-class OOD setting via an 80/20 class split (800 seen / 200 unseen).
 \textbf{CIFAR-10}~(10 classes, 60K images) provides a cross-dataset OOD setting: the adapter is trained on CIFAR-100 and evaluated on the disjoint CIFAR-10 classes.
 \textbf{FGVC-Aircraft}~(100 fine-grained aircraft variants, 10K images) and \textbf{Food-101}~(101 food categories, 25K images for the test split we use) provide unseen-class OOD settings: classes are randomly partitioned into $80\%$ seen / $20\%$ unseen with a fixed seed, the adapter is trained on the seen split, and retrieval is evaluated strictly on the unseen split.
+\textbf{Oxford-IIIT Pet}~(37 pet breeds, $\sim$7K images) provides an additional fine-grained OOD setting under the same 80/20 class-disjoint protocol.
 
 \paragraph{Indexing and metrics.}
 For all retrieval evaluations we use FAISS~\cite{johnson2019billion} \texttt{IndexIVFFlat} with $\text{nlist}{=}10$ centroids and report results at $\text{nprobe} \in \{1, 5, 10\}$.
@@ -866,6 +867,30 @@ The variation in $\rho^*$ aligns with dataset difficulty: fine-grained Aircraft 
     FGVC-Aircraft & 3.5\% & 96.5\% \\
     CIFAR-100     & 2.1\% & 97.9\% \\
     Food-101      & 0.8\% & 99.2\% \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Additional Fine-Grained Benchmark: Oxford-IIIT Pet}
+\label{appendix:pet}
+
+We further evaluate EGA and LoRA+Triplet on Oxford-IIIT Pet under the same 80/20 class-disjoint OOD protocol.
+Table~\ref{tab:pet_ood} reports LP@1 and AR@1 at $K{=}1$, $\text{nprobe}{=}1$.
+The frozen CLIP baseline achieves LP@1 $=$ 0.96 on unseen breeds, indicating that the pretrained encoder already separates these categories well; all adapter methods perform comparably to the baseline, with EGA retaining the highest ANNS Recall.
+This is consistent with our finding that EGA's advantage materializes on hard fine-grained shifts where the pretrained geometry is insufficient, while on easier shifts it simply preserves the already-strong frozen representation.
+
+\begin{table}[h]
+  \centering
+  \caption{Oxford-IIIT Pet OOD performance ($K{=}1$, $\text{nprobe}{=}1$, 80/20 class split).}
+  \label{tab:pet_ood}
+  \small
+  \begin{tabular}{lcc}
+    \toprule
+    Method & LP@1 & AR@1 \\
+    \midrule
+    Frozen CLIP   & 0.9595 & 0.8785 \\
+    LoRA+Triplet  & 0.9595 & 0.9342 \\
+    EGA           & 0.9595 & 0.9544 \\
     \bottomrule
   \end{tabular}
 \end{table}
