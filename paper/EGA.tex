@@ -44,7 +44,7 @@
 	We propose Euclidean Geodesic Alignment (EGA), a residual adapter that couples three simple principles: zero initialization, local triplet loss, and hypersphere projection.
 	These collectively induce a self-limiting dynamic: triplets that already satisfy a small margin stop producing gradients, so the adapter automatically stops updating where the local geometry is already correct.
 	At convergence $96.5\%$ of triplets are gradient-free, leaving unseen-class regions largely untouched while still enabling full-capacity refinement of seen classes.
-	Across five diverse OOD benchmarks, EGA achieves the highest worst-case Label Precision ($0.611$): the only method to exceed $0.6$ on every single benchmark.
+	Across five diverse OOD benchmarks, EGA achieves the highest worst-case Label Precision.
 	The design transfers directly to stronger backbones, and we provide an analytical justification linking gradient sparsity to bounded OOD perturbation.
 \end{abstract}
 
@@ -576,7 +576,7 @@ The largest gains appear on the relatively weaker CLIP ViT-B/32 (+14.65 pp in La
 
 We studied adapter training for vector search under open-category queries, where the proper metric is worst-case OOD Label Precision rather than in-distribution optimality.
 Global contrastive adapters silently distort unseen-class geometry; EGA avoids this through a self-limiting triplet loss that vanishes when local class structure is satisfied, automatically preserving unseen regions.
-Across five OOD benchmarks spanning cross-dataset, fine-grained, and large-scale shifts, EGA achieves the highest worst-case retrieval quality, is the only method above $0.6$ on every primary benchmark, and transfers directly to multiple backbones.
+Across five OOD benchmarks spanning cross-dataset, fine-grained, and large-scale shifts, EGA achieves the highest worst-case retrieval quality and transfers directly to multiple backbones.
 
 \paragraph{Limitations}
 The theoretical bound on unseen-class perturbation requires the empirically observed steady-state active triplet ratio as an input; a closed-form guarantee without this remains open.
