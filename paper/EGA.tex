@@ -40,12 +40,12 @@
 \maketitle
 
 \begin{abstract}
-  Vector search systems built on frozen vision encoders face queries from unseen classes at deployment, yet existing adapter training collapses under this shift: high-capacity adapters with global contrastive losses silently reassign unseen-class samples to wrong seen-class clusters, dropping Label Precision by over 40 points below the frozen baseline.
-  We propose Euclidean Geodesic Alignment (EGA), a residual adapter that couples three simple principles: zero initialization, local triplet loss, and hypersphere projection.
-  These collectively induce a self-limiting dynamic: triplets that already satisfy a small margin stop producing gradients, so the adapter automatically stops updating where the local geometry is already correct.
-  At convergence $96.5\%$ of triplets are gradient-free, leaving unseen-class regions largely untouched while still enabling full-capacity refinement of seen classes.
-  Across four diverse OOD benchmarks, EGA achieves the highest worst-case Label Precision ($0.611$): the only method to exceed $0.6$ on every single benchmark.
-  The design transfers directly to stronger backbones, and we provide an analytical justification linking gradient sparsity to bounded OOD perturbation.
+	Vector search systems built on frozen vision encoders face queries from unseen classes at deployment, yet existing adapter training collapses under this shift: high-capacity adapters with global contrastive losses silently reassign unseen-class samples to wrong seen-class clusters, dropping Label Precision by over 40 points below the frozen baseline.
+	We propose Euclidean Geodesic Alignment (EGA), a residual adapter that couples three simple principles: zero initialization, local triplet loss, and hypersphere projection.
+	These collectively induce a self-limiting dynamic: triplets that already satisfy a small margin stop producing gradients, so the adapter automatically stops updating where the local geometry is already correct.
+	At convergence $96.5\%$ of triplets are gradient-free, leaving unseen-class regions largely untouched while still enabling full-capacity refinement of seen classes.
+	Across four diverse OOD benchmarks, EGA achieves the highest worst-case Label Precision ($0.611$): the only method to exceed $0.6$ on every single benchmark.
+	The design transfers directly to stronger backbones, and we provide an analytical justification linking gradient sparsity to bounded OOD perturbation.
 \end{abstract}
 
 \section{Introduction}
@@ -76,7 +76,7 @@ LoRA variants avoid this collapse but pay for it in-distribution, with Label Pre
 
 This work presents Euclidean Geodesic Alignment (EGA), a residual adapter designed against both factors of loss function and adapter capacity, simultaneously.
 EGA pairs a high-capacity zero-initialized residual architecture with a small-margin triplet loss on the class-aware neighborhood graph of pre-trained embeddings, with $\ell_2$ projection onto the unit hypersphere.
-Despite the technical intricacies, the underlying idea is straightforward, as follows. 
+Despite the technical intricacies, the underlying idea is straightforward, as follows.
 On the one hand, the triplet loss induces a self-limiting training dynamic: as the adapter converges on seen classes, the fraction of margin-violating triplets decays rapidly.
 On the other hand, the capacity to refine seen-class neighborhoods is preserved, but the loss stops applying pressure once seen-class neighborhoods are locally separated.
 As a result, the global reshaping that destroys unseen-class geometry under ICon and SRL never accumulates.
@@ -99,16 +99,13 @@ In summary, this work makes the following contributions:
 	\item We propose Euclidean Geodesic Alignment (EGA), a residual adapter design
 	      that couples zero-initialized residual architecture, local triplet supervision,
 	      and hypersphere projection.
-	      This combination induces a self-limiting training dynamic: as seen-class
-	      neighborhoods become locally separated, the fraction of active triplets decays
-	      rapidly, empirically reaching $96.5\%$ zero-gradient triplets at steady state.
+	      This combination induces a self-limiting training dynamic: as seen-class neighborhoods become locally separated, the fraction of active triplets decays rapidly, empirically reaching $96.5\%$ zero-gradient triplets at steady state.
 	      We also provide a theoretical analysis of this dynamic, showing that the unseen-class perturbation is bounded by the product of the active triplet ratio and the adapter's Lipschitz constant.
 
 	\item Across four OOD benchmarks and three backbones (CLIP ViT-B/32, DINOv2-large,
 	      SigLIP), EGA achieves the highest worst-case OOD Label Precision ($0.611$),
 	      exceeding all five baselines by between $4.2$ and $23.6$ percentage points.
-	      EGA is the only method whose Label Precision exceeds $0.6$ on every OOD
-	      benchmark we evaluate.
+	      EGA is the only method whose Label Precision exceeds $0.6$ on every OOD benchmark we evaluate.
 \end{itemize}
 
 \section{Background and Related Work}
@@ -350,7 +347,8 @@ In the raw CLIP space, the two distributions overlap substantially, which is the
 After EGA, the two distributions separate cleanly across all $K$, and this separation drives the recall-efficiency improvement in Figure~\ref{fig:recall_grid}: raw CLIP achieves $0.667$ Recall@1 at $\text{nprobe}=1$, whereas EGA reaches $0.825$ and saturates above $0.99$ by $\text{nprobe}=5$.
 
 \begin{wraptable}{r}{0.5\textwidth}
-	\vspace{-1em}
+	% \vspace{-1em}
+
 	\centering
 	\caption{In-distribution retrieval performance at $K=1$, $\text{nprobe}=1$ on CIFAR-100 and ImageNet-1K.
 		Standard errors are below $0.01$ and omitted.
@@ -374,9 +372,9 @@ After EGA, the two distributions separate cleanly across all $K$, and this separ
 	\end{tabular}
 \end{wraptable}
 Table~\ref{tab:indist_summary} reports all six methods' in-distribution performance on both CIFAR-100 and ImageNet-1K.
-On CIFAR-100, ICon and SRL reach near-perfect Label Precision ($0.999$ and $0.992$) by maximally tightening seen-class clusters under their global contrastive objectives.
+On CIFAR-100, ICon and SRL reach near-perfect Label Precision ($0.999$ and $0.992$) by tightening seen-class clusters under global contrastive objectives.
 EGA reaches $0.705$, an improvement of $+16$ percentage points over the frozen baseline; the LoRA variants land between EGA and the baseline.
-On ImageNet-1K (1000 classes), the scale of all methods drops because the test set has approximately seven samples per class for retrieval (compared to $\sim$150 on CIFAR-100), but the relative ordering changes: LoRA+InfoNCE leads at $0.426$, with SRL ($0.421$), EGA ($0.407$), ICon ($0.386$), LoRA+Triplet ($0.359$), and CLIP ($0.321$) trailing.
+On ImageNet-1K (1000 classes), the scale of all methods drops because the test set has approximately seven samples per class for retrieval (vs. $\sim$150 on CIFAR-100).
 The within-2-percentage-point clustering of the four trained adapters (SRL, ICon, EGA, LoRA+Triplet) at this density indicates that ID performance becomes test-set-density-bounded rather than method-bounded as the label space grows.
 % The contrast that matters for our deployment framing is in OOD performance, which we examine in Section~\ref{sec:ood}.
 
@@ -386,7 +384,7 @@ The within-2-percentage-point clustering of the four trained adapters (SRL, ICon
 We now examine performance under strict OOD settings where evaluation categories are disjoint from training categories.
 Table~\ref{tab:ood_summary} reports headline numbers at $K=1$, $\text{nprobe}=1$ across four OOD benchmarks: CIFAR-10 (trained on CIFAR-100), FGVC-Aircraft (80 seen / 20 unseen classes), Food-101 (80 seen / 21 unseen classes), and ImageNet-1K held-out classes (800 seen / 200 unseen classes).
 For a fair comparison, all methods train identical adapters on top of frozen CLIP features and differ only in their loss functions.
-Robustness across search budgets is reported in Appendix~\ref{sec:more_results}.
+Robustness across search budgets is reported in Appendix~\ref{sec:appendix_budget}.
 
 \begin{table}[!t]
 	\centering
@@ -487,7 +485,8 @@ At capacity-matched scale ($\sim$4.2M parameters), LoRA+InfoNCE reaches $0.668$ 
 The two routes occupy different points in Figure~\ref{fig:pareto}.
 EGA, which neutralizes the loss-side factor while keeping capacity, achieves the highest worst-case OOD Label Precision because it does not collapse on any single OOD shift.
 Capacity-matched LoRA, which neutralizes the capacity-side factor while keeping a global loss, achieves higher OOD Label Precision on three of four benchmarks (CIFAR-10, Food-101, ImageNet) but collapses on the fine-grained Aircraft benchmark, capping its worst-case at $0.538$ to $0.569$.
-Whether either route subsumes the other under stronger conditions, for example by combining gradient sparsity with low-rank constraints, is a question we leave open.
+These two routes are complementary rather than redundant; as shown in Appendix~\ref{sec:loss_arch}, training the EGA architecture with a global InfoNCE loss (i.e., removing gradient sparsity while retaining capacity) degrades Aircraft LP@1 from 0.611 to 0.458, while scaling LoRA rank to 512 with triplet loss (i.e., adding capacity under low-rank constraints) leaves both ID and OOD performance nearly unchanged (CIFAR-100 LP@1 from 0.646 to 0.648, Aircraft LP@1 never exceeding 0.566).
+OOD robustness therefore requires the combination of local gradient sparsity and sufficient nonlinear capacity, and neither route alone reaches EGA's worst-case performance.
 
 \subsection{Ablation and Sensitivity Analysis}
 \label{sec:ablation}
@@ -661,7 +660,8 @@ The true instantaneous perturbation is therefore modulated by the projection of 
 \end{equation}
 As the active triplet ratio $\rho_t$ drops exponentially, the dimensionality of $\mathcal{S}_{active}^{(t)}$ collapses.
 Consequently, the spectral norm of the projected Jacobian $\left\| J_{\theta_t}(x_u) P_{\mathcal{S}_{active}^{(t)}} \right\|_2$ probabilistically approaches zero.
-Under the empirically observed decay of $\rho_t$, the dimensionality of $\mathcal{S}_{active}^{(t)}$ collapses, and the spectral norm of the projected Jacobian probabilistically approaches zero. This provides geometric intuition for why the sparse updates are unlikely to systematically corrupt the structure of unseen classes.
+Under the empirically observed decay of $\rho_t$, the dimensionality of $\mathcal{S}_{active}^{(t)}$ collapses, and the spectral norm of the projected Jacobian probabilistically approaches zero.
+This provides geometric intuition for why the sparse updates are unlikely to systematically corrupt the structure of unseen classes.
 
 \section{Experimental Setup Details}
 \label{sec:more_experiments}
@@ -710,7 +710,9 @@ The operating system is Ubuntu 24.04 LTS.
 \section{Additional Experimental Results}
 \label{sec:more_results}
 
-\paragraph{Robustness across search budgets.}
+\subsection{Robustness across search budgets.}
+\label{sec:appendix_budget}
+
 Figure~\ref{fig:ood_lp} traces Label Precision@1 across three OOD benchmarks and three search budgets ($\text{nprobe} \in \{1, 5, 10\}$).
 The collapse pattern of ICon and SRL persists across all $18$ measurement points ($3$ datasets $\times$ $3$ budgets $\times$ $2$ methods), ruling out the possibility that the degradation is an artifact of any particular benchmark or indexing configuration.
 EGA's relative ordering against other methods is also stable across budgets.
@@ -722,8 +724,9 @@ EGA's relative ordering against other methods is also stable across budgets.
 	\label{fig:ood_lp}
 \end{figure}
 
-\paragraph{Linear Probing Baseline Analysis}
+\subsection{Linear Probing Baseline Analysis}
 \label{sec:linear_probing}
+
 To address potential concerns about additional baselines, we also evaluated Linear Probing as an example.
 As shown in Table~\ref{tab:linear_probing_id} and Table~\ref{tab:linear_probing_ood}, Linear Probing achieves reasonable in-distribution performance (0.5112 LP@1 on CIFAR-100) but completely collapses on out-of-distribution benchmarks (0.0065--0.0133 LP@1).
 This confirms that Linear Probing is not a meaningful comparison in our cross-dataset OOD setting due to class semantic mismatch.
@@ -757,5 +760,85 @@ This confirms that Linear Probing is not a meaningful comparison in our cross-da
 		\bottomrule
 	\end{tabular}
 \end{table}
+
+% \subsection{Disentangling Loss and Architecture}
+% \label{sec:loss_arch_control}
+
+% To verify that gradient sparsity, rather than the adapter architecture alone, is the active mechanism protecting unseen-class geometry, we train EGAMLP (the same residual architecture used by EGA, $\sim$4.2M parameters) with the global contrastive InfoNCE loss and evaluate on the three OOD benchmarks under identical protocols.
+% Table~\ref{tab:ega_infonce} reports the results.
+
+% \begin{table}[h]
+% 	\centering
+% 	\caption{EGAMLP trained with InfoNCE on OOD benchmarks ($K{=}1$, $\text{nprobe}{=}1$).}
+% 	\label{tab:ega_infonce}
+% 	\small
+% 	\begin{tabular}{lccc}
+% 		\toprule
+% 		OOD Benchmark & LP@1 (EGAMLP+InfoNCE) & LP@1 (EGA, Triplet) & Frozen CLIP \\
+% 		\midrule
+% 		FGVC-Aircraft & 0.458                 & 0.611               & 0.512       \\
+% 		Food-101      & 0.667                 & 0.791               & 0.881       \\
+% 		CIFAR-10      & 0.710                 & 0.810               & 0.880       \\
+% 		\bottomrule
+% 	\end{tabular}
+% \end{table}
+
+% Under the global InfoNCE objective, EGAMLP degrades substantially on every benchmark: Aircraft LP@1 drops to $0.458$, below even the frozen baseline ($0.512$); Food-101 falls $21.4$ points below EGA; CIFAR-10 falls $10$ points below EGA.
+% This confirms that the EGAMLP architecture, despite its residual design and zero-initialization, does not by itself prevent unseen-class distortion.
+% The combination of gradient-sparse triplet supervision and high-capacity residual refinement is necessary for the OOD robustness observed in EGA.
+
+\subsection{Disentangling Loss and Architecture}
+\label{sec:loss_arch}
+
+We conduct two controlled analyses to isolate the contributions of gradient sparsity and architecture capacity to EGA's OOD robustness.
+
+\paragraph{Architecture without gradient sparsity.}
+We train EGAMLP (the same residual architecture as EGA, $\sim$4.2M parameters) with the global contrastive InfoNCE loss under the same protocols.
+Table~\ref{tab:ega_infonce} reports OOD Label Precision@1.
+Under the global objective, the architecture degrades substantially across all shifts: Aircraft drops to 0.458, below even the frozen baseline (0.512), and Food-101 and CIFAR-10 lose 21.4 and 10 points relative to EGA.
+This confirms that the residual design alone does not prevent unseen-class distortion; gradient sparsity from the triplet loss is essential.
+
+\begin{table}[h]
+	\centering
+	\caption{EGAMLP trained with InfoNCE on OOD benchmarks ($K{=}1$, $\text{nprobe}{=}1$).}
+	\label{tab:ega_infonce}
+	\small
+	\begin{tabular}{lccc}
+		\toprule
+		OOD Benchmark & EGAMLP+InfoNCE & EGA (Triplet) & Frozen CLIP \\
+		\midrule
+		FGVC-Aircraft & 0.458          & 0.611         & 0.512       \\
+		Food-101      & 0.667          & 0.791         & 0.881       \\
+		CIFAR-10      & 0.710          & 0.810         & 0.880       \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+\paragraph{Gradient sparsity with restricted capacity.}
+We next examine whether increasing the capacity of a low-rank adapter can recover EGA's OOD robustness when using the triplet loss.
+We train LoRA+Triplet at ranks $r \in \{64, 128, 256, 512\}$ and measure both in-distribution (CIFAR-100) and OOD (Aircraft) Label Precision@1.
+As shown in Table~\ref{tab:lora_rank}, ID performance barely improves with rank (0.6456 at $r{=}64$ to 0.6480 at $r{=}512$), remaining far below EGA's 0.705, while Aircraft LP@1 never exceeds 0.566 and even deteriorates at higher ranks.
+Thus, the low-rank structure intrinsically caps both ID refinement and OOD protection, regardless of parameter budget.
+
+\begin{table}[h]
+	\centering
+	\caption{LoRA+Triplet at different ranks ($K{=}1$, $\text{nprobe}{=}1$).}
+	\label{tab:lora_rank}
+	\small
+	\begin{tabular}{lcc}
+		\toprule
+		LoRA Rank  & CIFAR-100 LP@1 & Aircraft LP@1 \\
+		\midrule
+		64         & 0.6456         & 0.5655        \\
+		128        & 0.6460         & 0.5595        \\
+		256        & 0.6472         & 0.5655        \\
+		512        & 0.6480         & 0.5298        \\
+		\midrule
+		EGA (full) & 0.7050         & 0.6110        \\
+		\bottomrule
+	\end{tabular}
+\end{table}
+
+Together, these results establish that the combination of gradient-sparse triplet updates and a high-capacity nonlinear residual architecture is necessary for the OOD robustness observed in EGA, and that neither component alone suffices.
 
 \end{document}
