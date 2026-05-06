@@ -84,11 +84,10 @@ def train_ega_triplet(train_feats, train_labels, device, dim, epochs=150, margin
     return model
 
 def extract_features(backbone_key, cfg, device, output_dir="embeddings"):
-    """用 torchvision 加载 Aircraft 数据并提取特征"""
+    """用 torchvision 加载 Aircraft 数据并提取特征（最终稳定版）"""
     from transformers import AutoImageProcessor, AutoModel
     import torchvision.datasets as datasets
 
-    # 根目录设为包含 fgvc-aircraft-2013b 的上一级目录
     data_root = os.path.expanduser("~/hpdic/EGA/data")
     
     print(f"Loading backbone: {cfg['model_name']}...")
@@ -98,7 +97,6 @@ def extract_features(backbone_key, cfg, device, output_dir="embeddings"):
 
     transform = transforms.Compose([transforms.Resize((224, 224))])
 
-    # 直接使用 torchvision 加载 train 和 test 集合（不需要下载，因为已存在）
     train_set = datasets.FGVCAircraft(root=data_root, split="train", annotation_level="variant", download=False, transform=transform)
     test_set = datasets.FGVCAircraft(root=data_root, split="test", annotation_level="variant", download=False, transform=transform)
 
@@ -118,8 +116,15 @@ def extract_features(backbone_key, cfg, device, output_dir="embeddings"):
                 outputs = model(**inputs)
                 feat = outputs.last_hidden_state[:, 0, :]  # CLS token
             else:  # siglip
-                outputs = model.get_image_features(**inputs)
-                feat = outputs
+                outputs = model.get_image_features(pixel_values=inputs['pixel_values'])
+                # 兼容不同返回类型
+                if isinstance(outputs, torch.Tensor):
+                    feat = outputs
+                else:
+                    feat = outputs.pooler_output
+        # 确保 feat 是二维张量 [1, dim]
+        if feat.dim() == 1:
+            feat = feat.unsqueeze(0)
         feat = feat / feat.norm(dim=-1, keepdim=True)
         all_features.append(feat.cpu().numpy())
 
@@ -214,3 +219,42 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+
+# (venv) (base) cc@uc-a100:~/hpdic/EGA$ python scripts/48_run_aircraft_ood_backbones.py --backbone dinov2
+# Extracting features for dinov2...
+# Loading backbone: facebook/dinov2-large...
+# Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+# Loading weights: 100%|██████████████████████████████████████████████| 439/439 [00:00<00:00, 4831.97it/s]
+# Found 6667 images
+# Extracting dinov2: 100%|████████████████████████████████████████████| 6667/6667 [02:45<00:00, 40.36it/s]
+# Saved 6667 features, dim=1024
+# Feature dim: 1024
+# Train: 5332 samples, Test: 1335 samples [unseen]
+# Frozen dinov2: LP@1=0.6437, AR@1=0.9701
+# Training LoRA+Triplet on dinov2...
+# LoRA+Triplet: LP@1=0.8323, AR@1=0.9521
+# Training EGA on dinov2...
+# EGA: LP@1=0.8593, AR@1=0.9671
+
+# === Aircraft OOD on dinov2 ===
+# Method                   LP@1     AR@1
+# Frozen dinov2          0.6437   0.9701
+# LoRA+Triplet           0.8323   0.9521
+# EGA                    0.8593   0.9671
+
+# (venv) (base) cc@uc-a100:~/hpdic/EGA$ python scripts/48_run_aircraft_ood_backbones.py --backbone siglip
+# Feature dim: 1024
+# Train: 5332 samples, Test: 1335 samples [unseen]
+# Frozen siglip: LP@1=0.8892, AR@1=0.9192
+# Training LoRA+Triplet on siglip...
+# LoRA+Triplet: LP@1=0.9102, AR@1=0.9521
+# Training EGA on siglip...
+# EGA: LP@1=0.8952, AR@1=0.9760
+
+# === Aircraft OOD on siglip ===
+# Method                   LP@1     AR@1
+# Frozen siglip          0.8892   0.9192
+# LoRA+Triplet           0.9102   0.9521
+# EGA                    0.8952   0.9760
+# (venv) (base) cc@uc-a100:~/hpdic/EGA$ 

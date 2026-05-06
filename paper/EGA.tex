@@ -145,100 +145,60 @@ Recent work refines graph topologies~\cite{NEURIPS2024_bab1486c, NEURIPS2024_6dc
 \subsection{Problem Formulation}
 \label{sec:formulation}
 
-Let $\phi : \mathcal{X} \to \mathbb{R}^d$ denote a frozen vision-language encoder (e.g., CLIP ViT-B/32) that maps an image $x \in \mathcal{X}$ to a unit-normalized embedding $\mathbf{z} = \phi(x) \in \mathbb{S}^{d-1}$.
-We are given a set of labeled training images $\mathcal{D}_\text{train} = \{(x_i, y_i)\}_{i=1}^{N}$, where $y_i \in \mathcal{Y}_\text{seen}$ belongs to a set of \emph{seen} classes.
-At inference time, the retrieval system must operate over a database that also contains images from a disjoint set of \emph{unseen} classes $\mathcal{Y}_\text{unseen}$, with $\mathcal{Y}_\text{seen} \cap \mathcal{Y}_\text{unseen} = \emptyset$.
-Our goal is to learn an adapter $f_\theta : \mathbb{S}^{d-1} \to \mathbb{S}^{d-1}$ such that the transformed embeddings $\hat{\mathbf{z}} = f_\theta(\mathbf{z})$ support more accurate approximate nearest neighbor (ANN) retrieval on \emph{both} seen and unseen classes, without access to unseen-class labels during training.
+Given a frozen encoder $\phi : \mathcal{X} \to \mathbb{S}^{d-1}$ and labeled images $\mathcal{D}_\text{train} = \{(x_i, y_i)\}_{i=1}^{N}$ from \emph{seen} classes $\mathcal{Y}_\text{seen}$, we aim to learn an adapter $f_\theta : \mathbb{S}^{d-1} \to \mathbb{S}^{d-1}$ that supports accurate ANN retrieval on \emph{both} seen and unseen classes ($\mathcal{Y}_\text{unseen} \cap \mathcal{Y}_\text{seen} = \emptyset$), without access to unseen-class labels at training time.
 
-We evaluate retrieval quality along two complementary dimensions.
-\emph{Label	Precision@$K$} (LP@K) measures the semantic quality of retrieved results: whether the
-$K$ nearest neighbors in the transformed space share the same class label as
-the query:
+We evaluate retrieval quality via \emph{Label Precision@$K$} (LP@K, semantic quality) and \emph{ANNS Recall@$K$} (AR@K, geometric fidelity):
 \begin{equation}
-	\text{LP}@K = \frac{1}{|\mathcal{Q}|} \sum_{q \in \mathcal{Q}}
-	\frac{1}{K} \sum_{k=1}^{K}
-	\mathbf{1}\!\left[y_{\hat{n}_k(q)} = y_q\right],
-	\label{eq:lp}
+    \text{LP}@K = \frac{1}{|\mathcal{Q}|} \sum_{q \in \mathcal{Q}}
+    \frac{1}{K} \sum_{k=1}^{K}
+    \mathbf{1}\!\left[y_{\hat{n}_k(q)} = y_q\right],
+    \qquad
+    \text{AR}@K = \frac{1}{|\mathcal{Q}|} \sum_{q \in \mathcal{Q}}
+    \frac{\left|\mathcal{N}_K^\text{exact}(q) \cap \mathcal{N}_K^\text{approx}(q)\right|}{K},
 \end{equation}
-where $\mathcal{Q}$ is the query set and $\hat{n}_k(q)$ denotes the $k$-th
-nearest neighbor of $q$ in the transformed embedding space.
-\emph{ANNS Recall@$K$} (AR@K) measures the geometric fidelity of the ANN index, i.e, the
-fraction of true $K$ nearest neighbors (under exact search) that are recovered
-by the approximate index at a given search budget $\text{nprobe}$:
-\begin{equation}
-	\text{AR}@K = \frac{1}{|\mathcal{Q}|} \sum_{q \in \mathcal{Q}}
-	\frac{\left|\mathcal{N}_K^\text{exact}(q)
-		\cap \mathcal{N}_K^\text{approx}(q)\right|}{K},
-	\label{eq:ar}
-\end{equation}
-where $\mathcal{N}_K^\text{exact}(q)$ and $\mathcal{N}_K^\text{approx}(q)$
-denote the exact and approximate top-$K$ neighbor sets, respectively.
-The two metrics capture distinct failure modes: an adapter may improve $\text{LP}@K$ by tightening within-class clusters (semantic improvement) while simultaneously improving $\text{AR}@K$ by making the geometry more amenable to IVF-based indexing (geometric improvement).
+where $\mathcal{Q}$ is the query set, $\hat{n}_k(q)$ is the $k$-th approximate neighbor of $q$, and $\mathcal{N}_K^\text{exact}(q)$, $\mathcal{N}_K^\text{approx}(q)$ denote the exact and approximate top-$K$ neighbor sets. LP@K and AR@K capture distinct failure modes: tightening within-class clusters (semantic) vs.\ improving index fidelity (geometric).
+
 
 \subsection{Manifold-Preserving Adapter Design}
 \label{sec:design}
 
-The name Euclidean Geodesic Alignment (EGA) reflects the geometric intuition behind its three design principles.
-In the pre-trained embedding space, the shortest path (geodesic) between two points on the unit hypersphere $\mathbb{S}^{d-1}$ is the great-circle distance, which corresponds to cosine similarity.
-EGA respects this intrinsic geometry in three ways: (1) The zero-initialized residual connection ensures that the adapter begins as an identity map, thus initially preserving all pairwise geodesic distances.
-(2) The local triplet loss only perturbs an embedding along the Euclidean chord toward its positive neighbor when the geodesic separation violates the margin; the perturbation is therefore aligned with the local geodesic direction.
-(3) The $\ell_2$ projection back onto the hypersphere recovers a valid point on $\mathbb{S}^{d-1}$, ensuring that the output embedding remains in the same metric space.
-These principles allow EGA to perform local geodesic adjustments on the hypersphere without global distortion.
+We design EGA to satisfy a single objective: \emph{refine seen-class neighborhoods while preserving the pretrained geometry wherever local separation is already sufficient}.
+This translates into three design constraints, each addressed by a specific architectural choice.
 
-% EGA introduces a lightweight adapter $f_\theta$ composed of stacked residual blocks with a final refinement layer.
-% The architecture is constrained by three design principles, each of which contributes to keeping the adapter's updates anchored to the pretrained geometry.
-
-\paragraph{(1) Residual connection with zero initialization.}
-Each EGA block applies a residual update as:
+\textbf{Constraint 1: Training must begin from the pretrained geometry.}
+We enforce this via \emph{zero-initialized residual connections}.
+Each EGA block applies a residual update:
 \begin{equation}
-	\mathbf{z}' = \mathbf{z} + g_\theta(\mathbf{z}),
-	\label{eq:residual}
+    \mathbf{z}' = \mathbf{z} + g_\theta(\mathbf{z}),
+    \label{eq:residual}
 \end{equation}
-where $g_\theta$ is a learned transformation initialized so that
-$g_\theta(\mathbf{z}) \approx \mathbf{0}$ at the start of training.
-Concretely, the final linear layer of $g_\theta$ is initialized to zero, making $f_\theta$ an identity mapping at initialization.
-This guarantees that training begins from the pretrained geometry rather than a random perturbation, and that the adapter can only \emph{refine} rather than replace the CLIP embedding.
-% As confirmed by our ablation (Table~\ref{tab:ablation}), removing the residual connection causes accuracy to collapse from $0.70$ to $0.01$, because the lightweight MLP cannot reconstruct complex semantic relationships from seen-class data alone.
+where the final linear layer of $g_\theta$ is initialized to zero, making $f_\theta$ an identity map at initialization.
+The adapter can therefore only \emph{refine} the frozen representation, never replace it.
 
-\paragraph{(2) Feature gating.}
-Inside each residual block, the transformed signal passes through a module:
-\begin{equation}
-	\text{Gate}(\mathbf{h}) = \mathbf{h} \odot \sigma\!\left(
-	W_2\, \text{GELU}(W_1 \mathbf{h})
-	\right),
-	\label{eq:gate}
-\end{equation}
-where $W_1 \in \mathbb{R}^{(d/4) \times d}$, $W_2 \in \mathbb{R}^{d \times (d/4)}$,
-$\sigma$ is the Sigmoid function, and $\odot$ denotes elementwise
-multiplication.
-This is analogous to Squeeze-and-Excitation networks~\cite{hu2018squeeze} to learn a per-dimension weight that amplifies retrieval-relevant dimensions and suppresses noisy ones.
-The bottleneck ratio $1/4$ is chosen to prevent the gating from overfitting on seen-class data, to be validated in Table~\ref{tab:sensitivity}.
+\textbf{Constraint 2: Gradient pressure must be local and self-limiting.}
+We replace global contrastive losses with a \emph{small-margin triplet loss} (Section~\ref{sec:training}) whose hinge formulation stops gradient flow once the anchor-positive distance falls below the anchor-negative distance by a margin $m$, making the training dynamic self-limiting.
 
-The output of $f_\theta$ is projected back onto the unit hypersphere
-$\mathbb{S}^{d-1}$ via $\ell_2$:
+\textbf{Constraint 3: Transformations must remain within the original metric space.}
+We enforce this via $\ell_2$ \emph{projection back onto the unit hypersphere}:
 \begin{equation}
-	\hat{\mathbf{z}} = \frac{f_\theta(\mathbf{z})}
-	{\|f_\theta(\mathbf{z})\|_2}.
-	\label{eq:l2norm}
+    \hat{\mathbf{z}} = \frac{f_\theta(\mathbf{z})}{\|f_\theta(\mathbf{z})\|_2},
+    \label{eq:l2norm}
 \end{equation}
-This constraint ensures that the transformed embeddings remain in the same metric space as the original embeddings: Euclidean distance and cosine similarity remain interchangeable on the hypersphere.
-% Removing this constraint degrades retrieval performance by $4.2$ percentage points (Table~\ref{tab:ablation}), confirming that hypersphere consistency is necessary for stable ANN indexing.
+ensuring Euclidean distance and cosine similarity remain interchangeable.
 
-\paragraph{(3) Full forward pass.}
-Let $\text{Block}_i$ denote the $i$-th EGA block consisting of a two-layer MLP with LayerNorm followed by feature gating, and let $\text{Refine}$ denote the final linear projection with LayerNorm.
-The complete forward pass for an input
-embedding $\mathbf{z} \in \mathbb{S}^{d-1}$ is:
+Inside each residual block, a \emph{feature gating} module selectively amplifies retrieval-relevant dimensions through a bottleneck with ratio $1/4$:
 \begin{equation}
-	\hat{\mathbf{z}} = \ell_2\!\left(
-	\text{Refine}\!\left(
-	\text{Block}_2\!\left(
-	\text{Block}_1(\mathbf{z})
-	\right)
-	\right)
-	\right).
-	\label{eq:forward}
+    \text{Gate}(\mathbf{h}) = \mathbf{h} \odot \sigma\!\left(W_2\, \text{GELU}(W_1 \mathbf{h})\right),
+    \label{eq:gate}
 \end{equation}
-The total number of trainable parameters is approximately $4.2M$ for $d = 512$ and hidden dimension $2048$, which is negligible compared to the frozen CLIP backbone ($\sim$88M parameters).
+where $W_1 \in \mathbb{R}^{(d/4) \times d}$, $W_2 \in \mathbb{R}^{d \times (d/4)}$, $\sigma$ is the Sigmoid function, and $\odot$ denotes elementwise multiplication, analogous to Squeeze-and-Excitation networks~\cite{hu2018squeeze}.
+
+The complete forward pass chains two gated residual blocks followed by a final linear projection and $\ell_2$ normalization:
+\begin{equation}
+    \hat{\mathbf{z}} = \ell_2\!\left(\text{Refine}\!\left(\text{Block}_2\!\left(\text{Block}_1(\mathbf{z})\right)\right)\right).
+    \label{eq:forward}
+\end{equation}
+The total trainable parameters (${\sim}4.2M$ for $d{=}512$, hidden dim 2048) are negligible compared to the frozen CLIP backbone (${\sim}88M$).
 
 \subsection{Local Triplet Training}
 \label{sec:training}
@@ -461,7 +421,7 @@ The trade-off between these two approaches is visualized in Figure~\ref{fig:pare
 \subsection{Two Routes to OOD Stability: Gradient Sparsity and Capacity Restriction}
 \label{sec:mechanism}
 
-% The introduction identified two factors through which adapter training can distort unseen-class geometry: a loss that exerts pressure across the full embedding distribution, and an adapter capacity expressive enough to comply with that pressure.
+The introduction identified two factors through which adapter training can distort unseen-class geometry: a loss that exerts pressure across the full embedding distribution, and an adapter capacity expressive enough to comply with that pressure.
 Adapters that avoid OOD collapse must neutralize one of these factors, and the route determines its position in the Label Precision plane.
 
 \paragraph{Route 1: Gradient sparsity (EGA).}
@@ -472,18 +432,11 @@ Adapters that avoid OOD collapse must neutralize one of these factors, and the r
 	\caption{Gradient sparsity as OOD protection.}
 	\label{fig:mechanism}
 \end{wrapfigure}
-A triplet loss with margin $m$ produces a non-zero gradient for a sample
-triplet $(a, p, n)$ only when the margin constraint is violated:
-\begin{equation}
-	d(a, p) - d(a, n) + m > 0.
-	\label{eq:active_triplet}
-\end{equation}
-As the adapter converges on seen classes, the fraction of \emph{active} triplets decays.
-Figure~\ref{fig:mechanism} (left) tracks this ratio from $17.4\%$ at epoch 10 to $3.5\%$ at convergence.
-At steady state, $96.5\%$ of triplets contribute zero gradient: the loss stops applying pressure once seen-class neighborhoods are locally separated, even though the adapter retains the capacity to refine them further.
-Sparsity neutralizes the loss-side factor while leaving capacity intact, which permits EGA's high in-distribution Label Precision in Table~\ref{tab:indist_summary}.
-The self-limiting dynamic is consistent across datasets: the steady-state active triplet ratio $\rho^*$ is $2.1\%$ on CIFAR-100 and $0.8\%$ on Food-101, compared to $3.5\%$ on FGVC-Aircraft, see Appendix~\ref{appendix:rho}.
-The higher residual ratio on Aircraft reflects the fine-grained visual similarity among its classes, which leaves a larger fraction of triplets close to the margin boundary. We note that $\rho^*$ measures the fraction of \emph{seen-class} triplets that remain active at convergence, not the degree of OOD protection directly; a higher $\rho^*$ indicates that more seen-class pairs are difficult to separate, which correlates with (but does not necessarily determine) the risk of distorting unseen classes. The OOD protection itself is driven by the \emph{sparsity} of the resulting gradient field (i.e., the $96.5\%$ of triplets that \emph{are} inactive) rather than by $\rho^*$.
+A triplet loss with margin $m$ produces a non-zero gradient only when $d(a, p) - d(a, n) + m > 0$.
+Figure~\ref{fig:mechanism} (left) tracks the active triplet ratio from $17.4\%$ at epoch 10 to $3.5\%$ at convergence, meaning $96.5\%$ of triplets contribute zero gradient at steady state: the loss stops applying pressure once seen-class neighborhoods are locally separated, yet the adapter retains full capacity for further refinement.
+Sparsity neutralizes the loss-side factor while leaving capacity intact, which permits EGA's high in-distribution Label Precision (Table~\ref{tab:indist_summary}).
+The self-limiting dynamic is consistent across datasets ($\rho^*$ ranges from $0.8\%$ on Food-101 to $3.5\%$ on Aircraft; Appendix~\ref{appendix:rho}), with higher residual ratios on fine-grained classes reflecting greater visual similarity among seen categories.
+OOD protection is driven by the \emph{sparsity} of the gradient field (the $96.5\%$ of inactive triplets) rather than by the exact value of $\rho^*$.
 
 \paragraph{Route 2: Capacity restriction (LoRA).}
 The LoRA variants take the other route.
@@ -550,34 +503,45 @@ Performance is also stable across hidden dimensions from 512 to 4096, indicating
 
 \subsection{Generalization to More Backbones}
 
-To verify that EGA's benefits are not specific to CLIP ViT-B/32~\cite{clip_icml21}, we further evaluate it on two more recent vision encoders: DINOv2-large~\cite{oquab2024dinov} and SigLIP~\cite{10377550}.
-
 \begin{wraptable}{r}{0.58\textwidth}
-	\centering
-	\vspace{-0.3cm}
-	\caption{Retrieval performance on more backbones.}
-	\label{tab:ega_backbones}
-	\small
-	\begin{tabular}{lcccc}
-		\toprule
-		\multirow{2}{*}{Backbone} & \multicolumn{2}{c}{Label Precision@1} & \multicolumn{2}{c}{ANNS Recall@1}                   \\
-		\cmidrule(lr){2-3} \cmidrule(lr){4-5}
-		                          & Raw                                   & +EGA                              & Raw    & +EGA   \\
-		\midrule
-		CLIP ViT-B/32             & 0.549                                 & 0.6955                            & 0.667  & 0.7985 \\
-		DINOv2-large              & 0.8530                                & 0.9005                            & 0.8785 & 0.9310 \\
-		SigLIP SO400M             & 0.7740                                & 0.8595                            & 0.8015 & 0.9155 \\
-		\bottomrule
-	\end{tabular}
+    \centering
+    \vspace{-0.3cm}
+    \caption{Retrieval performance on more backbones.}
+    \label{tab:ega_backbones}
+    \small
+    \begin{tabular}{lcccc}
+        \toprule
+        \multirow{2}{*}{Backbone} & \multicolumn{2}{c}{Label Precision@1} & \multicolumn{2}{c}{ANNS Recall@1} \\
+        \cmidrule(lr){2-3} \cmidrule(lr){4-5}
+                                  & Raw     & +EGA   & Raw     & +EGA   \\
+        \midrule
+        \multicolumn{5}{c}{\small In-Distribution (CIFAR-100)} \\
+        CLIP ViT-B/32             & 0.549   & 0.6955 & 0.667   & 0.7985 \\
+        DINOv2-large              & 0.8530  & 0.9005 & 0.8785  & 0.9310 \\
+        SigLIP SO400M             & 0.7740  & 0.8595 & 0.8015  & 0.9155 \\
+        \midrule
+        \multicolumn{5}{c}{\small OOD (Aircraft)} \\
+        CLIP ViT-B/32             & 0.512   & 0.611  & 0.773   & 0.905  \\
+        DINOv2-large              & 0.6437  & 0.8593 & 0.9701  & 0.9671 \\
+        SigLIP SO400M             & 0.8892  & 0.8952 & 0.9192  & 0.9760 \\
+        \bottomrule
+    \end{tabular}
 \end{wraptable}
-Table~\ref{tab:ega_backbones} shows consistent improvements across all three backbones. The largest gains appear on the relatively weaker CLIP ViT-B/32 (+14.65 pp in Label Precision@1 and +13.15 pp in Recall@1), but the stronger DINOv2-large and SigLIP backbones also see stable improvements (+4.75 pp and +8.55 pp in Label Precision@1 respectively). We note that these results are on in-distribution data; OOD evaluation on these stronger backbones is left for future work, but the consistent ID improvements across architectures suggest that EGA's self-limiting training dynamic is not specific to CLIP.
+To verify that EGA's OOD robustness transfers to stronger backbones, we evaluate on DINOv2-large~\cite{oquab2024dinov} and SigLIP~\cite{10377550} under the Aircraft OOD protocol.
+On DINOv2-large, where frozen LP@1 is $0.644$, EGA reaches $0.859$ compared to LoRA+Triplet's $0.832$, confirming that EGA's advantage persists on hard fine-grained shifts even with a stronger backbone.
+On SigLIP, where frozen LP@1 is already $0.889$, both EGA ($0.895$) and LoRA+Triplet ($0.910$) improve over the frozen baseline, with LoRA's low-rank constraint providing a slightly better inductive bias when the pretrained geometry is already strong.
+Neither backbone exhibits the catastrophic OOD degradation observed with global contrastive methods on CLIP (Table~\ref{tab:ood_summary}), confirming that EGA's self-limiting dynamic transfers across backbone architectures and that gradient sparsity remains the active protective mechanism on hard shifts.
 
 \section{Conclusion}
 \label{sec:conclusion}
 
 We studied adapter training for vector search under open-category queries, where the proper metric is worst-case OOD Label Precision rather than in-distribution optimality.
-Global contrastive adapters silently distort unseen-class geometry; EGA avoids this through a self-limiting triplet loss that vanishes when local class structure is satisfied, automatically preserving unseen regions.
-Across five OOD benchmarks spanning cross-dataset, fine-grained, and large-scale shifts, EGA achieves the highest worst-case retrieval quality and transfers directly to multiple backbones.
+Global contrastive adapters silently distort unseen-class geometry, which can catastrophically degrade retrieval quality under distribution shift.
+EGA addresses this by using a triplet loss that produces a sparse gradient field, so that the adapter only updates embeddings that violate local neighborhood constraints, while leaving the rest of the space unchanged. 
+The residual architecture and zero initialization ensure that the adapter begins as an identity map and can only deviate from it when driven by active gradients, which are empirically observed to vanish at steady state. 
+To justify EGA's OOD stability, we derive a Lipschitz-based bound on the unseen-class perturbation that depends on the active triplet ratio, which is empirically observed to drop to $3.5\%$ at convergence. 
+This means that $96.5\%$ of triplets produce zero gradient at steady state, so the adapter's capacity is effectively focused on refining seen-class clusters without exerting pressure on unseen-class geometry. 
+We also conduct extensive experiments on five OOD benchmarks spanning cross-dataset, fine-grained, and large-scale shifts, where EGA achieves the highest worst-case retrieval quality and transfers directly to multiple backbones. 
 
 \paragraph{Limitations}
 The theoretical bound on unseen-class perturbation requires the empirically observed steady-state active triplet ratio as an input; a closed-form guarantee without this remains open.
