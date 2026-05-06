@@ -155,6 +155,7 @@ We evaluate retrieval quality via \emph{Label Precision@$K$} (LP@K, semantic qua
     \qquad
     \text{AR}@K = \frac{1}{|\mathcal{Q}|} \sum_{q \in \mathcal{Q}}
     \frac{\left|\mathcal{N}_K^\text{exact}(q) \cap \mathcal{N}_K^\text{approx}(q)\right|}{K},
+    \label{eq:lp_ar}
 \end{equation}
 where $\mathcal{Q}$ is the query set, $\hat{n}_k(q)$ is the $k$-th approximate neighbor of $q$, and $\mathcal{N}_K^\text{exact}(q)$, $\mathcal{N}_K^\text{approx}(q)$ denote the exact and approximate top-$K$ neighbor sets. LP@K and AR@K capture distinct failure modes: tightening within-class clusters (semantic) vs.\ improving index fidelity (geometric).
 
@@ -338,10 +339,10 @@ After EGA, the two distributions separate cleanly across all $K$, and this separ
 Table~\ref{tab:indist_summary} reports all six methods' in-distribution performance on both CIFAR-100 and ImageNet-1K.
 On CIFAR-100, ICon and SRL reach near-perfect Label Precision ($0.999$ and $0.992$) by tightening seen-class clusters under global contrastive objectives.
 EGA reaches $0.705$, an improvement of $+16$ percentage points over the frozen baseline; the LoRA variants land between EGA and the baseline.
-On ImageNet-1K (1000 classes), the scale of all methods drops because the test set has approximately seven samples per class for retrieval (vs.
-$\sim$150 on CIFAR-100).
-The within-2-percentage-point clustering of the four trained adapters (SRL, ICon, EGA, LoRA+Triplet) at this density indicates that ID performance becomes test-set-density-bounded rather than method-bounded as the label space grows.
-% The contrast that matters for our deployment framing is in OOD performance, which we examine in Section~\ref{sec:ood}.
+On ImageNet-1K (1000 classes), the absolute scale of all methods drops compared to CIFAR-100 because the test set contains approximately seven samples per class for retrieval.
+The four trained adapters cluster within two percentage points of each other (SRL 0.421, LoRA+InfoNCE 0.426, EGA 0.407, ICon 0.386), indicating that the task is sufficiently challenging for frozen CLIP features that no lightweight adapter can substantially restructure the embedding space under a pure ID objective.
+We note that ImageNet-1K as an ID task differs fundamentally from the OOD setting that motivates our work: its 1000 classes are all seen during training, and the pretrained CLIP encoder already captures rich semantic structure that adapter training can only marginally refine.
+Methods that aggressively optimize ID objectives (InfoNCE, SRL) achieve slightly higher ID precision here, consistent with their design, while EGA's self-limiting triplet loss prioritizes the preservation of geometric structure that proves essential under distribution shift rather than maximizing in-distribution separation.
 
 \subsection{Out-of-Distribution Generalization}
 \label{sec:ood}
@@ -399,6 +400,16 @@ To address this, we evaluate on Oxford-IIIT Pet (37-class pet breed classificati
 The frozen CLIP baseline already reaches LP@1 $=$ 0.9595 on unseen breeds, yet EGA further raises it to $0.9646$ while achieving the highest ANNS Recall (0.9392 vs.\ LoRA+Triplet's 0.9342; detailed numbers in Appendix~\ref{appendix:pet}).
 Taken together, these two fine-grained benchmarks span both hard and easy shifts (frozen LP@1 of 0.512 on Aircraft vs.\ 0.960 on Pet), and EGA improves over the strongest baseline on both, providing evidence that its advantage is not an artifact of a single dataset or a specific difficulty scheme.
 
+\begin{figure}[t]
+	\centering
+	\includegraphics[width=\linewidth]{fig/pareto_frontier.pdf}
+	\caption{ID/OOD operating points of adapter training in the (ID, OOD) Label Precision plane.
+	}
+	\label{fig:pareto}
+		\vspace{-1em}
+
+\end{figure}
+
 \paragraph{Per-benchmark behavior.}
 On ANNS Recall, all trained adapters match or exceed the frozen baseline across Aircraft, Food-101, and ImageNet, confirming that adapter training successfully reorganizes the geometry for ANN indexing.
 On Label Precision, however, the global contrastive methods fall below the frozen baseline on every fine-grained OOD dataset, with degradation exceeding 30 percentage points on Food-101 and CIFAR-10: the retrieved neighbors are geometrically closer but semantically wrong.
@@ -407,14 +418,6 @@ The collapse of global contrastive methods is most severe exactly where unseen c
 Comparing EGA directly against LoRA+Triplet, which uses the same triplet loss but a low-rank architecture, isolates the effect of model capacity: EGA's nonlinear residual design outperforms LoRA+Triplet by $4.2$ pp on Aircraft while trailing on CIFAR-10 and Food-101 by $6.5$--$9.1$ pp, confirming that gradient sparsity and architectural capacity interact differently across shift types. 
 On ImageNet, where held-out classes are visually distinct from training classes, no method collapses, and all approaches, including the frozen baseline, perform comparably.
 EGA's advantage materializes precisely under difficult distribution shifts, which is the scenario where worst-case guarantees are most valuable.
-
-\begin{figure}[t]
-	\centering
-	\includegraphics[width=\linewidth]{fig/pareto_frontier.pdf}
-	\caption{ID/OOD operating points of adapter training in the (ID, OOD) Label Precision plane.
-	}
-	\label{fig:pareto}
-\end{figure}
 
 EGA does not dominate every method on every individual benchmark.
 Methods that restrict adapter capacity rather than the loss function achieve higher Label Precision on CIFAR-10, Food-101, and ImageNet, but suffer catastrophic degradation on the fine-grained Aircraft split, which is what determines their worst-case performance.
@@ -429,15 +432,17 @@ The trade-off between these two approaches is visualized in Figure~\ref{fig:pare
 
 \paragraph{Route 1: Gradient sparsity (EGA).}
 \begin{wrapfigure}{r}{0.59\textwidth}
+	\vspace{-1em}
 	\centering
 	\includegraphics[width=1\linewidth]{fig/mechanism_sparse_gradient.pdf}
 	\caption{Gradient sparsity as OOD protection.}
 	\label{fig:mechanism}
+	\vspace{-1em}
 \end{wrapfigure}
 A triplet loss with margin $m$ produces a non-zero gradient only when $d(a, p) - d(a, n) + m > 0$.
-Figure~\ref{fig:mechanism} (left) tracks the active triplet ratio from $17.4\%$ at epoch 10 to $3.5\%$ at convergence, meaning $96.5\%$ of triplets contribute zero gradient at steady state: the loss stops applying pressure once seen-class neighborhoods are locally separated, yet the adapter retains full capacity for further refinement.
+Figure~\ref{fig:mechanism} (left) tracks the active triplet ratio from $17.4\%$ at epoch 10 to $3.5\%$ at convergence, meaning $96.5\%$ of triplets contribute zero gradient at steady state: the loss stops applying pressure once seen-class neighborhoods are locally separated, yet the adapter retains full capacity for refinement.
 Sparsity neutralizes the loss-side factor while leaving capacity intact, which permits EGA's high in-distribution Label Precision (Table~\ref{tab:indist_summary}).
-The self-limiting dynamic is consistent across datasets ($\rho^*$ ranges from $0.8\%$ on Food-101 to $3.5\%$ on Aircraft; Appendix~\ref{appendix:rho}), with higher residual ratios on fine-grained classes reflecting greater visual similarity among seen categories.
+The self-limiting dynamic is consistent across datasets ($\rho^*$ ranges from $0.8\%$ on Food-101 to $3.5\%$ on Aircraft; Appendix~\ref{appendix:rho}), with higher residual ratios on fine-grained classes reflecting greater similarity among seen categories.
 OOD protection is driven by the \emph{sparsity} of the gradient field (the $96.5\%$ of inactive triplets) rather than by the exact value of $\rho^*$.
 
 \paragraph{Route 2: Capacity restriction (LoRA).}
@@ -459,6 +464,7 @@ EGA's in-distribution performance reflects this design priority rather than unde
 \label{sec:ablation}
 
 \begin{table}[t]
+		\vspace{-1em}
 	\centering
 	\begin{minipage}{0.38\textwidth}
 		\centering
@@ -506,6 +512,7 @@ Performance is also stable across hidden dimensions from 512 to 4096, indicating
 \subsection{Generalization to More Backbones}
 
 \begin{wraptable}{r}{0.57\textwidth}
+		\vspace{-1em}
     \centering
     \caption{Retrieval performance on more backbones.}
     \label{tab:ega_backbones}
@@ -527,12 +534,13 @@ Performance is also stable across hidden dimensions from 512 to 4096, indicating
         SigLIP SO400M             & 0.8892  & 0.8952 & 0.9192  & 0.9760 \\
         \bottomrule
     \end{tabular}
+		\vspace{-1em}
 \end{wraptable}
-To verify that EGA's OOD robustness transfers to stronger backbones, we evaluate on DINOv2-large~\cite{oquab2024dinov} and SigLIP~\cite{10377550} under the Aircraft OOD protocol.
-On DINOv2-large, where frozen LP@1 is $0.644$, EGA reaches $0.859$ compared to LoRA+Triplet's $0.832$, confirming that EGA's advantage persists on hard fine-grained shifts even with a stronger backbone.
+To verify that EGA's robustness transfers to more backbones, we evaluate DINOv2-large~\cite{oquab2024dinov} and SigLIP~\cite{10377550}.
+On DINOv2-large, where frozen LP@1 is $0.644$, EGA reaches $0.859$ compared to LoRA+Triplet's $0.832$, confirming that EGA's advantage persists on fine-grained shifts.
 On SigLIP, where frozen LP@1 is already $0.889$, both EGA ($0.895$) and LoRA+Triplet ($0.910$) improve over the frozen baseline, with LoRA's low-rank constraint providing a slightly better inductive bias when the pretrained geometry is already strong.
 
-The complementary behavior across these two backbones aligns with the two-routes framework of Section~\ref{sec:mechanism}: gradient sparsity is the dominant protective factor when the frozen representation is insufficient (DINOv2), while capacity restriction can offer a small additional advantage when the frozen geometry is already well separated (SigLIP).
+The results on both backbones align with the two-routes framework of Section~\ref{sec:mechanism}: gradient sparsity is the dominant protective factor when the frozen representation is insufficient (DINOv2), while capacity restriction can offer a small advantage when the frozen geometry is already well separated (SigLIP).
 Neither backbone exhibits the catastrophic OOD degradation observed with global contrastive methods on CLIP (Table~\ref{tab:ood_summary}), confirming that EGA's self-limiting dynamic transfers across backbone architectures and that gradient sparsity remains the active protective mechanism on hard shifts.
 The consistency across three backbones with substantially different pre-training objectives and embedding geometries also rules out the possibility that EGA's benefits are specific to CLIP.
 
@@ -549,7 +557,7 @@ Across five OOD benchmarks spanning cross-dataset, fine-grained, and large-scale
 \paragraph{Limitations}
 The theoretical bound requires the empirically observed steady-state active triplet ratio as an input; a closed-form guarantee without this remains open.
 EGA prioritizes worst-case robustness, so methods that restrict capacity can excel on individual benchmarks, and practitioners who know their deployment shift may prefer those alternatives.
-Our worst-case analysis covers five benchmarks spanning distinct shift types; additional challenging fine-grained domains remain a natural extension.
+Our analysis covers five benchmarks spanning distinct shift types; additional fine-grained domains remain a natural extension.
 
 \bibliography{ref}
 \bibliographystyle{plain}
@@ -603,7 +611,7 @@ We assume that for any individual triplet, the gradient norm is bounded by a con
 Therefore, the batch gradient norm satisfies:
 \begin{equation}
 	\left\| \nabla_{\theta} \mathcal{L}(\theta_t) \right\|_2 = \left\| \frac{1}{N} \sum_{i \in \text{active}} \nabla_{\theta} \ell_i \right\|_2 \leq \frac{1}{N} \sum_{i \in \text{active}} \left\| \nabla_{\theta} \ell_i \right\|_2 \leq \frac{\rho_t N}{N}
-	G = \rho_t G, \end{equation} where $\rho_t$ is the active triplet ratio defined in Eq.~(10).
+	G = \rho_t G, \end{equation} where $\rho_t$ is the active triplet ratio defined in Eq.~\eqref{eq:active_ratio}.
 This directly bounds the parameter update rate:
 \begin{equation}
 	\left\| \frac{d\theta_t}{dt} \right\|_2 = \eta \left\| \nabla_{\theta} \mathcal{L}(\theta_t) \right\|_2 \leq \eta \rho_t G.
@@ -622,7 +630,7 @@ Substituting this back into the path integral bound yields the global perturbati
 \noindent \emph{Contrast with global contrastive methods.}
 For methods like ICon or SRL, the loss is computed over the full pairwise similarity matrix of the batch.
 In our framework, this implies that a non-zero gradient is produced for nearly all pairs in every step, corresponding to an active ratio $\rho_t^{\text{(global)}} \approx 1$.
-Inserting this into Eq.~(\ref{eq:ega_bound}) yields $\Delta_{\text{global}}(x_u) \leq \eta L G T$, a perturbation bound that grows linearly with training time $T$.
+Inserting this into Eq.~\eqref{eq:ega_bound} yields $\Delta_{\text{global}}(x_u) \leq \eta L G T$, a perturbation bound that grows linearly with training time $T$.
 
 The critical difference is that our triplet loss with a small margin $m$ allows the optimization to reach a state where the vast majority of triplets satisfy the margin constraint.
 This forces $\rho_t$ to decay to a small steady-state value $\rho^*$, as empirically observed in Section~\ref{sec:mechanism} and Appendix~\ref{appendix:rho}.
@@ -649,9 +657,41 @@ We can bound this using the sub-multiplicativity of the spectral norm:
 
 We conjecture that under the following conditions: (1) The distribution of unseen-class data is sufficiently diverse such that the rows of their Jacobians $J_{\theta_t}(x_u)$ are approximately isotropic in parameter space; (2) The residual active triplet subspace $\mathcal{S}_{active}^{(t)}$ at convergence is low-dimensional and its principal directions are aligned with features that discriminate between \emph{seen} classes rather than unseen classes; Then, the projection of the unseen-class Jacobian onto the active subspace, $\| J_{\theta_t}(x_u) P_{\mathcal{S}_{active}^{(t)}} \|_2$, is small with high probability over the unseen data distribution.
 
-\emph{Discussion.}
 This conjecture is consistent with our empirical evidence: EGA preserves unseen-class geometry better than global contrastive methods (Section~\ref{sec:ood}).
 However, formalizing this geometric picture would require modeling the evolution of the active subspace during training and characterizing its alignment with unseen data, a significant theoretical challenge that we leave for future work.
+
+\vspace{1em}
+\noindent \emph{5. Illustrative Setting: Directional Safety under Sparse Gradients.}
+
+We illustrate the directional safety of sparse triplet gradients in a simplified setting.
+Consider a frozen embedding space $\mathbb{S}^{d-1}$ with two seen classes $\mathcal{C}_1, \mathcal{C}_2$ and one unseen class $\mathcal{C}_u$.
+Let $\mathbf{z}_1, \mathbf{z}_2, \mathbf{z}_u \in \mathbb{S}^{d-1}$ denote the embeddings of a query from each class after convergence of the adapter.
+By construction, the adapter is trained only on triplets from $\mathcal{C}_1$ and $\mathcal{C}_2$.
+
+\textbf{Global contrastive loss.}
+A global objective (e.g., InfoNCE) encourages all pairs from the same class to be closer than pairs from different classes.
+In our two-class setting, this exerts a force that pushes $\mathbf{z}_u$ toward whichever seen-class prototype $\mathbf{c}_1$ or $\mathbf{c}_2$ it happens to be nearer to in the pretrained geometry.
+If $\|\mathbf{z}_u - \mathbf{c}_1\| < \|\mathbf{z}_u - \mathbf{c}_2\|$ initially, the global gradient will pull $\mathbf{z}_u$ further toward $\mathcal{C}_1$, collapsing the unseen class into the wrong seen cluster.
+This is the mechanism behind the OOD degradation observed for ICon and SRL in Table~\ref{tab:ood_summary}.
+
+\textbf{Triplet loss with small margin.}
+Under the triplet loss, a gradient step is taken only for active triplets violating the margin.
+After convergence, active triplets are sparse (Section~\ref{sec:mechanism}) and correspond almost entirely to pairs of seen classes that remain close to the decision boundary.
+For an unseen sample $\mathbf{z}_u$, the instantaneous perturbation is $\Delta \mathbf{z}_u \propto \sum_{(a,p,n) \in \mathcal{A}} \nabla_{\mathbf{z}_u} \ell(a,p,n)$, where $\mathcal{A}$ is the set of active triplets.
+Since no triplet involves $\mathbf{z}_u$, the gradient $\nabla_{\mathbf{z}_u} \ell$ is determined entirely by the indirect effect of parameter updates on the adapter's forward pass.
+
+We now show that this indirect effect is small in the direction that would pull $\mathbf{z}_u$ toward a seen-class prototype.
+Assume the adapter is a linear residual layer $\mathbf{z} \mapsto \ell_2(\mathbf{z} + \mathbf{W}\mathbf{z})$ with $\mathbf{W} \in \mathbb{R}^{d \times d}$ initialized to zero.
+The update to $\mathbf{W}$ from an active triplet $(a,p,n)$ is a rank-1 matrix whose row space is spanned by the embeddings of $a$, $p$, and $n$.
+At convergence, the active triplets are concentrated around the decision boundary between $\mathcal{C}_1$ and $\mathcal{C}_2$, so the row space of the cumulative update $\Delta\mathbf{W}$ is approximately the 2-dimensional subspace spanned by the prototypes $\mathbf{c}_1$ and $\mathbf{c}_2$.
+An unseen embedding $\mathbf{z}_u$ is perturbed by $\Delta\mathbf{W}\,\mathbf{z}_u$, whose magnitude is controlled by the projection of $\mathbf{z}_u$ onto this 2-dimensional subspace.
+If the unseen class is not collinear with the seen-class prototypes (i.e., $\mathbf{z}_u$ lies largely outside the span of $\mathbf{c}_1$ and $\mathbf{c}_2$), the perturbation $\|\Delta\mathbf{W}\,\mathbf{z}_u\|$ is small.
+Moreover, the \emph{direction} of the perturbation is predominantly within the seen-class subspace, moving $\mathbf{z}_u$ parallel to the decision boundary rather than across it.
+
+\textbf{Implication.}
+This illustrative analysis shows that under a linear residual adapter, sparse triplet gradients from seen classes produce parameter updates whose row space is low-dimensional and aligned with seen-class discrimination directions.
+An unseen embedding whose pretrained geometry places it outside this subspace experiences only a small perturbation, and the perturbation direction is unlikely to pull it across a seen-class decision boundary.
+This is in contrast to global contrastive objectives, which exert dense, radially directed forces on all embeddings regardless of whether local class structure is already satisfied.
 
 \section{Experimental Setup Details}
 \label{sec:more_experiments}
@@ -686,7 +726,7 @@ We evaluate on six datasets covering both in-distribution and OOD retrieval scen
 
 \paragraph{Indexing and metrics.}
 For all retrieval evaluations we use FAISS~\cite{johnson2019billion} \texttt{IndexIVFFlat} with $\text{nlist}{=}10$ centroids and report results at $\text{nprobe} \in \{1, 5, 10\}$.
-We measure both Label Precision~(LP@$K$, Eq.~\ref{eq:lp}) and ANNS Recall~(AR@$K$, Eq.~\ref{eq:ar}) at $K \in \{1, 3, 5, 10\}$.
+We measure both Label Precision~(LP@$K$, Eq.~\eqref{eq:lp_ar}) and ANNS Recall~(AR@$K$, Eq.~\eqref{eq:lp_ar}) at $K \in \{1, 3, 5, 10\}$.
 
 \paragraph{Training.}
 All adapters are trained with AdamW (weight decay $10^{-4}$), cosine-annealed learning rate, and batch size 256 (CIFAR-100) or 512 (ImageNet-1K).
