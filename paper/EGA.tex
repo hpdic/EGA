@@ -45,7 +45,7 @@
 	These collectively induce a self-limiting dynamic: triplets that already satisfy a small margin stop producing gradients, so the adapter automatically stops updating where the local geometry is already correct.
 	At convergence $96.5\%$ of triplets are gradient-free, leaving unseen-class regions largely untouched while still enabling full-capacity refinement of seen classes.
 	Across five diverse OOD benchmarks, EGA achieves the highest worst-case Label Precision.
-	The design transfers directly to stronger backbones, and we provide an analytical justification linking gradient sparsity to bounded OOD perturbation.
+	The design transfers to stronger backbones, and we provide an analytical justification linking gradient sparsity to bounded OOD perturbation.
 \end{abstract}
 
 \section{Introduction}
@@ -432,9 +432,8 @@ The worst-case reflects deployment uncertainty: the system designer commits to o
 Methods that excel on some shifts but collapse on others (ICon collapses on Aircraft, SRL collapses on Aircraft, LoRA variants on Aircraft) cannot guarantee a quality floor.
 
 While these four benchmarks span the major categories of distribution shift, the worst-case is driven by the fine-grained Aircraft split.
-As a further probe, we evaluate on Oxford-IIIT Pet (37-class pet breed classification) under the same OOD protocol: the frozen CLIP baseline already reaches LP@1 $=$ 0.96, and all adapter methods perform comparably; EGA remains the best-performing method qualitatively, preserving the pretrained geometry without degradation (detailed numbers in Appendix~\ref{appendix:pet}).
-This supports the interpretation that EGA's advantage is specific to hard fine-grained shifts where the pretrained geometry is genuinely insufficient to separate unseen categories, rather than to fine-grained datasets in general.
-% Whether this pattern generalizes to other challenging fine-grained domains remains open, but the consistent collapse of global contrastive methods on Aircraft suggests the phenomenon is systematic.
+As a further probe, we evaluate on Oxford-IIIT Pet (37-class pet breed classification) under the same OOD protocol: the frozen CLIP baseline already reaches LP@1 $=$ 0.9595, yet EGA further raises it to $0.9646$ while achieving the highest ANNS Recall (detailed numbers in Appendix~\ref{appendix:pet}).
+This supports the interpretation that EGA provides consistent improvement across shift difficulties, with its advantage most pronounced on hard fine-grained shifts where the pretrained geometry is genuinely insufficient to separate unseen categories.
 
 \paragraph{Per-benchmark behavior.}
 On ANNS Recall, all trained adapters match or exceed the frozen baseline across Aircraft, Food-101, and ImageNet, confirming that adapter training successfully reorganizes the geometry for ANN indexing.
@@ -876,8 +875,8 @@ The variation in $\rho^*$ aligns with dataset difficulty: fine-grained Aircraft 
 
 We further evaluate EGA and LoRA+Triplet on Oxford-IIIT Pet under the same 80/20 class-disjoint OOD protocol.
 Table~\ref{tab:pet_ood} reports LP@1 and AR@1 at $K{=}1$, $\text{nprobe}{=}1$.
-The frozen CLIP baseline achieves LP@1 $=$ 0.96 on unseen breeds, indicating that the pretrained encoder already separates these categories well; all adapter methods perform comparably to the baseline, with EGA retaining the highest ANNS Recall.
-This is consistent with our finding that EGA's advantage materializes on hard fine-grained shifts where the pretrained geometry is insufficient, while on easier shifts it simply preserves the already-strong frozen representation.
+The frozen CLIP baseline achieves LP@1 $=$ 0.96 on unseen breeds, indicating that the pretrained encoder already separates these categories well; EGA further raises LP@1 to $0.9646$ while achieving the highest ANNS Recall ($0.9392$).
+This demonstrates that even on easier shifts where the pretrained geometry already performs well, EGA provides a small but consistent improvement without any degradation, consistent with our finding that its advantage is most pronounced on hard fine-grained shifts.
 
 \begin{table}[h]
   \centering
@@ -889,8 +888,8 @@ This is consistent with our finding that EGA's advantage materializes on hard fi
     Method & LP@1 & AR@1 \\
     \midrule
     Frozen CLIP   & 0.9595 & 0.8785 \\
-    LoRA+Triplet  & 0.9595 & 0.9342 \\
-    EGA           & 0.9595 & 0.9544 \\
+    LoRA+Triplet  & 0.9519 & 0.9342 \\
+    EGA           & 0.9646 & 0.9392 \\
     \bottomrule
   \end{tabular}
 \end{table}

@@ -1,12 +1,22 @@
 #!/usr/bin/env python3
 """
-Oxford-IIIT Pet OOD evaluation (评估协议对齐主实验 Table 2):
-  - 动态 75/25 切分索引库/查询集 (避免除零)
-  - nlist=10 (与论文主表一致)
-  - nprobe=1
-  - 保持原有训练流程不变
+Stanford Dogs OOD evaluation: EGA vs LoRA+Triplet (r=128).
+评估协议对齐主实验 (nlist=10, nprobe=1, 75/25 动态切分)。
+
+cd ~/hpdic/EGA/data
+
+# 下载（约 800MB，速度较快）
+wget http://vision.stanford.edu/aditya86/ImageNetDogs/images.tar
+
+# 解压
+tar -xf images.tar
+
+# 解压后会生成 Images/ 目录，里面有 120 个子文件夹
+# 每个子文件夹就是一种狗，图片已经按类别分好
+# 
+#       
 Usage:
-  python scripts/44_run_iiit_ood.py
+  python scripts/run_stanford_dogs_ood.py
 """
 import os, argparse, numpy as np, torch, torch.nn as nn, torch.nn.functional as F
 import torch.optim as optim
@@ -15,8 +25,8 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from models.ega_mlp import EGAMLP
 from utils_ega import TripletDataset, split_by_class
-import torchvision
 import torchvision.transforms as transforms
+from torchvision.datasets import ImageFolder
 from transformers import CLIPProcessor, CLIPModel
 import faiss
 
@@ -69,74 +79,62 @@ def train_ega_triplet(train_feats, train_labels, device, dim, epochs=150, margin
         scheduler.step()
     return model
 
-# ── Feature extraction from Oxford-IIIT Pet ──
-def extract_pet_features(device, output_dir="embeddings"):
-    trainval_set = torchvision.datasets.OxfordIIITPet(
-        root="./data", split="trainval", download=True,
-        transform=transforms.Compose([transforms.Resize((224, 224))])
-    )
-    test_set = torchvision.datasets.OxfordIIITPet(
-        root="./data", split="test", download=True,
-        transform=transforms.Compose([transforms.Resize((224, 224))])
-    )
+def extract_dogs_features(device, output_dir="embeddings"):
+    """从本地 Images/ 目录加载 Stanford Dogs 并提取 CLIP 特征（逐张处理）"""
+    images_dir = os.path.expanduser("~/hpdic/EGA/data/Images")
+    if not os.path.exists(images_dir):
+        print("Stanford Dogs images not found!")
+        print("Download: wget http://vision.stanford.edu/aditya86/ImageNetDogs/images.tar")
+        print("Extract:  tar -xf images.tar -C ~/hpdic/EGA/data/")
+        return None, None
 
-    all_images, all_labels = [], []
-    for dataset, split_name in [(trainval_set, "trainval"), (test_set, "test")]:
-        for img, label in tqdm(dataset, desc=f"Loading {split_name}"):
-            all_images.append(img)
-            all_labels.append(label)
+    transform = transforms.Compose([transforms.Resize((224, 224))])
+    dataset = ImageFolder(root=images_dir, transform=transform)
+    print(f"Loaded {len(dataset)} images, {len(dataset.classes)} classes")
 
     model = CLIPModel.from_pretrained("openai/clip-vit-base-patch32").to(device)
     processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
     model.eval()
 
-    features_list = []
-    for img in tqdm(all_images, desc="CLIP encoding"):
+    all_features = []
+    all_labels_list = []
+    for img, label in tqdm(dataset, desc="CLIP encoding"):
         inputs = processor(images=img, return_tensors="pt").to(device)
         with torch.no_grad():
             outputs = model.get_image_features(**inputs)
             feat = outputs.pooler_output
             feat = feat / feat.norm(dim=-1, keepdim=True)
-        features_list.append(feat.cpu().numpy())
+        all_features.append(feat.cpu().numpy())
+        all_labels_list.append(label)
 
-    features = np.concatenate(features_list, axis=0).astype(np.float32)
-    labels = np.array(all_labels)
+    features = np.concatenate(all_features, axis=0).astype(np.float32)
+    labels_arr = np.array(all_labels_list)
     os.makedirs(output_dir, exist_ok=True)
-    np.save(os.path.join(output_dir, "pet_features.npy"), features)
-    np.save(os.path.join(output_dir, "pet_labels.npy"), labels)
-    print(f"Saved {len(features)} features, {len(np.unique(labels))} classes")
-    return features, labels
+    np.save(os.path.join(output_dir, "dogs_features.npy"), features)
+    np.save(os.path.join(output_dir, "dogs_labels.npy"), labels_arr)
+    print(f"Saved {len(features)} features, {len(np.unique(labels_arr))} classes")
+    return features, labels_arr
 
-# ── 评估 (动态 75/25 切分，nlist=10) ──
+# ── 评估 ──
 def evaluate(features, labels, k=1, nlist=10, nprobe=1):
-    """75/25 动态切分，与你主实验 Table 2 对齐"""
     np.random.seed(42)
     perm = np.random.permutation(len(features))
     features, labels = features[perm], labels[perm]
-    
     split = int(len(features) * 0.75)
     base, base_labels = features[:split], labels[:split]
     query, query_labels = features[split:], labels[split:]
-    
     dim = base.shape[1]
-    
-    # Ground truth (exact)
     exact = faiss.IndexFlatL2(dim)
     exact.add(base)
     _, gt = exact.search(query, k)
-    
-    # IVF index
     ivf = faiss.IndexIVFFlat(faiss.IndexFlatL2(dim), dim, nlist, faiss.METRIC_L2)
     ivf.train(base)
     ivf.add(base)
     ivf.nprobe = nprobe
     _, ret = ivf.search(query, k)
-    
-    # 计算指标
     recall = np.mean([len(np.intersect1d(ret[i, :k], gt[i, :k])) for i in range(len(gt))]) / k
     lp = sum(np.sum(base_labels[ret[i, :k]] == query_labels[i]) for i in range(len(query_labels)))
     lp /= (len(query_labels) * k)
-    
     return lp, recall
 
 # ── Main ──
@@ -148,28 +146,27 @@ def main():
     device = "cuda" if torch.cuda.is_available() else "cpu"
     torch.backends.cudnn.benchmark = True
 
-    feat_path = "embeddings/pet_features.npy"
-    label_path = "embeddings/pet_labels.npy"
+    feat_path = "embeddings/dogs_features.npy"
+    label_path = "embeddings/dogs_labels.npy"
     if not os.path.exists(feat_path):
-        print("Extracting features (this will download Oxford-IIIT Pet)...")
-        features, labels = extract_pet_features(device)
+        print("Extracting features...")
+        features, labels = extract_dogs_features(device)
+        if features is None:
+            return
     else:
         features = np.load(feat_path)
         labels = np.load(label_path)
 
     features = features / np.linalg.norm(features, axis=1, keepdims=True)
-
     (train_feats, train_labels), (test_feats, test_labels) = split_by_class(features, labels)
     dim = features.shape[1]
     print(f"Total classes: {len(np.unique(labels))}")
     print(f"Train: {len(train_feats)} samples ({len(np.unique(train_labels))} classes)")
     print(f"Test: {len(test_feats)} samples ({len(np.unique(test_labels))} classes) [unseen]")
 
-    # Frozen CLIP baseline
     lp, ar = evaluate(test_feats, test_labels)
     print(f"Frozen CLIP: LP@1={lp:.4f}, AR@1={ar:.4f}")
 
-    # LoRA+Triplet r=128
     print("Training LoRA+Triplet (r=128)...")
     lora_model = train_lora_triplet(train_feats, train_labels, device, dim, epochs=args.epochs)
     lora_model.eval()
@@ -178,7 +175,6 @@ def main():
     lp_l, ar_l = evaluate(lora_feats, test_labels)
     print(f"LoRA+Triplet: LP@1={lp_l:.4f}, AR@1={ar_l:.4f}")
 
-    # EGA
     print("Training EGA...")
     ega_model = train_ega_triplet(train_feats, train_labels, device, dim, epochs=args.epochs)
     ega_model.eval()
@@ -187,7 +183,7 @@ def main():
     lp_e, ar_e = evaluate(ega_feats, test_labels)
     print(f"EGA: LP@1={lp_e:.4f}, AR@1={ar_e:.4f}")
 
-    print("\n=== Oxford-IIIT Pet OOD Results ===")
+    print("\n=== Stanford Dogs OOD Results ===")
     print(f"{'Method':20s} {'LP@1':>8s} {'AR@1':>8s}")
     print(f"{'Frozen CLIP':20s} {lp:8.4f} {ar:8.4f}")
     print(f"{'LoRA+Triplet':20s} {lp_l:8.4f} {ar_l:8.4f}")
@@ -195,21 +191,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-
-
-# (venv) (base) cc@uc-a100:~/hpdic/EGA$ python scripts/44_run_iiit_ood.py 
-# Total classes: 37
-# Train: 5771 samples (29 classes)
-# Test: 1578 samples (8 classes) [unseen]
-# Frozen CLIP: LP@1=0.9595, AR@1=0.8785
-# Training LoRA+Triplet (r=128)...
-# LoRA+Triplet: LP@1=0.9519, AR@1=0.9342
-# Training EGA...
-# EGA: LP@1=0.9646, AR@1=0.9392
-
-# === Oxford-IIIT Pet OOD Results ===
-# Method                   LP@1     AR@1
-# Frozen CLIP            0.9595   0.8785
-# LoRA+Triplet           0.9519   0.9342
-# EGA                    0.9646   0.9392
-# (venv) (base) cc@uc-a100:~/hpdic/EGA$ 
