@@ -594,80 +594,94 @@ Our worst-case analysis covers five benchmarks spanning distinct shift types; th
 \section{Theoretical Analysis of EGA's OOD Stability}
 \label{sec:appendix_theory}
 
-We provide a theoretical analysis to explain why the proposed EGA adapter outperforms other popular adapters in worst-case out-of-distribution (OOD) scenarios.
-The analysis is structured in four steps, starting from the geometric interpretation of the adapter architecture to deriving a Lipschitz-based bound on the unseen-class perturbation.
+We provide a theoretical analysis to explain why the proposed EGA adapter limits the perturbation of unseen-class geometry, in contrast to global contrastive methods.
+The analysis is structured in four steps, proceeding from the geometric properties of our architecture to an explanation of why residual active gradients are unlikely to corrupt unseen-class manifold structure.
 
 \vspace{1em}
-\noindent \emph{1.
-	Manifold Projection and Identity Initialization}
+\noindent \emph{1. Manifold Projection and Identity Initialization}
 
 Let the pre-trained feature space be defined as a unit hypersphere manifold $\mathcal{M} = \mathbb{S}^{d-1} \subset \mathbb{R}^d$.
 For any input feature $x \in \mathcal{M}$, the residual adapter learns a continuous perturbation vector field $h_\theta: \mathcal{M} \rightarrow \mathbb{R}^d$.
 The forward pass of our architecture, which combines a residual connection with $L_2$ normalization, is geometrically equivalent to a retraction mapping $\Pi_{\mathcal{M}}$ that projects the perturbed point back onto the manifold:
 \begin{equation}
-	f_\theta(x) = \Pi_{\mathcal{M}}(x + h_\theta(x)) = \frac{x + h_\theta(x)}{\|x + h_\theta(x)\|_2}.
+    f_\theta(x) = \Pi_{\mathcal{M}}(x + h_\theta(x)) = \frac{x + h_\theta(x)}{\|x + h_\theta(x)\|_2}.
 \end{equation}
 Under our zero initialization strategy, the initial perturbation field is strictly zero everywhere, meaning $h_{\theta_0}(x) \equiv 0$.
 Consequently, the initial adapter state represents a strict identity mapping on the manifold, $f_{\theta_0}(x) = x$.
-This forms the theoretical origin for computing cumulative structural distortions.
+This forms the theoretical baseline for computing cumulative structural distortions: any change to an embedding is measured as a deviation from its pre-trained location.
 
 \vspace{1em}
-\noindent \emph{2.
-	Path Integral of Unseen Class Distortion}
+\noindent \emph{2. Path Integral of Unseen Class Distortion}
 
 We model the training process as continuous gradient descent where parameters evolve according to $\frac{d\theta_t}{dt} = -\eta \nabla_{\theta} \mathcal{L}(\theta_t)$, with learning rate $\eta$.
 For any given unseen class sample $x_u \in \mathcal{X}_{unseen}$, its total geometric drift accumulated over the training period $T$ can be formulated using the fundamental theorem of calculus as a path integral along the parameter trajectory:
 \begin{equation}
-	\Delta(x_u) = \left\| f_{\theta_T}(x_u) - f_{\theta_0}(x_u) \right\|_2 = \left\| \int_{0}^{T}
-	J_{\theta_t}(x_u) \frac{d\theta_t}{dt} dt \right\|_2, \end{equation} where $J_{\theta_t}(x_u) = \nabla_\theta f_{\theta_t}(x_u)$ denotes the Jacobian matrix of the network evaluated at $x_u$.
-Applying the triangle inequality for integrals, we establish the fundamental upper bound for geometric distortion:
+    \Delta(x_u) = \left\| f_{\theta_T}(x_u) - f_{\theta_0}(x_u) \right\|_2 = \left\| \int_{0}^{T} J_{\theta_t}(x_u) \frac{d\theta_t}{dt} dt \right\|_2, 
+\end{equation}
+where $J_{\theta_t}(x_u) = \nabla_\theta f_{\theta_t}(x_u)$ denotes the Jacobian matrix of the network evaluated at $x_u$.
+Applying the triangle inequality for vector norms to the integral yields the fundamental upper bound for geometric distortion:
 \begin{equation}
-	\Delta(x_u) \leq \int_{0}^{T} \left\| J_{\theta_t}(x_u) \frac{d\theta_t}{dt} \right\|_2 dt.
+    \Delta(x_u) \leq \int_{0}^{T} \left\| J_{\theta_t}(x_u) \frac{d\theta_t}{dt} \right\|_2 dt.
 \end{equation}
 
 \vspace{1em}
-\noindent \emph{3.
-	Sparsity Modulated Deformation Bound}
+\noindent \emph{3. Sparsity Modulated Deformation Bound}
 
-In our formulation, the parameter derivative is entirely driven by the active triplet ratio $\rho_t$.
-Let $N$ be the batch size.
-The loss gradient is the average over active triplets.
-Assuming the gradient norm per individual sample is bounded by $G$, the batch gradient norm satisfies:
+We now connect the geometric distortion to the gradient sparsity of our triplet loss.
+In our formulation, the parameter derivative $\frac{d\theta_t}{dt}$ is driven by the mean gradient over the mini-batch $\mathcal{B}$ of size $N$.
+We assume that for any individual triplet, the gradient norm is bounded by a constant $G$, i.e., $\|\nabla_{\theta}\ell_i\|_2 \leq G$.
+Therefore, the batch gradient norm satisfies:
 \begin{equation}
-	\left\| \nabla_{\theta} \mathcal{L}(\theta_t) \right\|_2 = \left\| \frac{1}{N} \sum_{i \in active} \nabla_{\theta} \ell_i \right\|_2 \leq \frac{1}{N} \sum_{i \in active} \left\| \nabla_{\theta} \ell_i \right\|_2 \leq \frac{\rho_t N}{N}
-	G = \rho_t G.
+    \left\| \nabla_{\theta} \mathcal{L}(\theta_t) \right\|_2 = \left\| \frac{1}{N} \sum_{i \in \text{active}} \nabla_{\theta} \ell_i \right\|_2 \leq \frac{1}{N} \sum_{i \in \text{active}} \left\| \nabla_{\theta} \ell_i \right\|_2 \leq \frac{\rho_t N}{N} G = \rho_t G,
 \end{equation}
-This directly bounds the parameter update rate:
+where $\rho_t$ is the active triplet ratio defined in Eq.~(10). This directly bounds the parameter update rate:
 \begin{equation}
-	\left\| \frac{d\theta_t}{dt} \right\|_2 = \eta \left\| \nabla_{\theta} \mathcal{L}(\theta_t) \right\|_2 \leq \eta \rho_t G.
+    \left\| \frac{d\theta_t}{dt} \right\|_2 = \eta \left\| \nabla_{\theta} \mathcal{L}(\theta_t) \right\|_2 \leq \eta \rho_t G.
 \end{equation}
-To process the integrand from the previous step, we apply the sub-multiplicativity of matrix norms.
-Assuming the network satisfies $L$ Lipschitz continuity such that the spectral norm of the Jacobian is bounded by $\left\| J_{\theta_t}(x_u) \right\|_2 \leq L$, we obtain:
+To bound the integrand in Step 2, we apply the sub-multiplicativity of the spectral norm.
+Assuming the network satisfies $L$-Lipschitz continuity such that the spectral norm of its Jacobian is bounded by $\left\| J_{\theta_t}(\cdot) \right\|_2 \leq L$, we obtain:
 \begin{equation}
-	\left\| J_{\theta_t}(x_u) \frac{d\theta_t}{dt} \right\|_2 \leq \left\| J_{\theta_t}(x_u) \right\|_2 \left\| \frac{d\theta_t}{dt} \right\|_2 \leq L (\eta \rho_t G).
+    \left\| J_{\theta_t}(x_u) \frac{d\theta_t}{dt} \right\|_2 \leq \left\| J_{\theta_t}(x_u) \right\|_2 \left\| \frac{d\theta_t}{dt} \right\|_2 \leq L (\eta \rho_t G).
 \end{equation}
-Substituting this back into the path integral yields the global perturbation upper bound for any unseen sample:
+Substituting this back into the path integral bound yields the global perturbation upper bound for any unseen sample:
 \begin{equation}
-	\Delta_{EGA}(x_u) \leq \eta L G \int_{0}^{T} \rho_t dt.
+    \Delta_{EGA}(x_u) \leq \eta L G \int_{0}^{T} \rho_t dt. \label{eq:ega_bound}
 \end{equation}
-For global contrastive methods, the equivalent active ratio remains at a constant level near $1$, resulting in a perturbation bound that grows linearly with time $\eta L G T$.
-In contrast, our gradient sparsity mechanism forces $\rho_t$ to decay rapidly to a marginal steady state value.
-The bounded nature of this integral mathematically locks the maximum possible geometric shift for unseen categories.
 
-\noindent \emph{4. Geometric Intuition via Subspace Dimensionality.}
+\vspace{1em}
+\noindent \emph{Contrast with global contrastive methods.}
+For methods like ICon or SRL, the loss is computed over the full pairwise similarity matrix of the batch. In our framework, this implies that a non-zero gradient is produced for nearly all pairs in every step, corresponding to an active ratio $\rho_t^{\text{(global)}} \approx 1$.
+Inserting this into Eq.~(\ref{eq:ega_bound}) yields $\Delta_{\text{global}}(x_u) \leq \eta L G T$, a perturbation bound that grows linearly with training time $T$.
 
-To explain why the residual active gradients do not coincidentally distort visually similar unseen classes, we analyze the dimensionality of the update space.
-The parameter update direction $\frac{d\theta_t}{dt}$ resides entirely within a tangent subspace $\mathcal{S}_{active}^{(t)}$ spanned by the gradients of the active triplets.
-Let $P_{\mathcal{S}}$ denote the orthogonal projection operator onto this active subspace.
-We can rewrite the update vector as $P_{\mathcal{S}_{active}^{(t)}} \frac{d\theta_t}{dt}$.
-The true instantaneous perturbation is therefore modulated by the projection of the unseen Jacobian onto this subspace:
+The critical difference is that our triplet loss with a small margin $m$ allows the optimization to reach a state where the vast majority of triplets satisfy the margin constraint.
+This forces $\rho_t$ to decay to a small steady-state value $\rho^*$, as empirically observed in Section~\ref{sec:mechanism} and Appendix~\ref{appendix:rho}.
+Consequently, the integral $\int_0^T \rho_t dt$ in EGA's bound is substantially smaller than $T$, keeping the cumulative perturbation limited even after prolonged training.
+This analysis logically grounds the observed OOD robustness of EGA in the self-limiting nature of its training objective.
+
+\vspace{1em}
+\noindent \emph{4. Conjecture: Uncorrelated Residual Subspace.}
+
+The bound in Step 3 explains why the \textit{magnitude} of parameter updates is small at convergence.
+However, it does not guarantee that the \textit{direction} of these residual updates is harmless to unseen classes.
+We present a conjecture to address this: the small number of residual active triplets at convergence produce gradient updates whose direction is approximately uncorrelated with the Jacobian of unseen-class embeddings.
+
+Formally, let $\mathcal{S}_{active}^{(t)} \subset \mathbb{R}^{|\theta|}$ be the tangent subspace spanned by the gradients of the active triplets at time $t$, and let $P_{\mathcal{S}^{(t)}}$ be the orthogonal projection onto it.
+The parameter update $\frac{d\theta_t}{dt}$ resides entirely in $\mathcal{S}_{active}^{(t)}$, so we can write $\frac{d\theta_t}{dt} = P_{\mathcal{S}_{active}^{(t)}} \frac{d\theta_t}{dt}$.
+The instantaneous perturbation on an unseen sample $x_u$ is thus $\| J_{\theta_t}(x_u) P_{\mathcal{S}_{active}^{(t)}} \frac{d\theta_t}{dt} \|_2$.
+
+We can bound this using the sub-multiplicativity of the spectral norm:
 \begin{equation}
-	\left\| J_{\theta_t}(x_u) \frac{d\theta_t}{dt} \right\|_2 = \left\| J_{\theta_t}(x_u) P_{\mathcal{S}_{active}^{(t)}} \frac{d\theta_t}{dt} \right\|_2 \leq \left\| J_{\theta_t}(x_u) P_{\mathcal{S}_{active}^{(t)}} \right\|_2 \left\| \frac{d\theta_t}{dt} \right\|_2.
+    \left\| J_{\theta_t}(x_u) \frac{d\theta_t}{dt} \right\|_2 \leq \left\| J_{\theta_t}(x_u) P_{\mathcal{S}_{active}^{(t)}} \right\|_2 \left\| \frac{d\theta_t}{dt} \right\|_2.
 \end{equation}
-As the active triplet ratio $\rho_t$ drops exponentially, the dimensionality of $\mathcal{S}_{active}^{(t)}$ collapses.
-Consequently, the spectral norm of the projected Jacobian $\left\| J_{\theta_t}(x_u) P_{\mathcal{S}_{active}^{(t)}} \right\|_2$ probabilistically approaches zero.
-Under the empirically observed decay of $\rho_t$, the dimensionality of $\mathcal{S}_{active}^{(t)}$ is small at convergence, and the spectral norm of the projected Jacobian $\| J_{\theta_t}(x_u) P_{\mathcal{S}_{active}^{(t)}} \|_2$ is correspondingly small in practice.
-This provides geometric intuition for why the sparse updates are unlikely to systematically corrupt the structure of unseen classes.
+
+We conjecture that under the following conditions:
+(1) The distribution of unseen-class data is sufficiently diverse such that the rows of their Jacobians $J_{\theta_t}(x_u)$ are approximately isotropic in parameter space;
+(2) The residual active triplet subspace $\mathcal{S}_{active}^{(t)}$ at convergence is low-dimensional and its principal directions are aligned with features that discriminate between \emph{seen} classes rather than unseen classes;
+Then, the projection of the unseen-class Jacobian onto the active subspace, $\| J_{\theta_t}(x_u) P_{\mathcal{S}_{active}^{(t)}} \|_2$, is small with high probability over the unseen data distribution.
+
+\emph{Discussion.}
+This conjecture is consistent with our empirical evidence: EGA preserves unseen-class geometry better than global contrastive methods (Section~\ref{sec:ood}).
+However, formalizing this geometric picture would require modeling the evolution of the active subspace during training and characterizing its alignment with unseen data, a significant theoretical challenge that we leave for future work.
 
 \section{Experimental Setup Details}
 \label{sec:more_experiments}
@@ -738,7 +752,7 @@ To address potential concerns about additional baselines, we also evaluated Line
 As shown in Table~\ref{tab:linear_probing_id} and Table~\ref{tab:linear_probing_ood}, Linear Probing achieves reasonable in-distribution performance (0.5112 LP@1 on CIFAR-100) but completely collapses on out-of-distribution benchmarks (0.0065--0.0133 LP@1).
 This confirms that Linear Probing is not a meaningful comparison in our cross-dataset OOD setting due to class semantic mismatch.
 
-\begin{table}[h]
+\begin{table}[!h]
 	\centering
 	\caption{Linear Probing in-distribution performance on CIFAR-100 (75/25 split, mean $\pm$ std over 3 seeds).}
 	\label{tab:linear_probing_id}
@@ -752,7 +766,7 @@ This confirms that Linear Probing is not a meaningful comparison in our cross-da
 	\end{tabular}
 \end{table}
 
-\begin{table}[h]
+\begin{table}[!h]
 	\centering
 	\caption{Linear Probing OOD performance (mean $\pm$ std over 3 seeds).}
 	\label{tab:linear_probing_ood}
@@ -805,7 +819,7 @@ Table~\ref{tab:ega_infonce} reports OOD Label Precision@1.
 Under the global objective, the architecture degrades substantially across all shifts: Aircraft drops to 0.458, below even the frozen baseline (0.512), and Food-101 and CIFAR-10 lose 21.4 and 10 points relative to EGA.
 This confirms that the residual design alone does not prevent unseen-class distortion; gradient sparsity from the triplet loss is essential.
 
-\begin{table}[h]
+\begin{table}[!h]
 	\centering
 	\caption{EGAMLP trained with InfoNCE on OOD benchmarks ($K{=}1$, $\text{nprobe}{=}1$).}
 	\label{tab:ega_infonce}
@@ -827,7 +841,7 @@ We train LoRA+Triplet at ranks $r \in \{64, 128, 256, 512\}$ and measure both in
 As shown in Table~\ref{tab:lora_rank}, ID performance barely improves with rank (0.6456 at $r{=}64$ to 0.6480 at $r{=}512$), remaining far below EGA's 0.705, while Aircraft LP@1 never exceeds 0.566 and even deteriorates at higher ranks.
 Thus, the low-rank structure intrinsically caps both ID refinement and OOD protection, regardless of parameter budget.
 
-\begin{table}[h]
+\begin{table}[!h]
 	\centering
 	\caption{LoRA+Triplet at different ranks ($K{=}1$, $\text{nprobe}{=}1$).}
 	\label{tab:lora_rank}
@@ -855,7 +869,7 @@ Table~\ref{tab:rho_datasets} reports the steady-state active triplet ratio $\rho
 The fraction of zero-gradient triplets exceeds $96\%$ in all cases, confirming that the self-limiting dynamic is not specific to Aircraft.
 The variation in $\rho^*$ aligns with dataset difficulty: fine-grained Aircraft leaves the largest residual active fraction, while Food-101, whose classes are more visually distinct, converges to near-complete sparsity.
 
-\begin{table}[h]
+\begin{table}[!h]
   \centering
   \caption{Steady-state active triplet ratio $\rho^*$ across datasets.}
   \label{tab:rho_datasets}
@@ -878,7 +892,7 @@ Table~\ref{tab:pet_ood} reports LP@1 and AR@1 at $K{=}1$, $\text{nprobe}{=}1$.
 The frozen CLIP baseline achieves LP@1 $=$ 0.96 on unseen breeds, indicating that the pretrained encoder already separates these categories well; EGA further raises LP@1 to $0.9646$ while achieving the highest ANNS Recall ($0.9392$).
 This demonstrates that even on easier shifts where the pretrained geometry already performs well, EGA provides a small but consistent improvement without any degradation, consistent with our finding that its advantage is most pronounced on hard fine-grained shifts.
 
-\begin{table}[h]
+\begin{table}[!h]
   \centering
   \caption{Oxford-IIIT Pet OOD performance ($K{=}1$, $\text{nprobe}{=}1$, 80/20 class split).}
   \label{tab:pet_ood}
