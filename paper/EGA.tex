@@ -310,7 +310,7 @@ In the raw CLIP space, the two distributions overlap substantially, which is the
 After EGA, the two distributions separate cleanly across all $K$, and this separation drives the recall-efficiency improvement in Figure~\ref{fig:recall_grid}: raw CLIP achieves $0.667$ Recall@1 at $\text{nprobe}=1$, whereas EGA reaches $0.825$ and saturates above $0.99$ by $\text{nprobe}=5$.
 
 \begin{wraptable}{r}{0.5\textwidth}
-	% \vspace{-1em}
+	\vspace{-1.5em}
 
 	\centering
 	\caption{In-distribution retrieval performance at $K=1$, $\text{nprobe}=1$ on CIFAR-100 and ImageNet-1K.
@@ -333,6 +333,7 @@ After EGA, the two distributions separate cleanly across all $K$, and this separ
 		EGA                     & \textbf{0.705}                & \textbf{0.825}                  & \textbf{0.407} & \textbf{0.817}    \\
 		\bottomrule
 	\end{tabular}
+	\vspace{-1em}
 \end{wraptable}
 Table~\ref{tab:indist_summary} reports all six methods' in-distribution performance on both CIFAR-100 and ImageNet-1K.
 On CIFAR-100, ICon and SRL reach near-perfect Label Precision ($0.999$ and $0.992$) by tightening seen-class clusters under global contrastive objectives.
@@ -393,8 +394,10 @@ The worst-case reflects deployment uncertainty: the system designer commits to o
 Methods that excel on some shifts but collapse on others (ICon collapses on Aircraft, SRL collapses on Aircraft, LoRA variants on Aircraft) cannot guarantee a quality floor.
 
 While these four benchmarks span the major categories of distribution shift, the worst-case is driven by the fine-grained Aircraft split.
-As a further probe, we evaluate on Oxford-IIIT Pet (37-class pet breed classification) under the same OOD protocol: the frozen CLIP baseline already reaches LP@1 $=$ 0.9595, yet EGA further raises it to $0.9646$ while achieving the highest ANNS Recall (detailed numbers in Appendix~\ref{appendix:pet}).
-This supports the interpretation that EGA provides consistent improvement across shift difficulties, with its advantage most pronounced on hard fine-grained shifts where the pretrained geometry is genuinely insufficient to separate unseen categories.
+This raises the natural question of whether EGA's advantage is specific to a single dataset.
+To address this, we evaluate on Oxford-IIIT Pet (37-class pet breed classification), a fine-grained benchmark from an independent visual domain (natural species rather than man-made objects), under the identical OOD protocol.
+The frozen CLIP baseline already reaches LP@1 $=$ 0.9595 on unseen breeds, yet EGA further raises it to $0.9646$ while achieving the highest ANNS Recall (0.9392 vs.\ LoRA+Triplet's 0.9342; detailed numbers in Appendix~\ref{appendix:pet}).
+Taken together, these two fine-grained benchmarks span both hard and easy shifts (frozen LP@1 of 0.512 on Aircraft vs.\ 0.960 on Pet), and EGA improves over the strongest baseline on both, providing evidence that its advantage is not an artifact of a single dataset or a specific difficulty scheme.
 
 \paragraph{Per-benchmark behavior.}
 On ANNS Recall, all trained adapters match or exceed the frozen baseline across Aircraft, Food-101, and ImageNet, confirming that adapter training successfully reorganizes the geometry for ANN indexing.
@@ -405,11 +408,6 @@ Comparing EGA directly against LoRA+Triplet, which uses the same triplet loss bu
 On ImageNet, where held-out classes are visually distinct from training classes, no method collapses, and all approaches, including the frozen baseline, perform comparably.
 EGA's advantage materializes precisely under difficult distribution shifts, which is the scenario where worst-case guarantees are most valuable.
 
-EGA does not dominate every method on every individual benchmark.
-Methods that restrict adapter capacity rather than the loss function achieve higher Label Precision on CIFAR-10, Food-101, and ImageNet, but suffer catastrophic degradation on the fine-grained Aircraft split, which is what determines their worst-case performance.
-EGA's design explicitly prioritizes worst-case robustness; practitioners who can confidently bound the deployed distribution shift may reasonably prefer capacity-restricted alternatives.
-The trade-off between these two approaches is visualized in Figure~\ref{fig:pareto}.
-
 \begin{figure}[t]
 	\centering
 	\includegraphics[width=\linewidth]{fig/pareto_frontier.pdf}
@@ -418,15 +416,19 @@ The trade-off between these two approaches is visualized in Figure~\ref{fig:pare
 	\label{fig:pareto}
 \end{figure}
 
+EGA does not dominate every method on every individual benchmark.
+Methods that restrict adapter capacity rather than the loss function achieve higher Label Precision on CIFAR-10, Food-101, and ImageNet, but suffer catastrophic degradation on the fine-grained Aircraft split, which is what determines their worst-case performance.
+EGA's design explicitly prioritizes worst-case robustness; practitioners who can confidently bound the deployed distribution shift may reasonably prefer capacity-restricted alternatives.
+The trade-off between these two approaches is visualized in Figure~\ref{fig:pareto}.
+
 \subsection{Two Routes to OOD Stability: Gradient Sparsity and Capacity Restriction}
 \label{sec:mechanism}
 
-The introduction identified two factors through which adapter training can distort unseen-class geometry: a loss that exerts pressure across the full embedding distribution, and an adapter capacity expressive enough to comply with that pressure.
-Adapters that avoid OOD collapse must neutralize one of these factors, and the route determines its position in the Label Precision plane.
+% The introduction identified two factors through which adapter training can distort unseen-class geometry: a loss that exerts pressure across the full embedding distribution, and an adapter capacity expressive enough to comply with that pressure.
+% Adapters that avoid OOD collapse must neutralize one of these factors, and the route determines its position in the Label Precision plane.
 
 \paragraph{Route 1: Gradient sparsity (EGA).}
 \begin{wrapfigure}{r}{0.59\textwidth}
-	\vspace{-1em}
 	\centering
 	\includegraphics[width=1\linewidth]{fig/mechanism_sparse_gradient.pdf}
 	\caption{Gradient sparsity as OOD protection.}
@@ -503,9 +505,8 @@ Performance is also stable across hidden dimensions from 512 to 4096, indicating
 
 \subsection{Generalization to More Backbones}
 
-\begin{wraptable}{r}{0.58\textwidth}
+\begin{wraptable}{r}{0.57\textwidth}
     \centering
-    \vspace{-0.3cm}
     \caption{Retrieval performance on more backbones.}
     \label{tab:ega_backbones}
     \small
@@ -530,23 +531,25 @@ Performance is also stable across hidden dimensions from 512 to 4096, indicating
 To verify that EGA's OOD robustness transfers to stronger backbones, we evaluate on DINOv2-large~\cite{oquab2024dinov} and SigLIP~\cite{10377550} under the Aircraft OOD protocol.
 On DINOv2-large, where frozen LP@1 is $0.644$, EGA reaches $0.859$ compared to LoRA+Triplet's $0.832$, confirming that EGA's advantage persists on hard fine-grained shifts even with a stronger backbone.
 On SigLIP, where frozen LP@1 is already $0.889$, both EGA ($0.895$) and LoRA+Triplet ($0.910$) improve over the frozen baseline, with LoRA's low-rank constraint providing a slightly better inductive bias when the pretrained geometry is already strong.
+
+The complementary behavior across these two backbones aligns with the two-routes framework of Section~\ref{sec:mechanism}: gradient sparsity is the dominant protective factor when the frozen representation is insufficient (DINOv2), while capacity restriction can offer a small additional advantage when the frozen geometry is already well separated (SigLIP).
 Neither backbone exhibits the catastrophic OOD degradation observed with global contrastive methods on CLIP (Table~\ref{tab:ood_summary}), confirming that EGA's self-limiting dynamic transfers across backbone architectures and that gradient sparsity remains the active protective mechanism on hard shifts.
+The consistency across three backbones with substantially different pre-training objectives and embedding geometries also rules out the possibility that EGA's benefits are specific to CLIP.
 
 \section{Conclusion}
 \label{sec:conclusion}
 
 We studied adapter training for vector search under open-category queries, where the proper metric is worst-case OOD Label Precision rather than in-distribution optimality.
 Global contrastive adapters silently distort unseen-class geometry, which can catastrophically degrade retrieval quality under distribution shift.
-EGA addresses this by using a triplet loss that produces a sparse gradient field, so that the adapter only updates embeddings that violate local neighborhood constraints, while leaving the rest of the space unchanged. 
-The residual architecture and zero initialization ensure that the adapter begins as an identity map and can only deviate from it when driven by active gradients, which are empirically observed to vanish at steady state. 
-To justify EGA's OOD stability, we derive a Lipschitz-based bound on the unseen-class perturbation that depends on the active triplet ratio, which is empirically observed to drop to $3.5\%$ at convergence. 
-This means that $96.5\%$ of triplets produce zero gradient at steady state, so the adapter's capacity is effectively focused on refining seen-class clusters without exerting pressure on unseen-class geometry. 
-We also conduct extensive experiments on five OOD benchmarks spanning cross-dataset, fine-grained, and large-scale shifts, where EGA achieves the highest worst-case retrieval quality and transfers directly to multiple backbones. 
+EGA addresses this through a self-limiting triplet loss: the hinge formulation automatically stops gradient flow once local class structure is satisfied, so the adapter refines only where needed while preserving the pretrained geometry elsewhere.
+The residual architecture and zero initialization anchor training to the frozen representation.
+A Lipschitz-based bound on the unseen-class perturbation, controlled by the empirically decaying active triplet ratio, provides analytical support for this mechanism.
+Across five OOD benchmarks spanning cross-dataset, fine-grained, and large-scale shifts, EGA achieves the highest worst-case retrieval quality, with consistent improvement on two independent fine-grained domains, and transfers directly to stronger backbones.
 
 \paragraph{Limitations}
-The theoretical bound on unseen-class perturbation requires the empirically observed steady-state active triplet ratio as an input; a closed-form guarantee without this remains open.
+The theoretical bound requires the empirically observed steady-state active triplet ratio as an input; a closed-form guarantee without this remains open.
 EGA prioritizes worst-case robustness, so methods that restrict capacity can excel on individual benchmarks, and practitioners who know their deployment shift may prefer those alternatives.
-Our worst-case analysis covers five benchmarks spanning distinct shift types; the absolute worst-case is determined by the hardest available fine-grained dataset, and additional challenging domains remain a natural extension.
+Our worst-case analysis covers five benchmarks spanning distinct shift types; additional challenging fine-grained domains remain a natural extension.
 
 \bibliography{ref}
 \bibliographystyle{plain}
