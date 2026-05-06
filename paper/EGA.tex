@@ -443,7 +443,7 @@ A triplet loss with margin $m$ produces a non-zero gradient only when $d(a, p) -
 Figure~\ref{fig:mechanism} (left) tracks the active triplet ratio from $17.4\%$ at epoch 10 to $3.5\%$ at convergence, meaning $96.5\%$ of triplets contribute zero gradient at steady state: the loss stops applying pressure once seen-class neighborhoods are locally separated, yet the adapter retains full capacity for refinement.
 Sparsity neutralizes the loss-side factor while leaving capacity intact, which permits EGA's high in-distribution Label Precision (Table~\ref{tab:indist_summary}).
 The self-limiting dynamic is consistent across datasets ($\rho^*$ ranges from $0.8\%$ on Food-101 to $3.5\%$ on Aircraft; Appendix~\ref{appendix:rho}), with higher residual ratios on fine-grained classes reflecting greater similarity among seen categories.
-OOD protection is driven by the \emph{sparsity} of the gradient field (the $96.5\%$ of inactive triplets) rather than by the exact value of $\rho^*$.
+OOD protection is driven by the \emph{sparsity} of the gradient field ($96.5\%$ inactive triplets) rather than $\rho^*$.
 
 \paragraph{Route 2: Capacity restriction (LoRA).}
 The LoRA variants take the other route.
@@ -458,7 +458,6 @@ EGA, which neutralizes the loss-side factor while keeping capacity, achieves the
 Capacity-matched LoRA, which neutralizes the capacity-side factor, excels on three of four benchmarks but collapses on Aircraft (worst-case 0.538--0.569).
 These routes are complementary: removing gradient sparsity from EGA drops Aircraft LP@1 to 0.458 (Appendix~\ref{sec:loss_arch}), while scaling LoRA rank from 64 to 512 leaves both ID and OOD nearly unchanged.
 OOD robustness thus requires the combination of gradient sparsity and sufficient nonlinear capacity.
-EGA's in-distribution performance reflects this design priority rather than underfitting: increasing the margin would relax gradient sparsity and degrade OOD, so the reported ID scores represent a deliberate choice to preserve worst-case robustness.
 
 \subsection{Ablation and Sensitivity Analysis}
 \label{sec:ablation}
@@ -508,6 +507,7 @@ Zero-initialization lets the adapter begin as an identity mapping, and removing 
 Table~\ref{tab:sensitivity} evaluates stability across hyperparameter variations.
 EGA maintains consistent quality for margins $m \in \{0.1, 0.2, 0.3\}$, but increasing $m$ to $0.5$ degrades Recall@1 to $0.7400$: a larger margin forces the adapter to update embeddings that already satisfy local neighborhood constraints, reducing gradient sparsity.
 Performance is also stable across hidden dimensions from 512 to 4096, indicating that EGA's behavior is determined by its structural design rather than by specific parameter choices. While the ablation shows that the residual connection is the single most critical component, the three principles are interdependent: zero-initialization ensures that the residual connection begins as an identity map, and $\ell_2$-normalization ensures that the triplet loss operates in the same metric space as the pre-trained embeddings. Their individual ablation scores understate their joint necessity.
+We note that Table~\ref{tab:sensitivity} reports Recall under the in-distribution protocol of Section~\ref{sec:indist} (CIFAR-100 75/25 split); a corresponding OOD scan would require training separate adapters for each OOD benchmark at each margin value, which we leave for future work. The observed stability of ID Recall across $m \in \{0.1, 0.2, 0.3\}$ indicates that $m=0.2$ lies within a flat region of the loss landscape.
 
 \subsection{Generalization to More Backbones}
 
@@ -571,11 +571,9 @@ Our analysis covers five benchmarks spanning distinct shift types; additional fi
 \label{sec:appendix_theory}
 
 We provide a theoretical analysis to explain why the proposed EGA adapter limits the perturbation of unseen-class geometry, in contrast to global contrastive methods.
-The analysis is structured in four steps, proceeding from the geometric properties of our architecture to an explanation of why residual active gradients are unlikely to corrupt unseen-class manifold structure.
+The analysis is structured in five steps, proceeding from the geometric properties of our architecture to a bound on unseen-class perturbation, and concluding with an illustrative demonstration of why sparse seen-class gradients are directionally safe for unseen categories.
 
-\vspace{1em}
-\noindent \emph{1.
-	Manifold Projection and Identity Initialization}
+\subsection{Manifold Projection and Identity Initialization}
 
 Let the pre-trained feature space be defined as a unit hypersphere manifold $\mathcal{M} = \mathbb{S}^{d-1} \subset \mathbb{R}^d$.
 For any input feature $x \in \mathcal{M}$, the residual adapter learns a continuous perturbation vector field $h_\theta: \mathcal{M} \rightarrow \mathbb{R}^d$.
@@ -587,9 +585,7 @@ Under our zero initialization strategy, the initial perturbation field is strict
 Consequently, the initial adapter state represents a strict identity mapping on the manifold, $f_{\theta_0}(x) = x$.
 This forms the theoretical baseline for computing cumulative structural distortions: any change to an embedding is measured as a deviation from its pre-trained location.
 
-\vspace{1em}
-\noindent \emph{2.
-	Path Integral of Unseen Class Distortion}
+\subsection{Path Integral of Unseen Class Distortion}
 
 We model the training process as continuous gradient descent where parameters evolve according to $\frac{d\theta_t}{dt} = -\eta \nabla_{\theta} \mathcal{L}(\theta_t)$, with learning rate $\eta$.
 For any given unseen class sample $x_u \in \mathcal{X}_{unseen}$, its total geometric drift accumulated over the training period $T$ can be formulated using the fundamental theorem of calculus as a path integral along the parameter trajectory:
@@ -601,9 +597,7 @@ Applying the triangle inequality for vector norms to the integral yields the fun
 	\Delta(x_u) \leq \int_{0}^{T} \left\| J_{\theta_t}(x_u) \frac{d\theta_t}{dt} \right\|_2 dt.
 \end{equation}
 
-\vspace{1em}
-\noindent \emph{3.
-	Sparsity Modulated Deformation Bound}
+\subsection{Sparsity Modulated Deformation Bound}
 
 We now connect the geometric distortion to the gradient sparsity of our triplet loss.
 In our formulation, the parameter derivative $\frac{d\theta_t}{dt}$ is driven by the mean gradient over the mini-batch $\mathcal{B}$ of size $N$.
@@ -626,8 +620,6 @@ Substituting this back into the path integral bound yields the global perturbati
 	\Delta_{EGA}(x_u) \leq \eta L G \int_{0}^{T} \rho_t dt. \label{eq:ega_bound}
 \end{equation}
 
-\vspace{1em}
-\noindent \emph{Contrast with global contrastive methods.}
 For methods like ICon or SRL, the loss is computed over the full pairwise similarity matrix of the batch.
 In our framework, this implies that a non-zero gradient is produced for nearly all pairs in every step, corresponding to an active ratio $\rho_t^{\text{(global)}} \approx 1$.
 Inserting this into Eq.~\eqref{eq:ega_bound} yields $\Delta_{\text{global}}(x_u) \leq \eta L G T$, a perturbation bound that grows linearly with training time $T$.
@@ -637,10 +629,7 @@ This forces $\rho_t$ to decay to a small steady-state value $\rho^*$, as empiric
 Consequently, the integral $\int_0^T \rho_t dt$ in EGA's bound is substantially smaller than $T$, keeping the cumulative perturbation limited even after prolonged training.
 This analysis logically grounds the observed OOD robustness of EGA in the self-limiting nature of its training objective.
 
-\vspace{1em}
-\noindent \emph{4.
-	Conjecture: Uncorrelated Residual Subspace.
-}
+\subsection{Conjecture: Uncorrelated Residual Subspace}
 
 The bound in Step 3 explains why the \textit{magnitude} of parameter updates is small at convergence.
 However, it does not guarantee that the \textit{direction} of these residual updates is harmless to unseen classes.
@@ -660,21 +649,18 @@ We conjecture that under the following conditions: (1) The distribution of unsee
 This conjecture is consistent with our empirical evidence: EGA preserves unseen-class geometry better than global contrastive methods (Section~\ref{sec:ood}).
 However, formalizing this geometric picture would require modeling the evolution of the active subspace during training and characterizing its alignment with unseen data, a significant theoretical challenge that we leave for future work.
 
-\vspace{1em}
-\noindent \emph{5. Illustrative Setting: Directional Safety under Sparse Gradients.}
+\subsection{Illustrative Setting: Directional Safety under Sparse Gradients.}
 
 We illustrate the directional safety of sparse triplet gradients in a simplified setting.
 Consider a frozen embedding space $\mathbb{S}^{d-1}$ with two seen classes $\mathcal{C}_1, \mathcal{C}_2$ and one unseen class $\mathcal{C}_u$.
 Let $\mathbf{z}_1, \mathbf{z}_2, \mathbf{z}_u \in \mathbb{S}^{d-1}$ denote the embeddings of a query from each class after convergence of the adapter.
 By construction, the adapter is trained only on triplets from $\mathcal{C}_1$ and $\mathcal{C}_2$.
 
-\textbf{Global contrastive loss.}
 A global objective (e.g., InfoNCE) encourages all pairs from the same class to be closer than pairs from different classes.
 In our two-class setting, this exerts a force that pushes $\mathbf{z}_u$ toward whichever seen-class prototype $\mathbf{c}_1$ or $\mathbf{c}_2$ it happens to be nearer to in the pretrained geometry.
 If $\|\mathbf{z}_u - \mathbf{c}_1\| < \|\mathbf{z}_u - \mathbf{c}_2\|$ initially, the global gradient will pull $\mathbf{z}_u$ further toward $\mathcal{C}_1$, collapsing the unseen class into the wrong seen cluster.
 This is the mechanism behind the OOD degradation observed for ICon and SRL in Table~\ref{tab:ood_summary}.
 
-\textbf{Triplet loss with small margin.}
 Under the triplet loss, a gradient step is taken only for active triplets violating the margin.
 After convergence, active triplets are sparse (Section~\ref{sec:mechanism}) and correspond almost entirely to pairs of seen classes that remain close to the decision boundary.
 For an unseen sample $\mathbf{z}_u$, the instantaneous perturbation is $\Delta \mathbf{z}_u \propto \sum_{(a,p,n) \in \mathcal{A}} \nabla_{\mathbf{z}_u} \ell(a,p,n)$, where $\mathcal{A}$ is the set of active triplets.
@@ -688,7 +674,6 @@ An unseen embedding $\mathbf{z}_u$ is perturbed by $\Delta\mathbf{W}\,\mathbf{z}
 If the unseen class is not collinear with the seen-class prototypes (i.e., $\mathbf{z}_u$ lies largely outside the span of $\mathbf{c}_1$ and $\mathbf{c}_2$), the perturbation $\|\Delta\mathbf{W}\,\mathbf{z}_u\|$ is small.
 Moreover, the \emph{direction} of the perturbation is predominantly within the seen-class subspace, moving $\mathbf{z}_u$ parallel to the decision boundary rather than across it.
 
-\textbf{Implication.}
 This illustrative analysis shows that under a linear residual adapter, sparse triplet gradients from seen classes produce parameter updates whose row space is low-dimensional and aligned with seen-class discrimination directions.
 An unseen embedding whose pretrained geometry places it outside this subspace experiences only a small perturbation, and the perturbation direction is unlikely to pull it across a seen-class decision boundary.
 This is in contrast to global contrastive objectives, which exert dense, radially directed forces on all embeddings regardless of whether local class structure is already satisfied.
