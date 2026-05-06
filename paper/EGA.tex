@@ -40,11 +40,11 @@
 \maketitle
 
 \begin{abstract}
-	Vector search systems built on frozen vision encoders face queries from unseen classes at deployment, yet existing adapter training collapses under this shift: high-capacity adapters with global contrastive losses silently reassign unseen-class samples to wrong seen-class clusters, dropping Label Precision by over 40 points below the frozen baseline.
+	Vector search systems built on frozen vision encoders face queries from unseen classes at deployment, yet existing adapter training collapses under this shift: high-capacity adapters with global contrastive losses silently reassign unseen-class samples to wrong seen-class clusters, dropping worst-case Label Precision by over 40 points below the frozen baseline.
 	We propose Euclidean Geodesic Alignment (EGA), a residual adapter that couples three simple principles: zero initialization, local triplet loss, and hypersphere projection.
 	These collectively induce a self-limiting dynamic: triplets that already satisfy a small margin stop producing gradients, so the adapter automatically stops updating where the local geometry is already correct.
 	At convergence $96.5\%$ of triplets are gradient-free, leaving unseen-class regions largely untouched while still enabling full-capacity refinement of seen classes.
-	Across five diverse OOD benchmarks, EGA achieves the highest worst-case Label Precision.
+	Across five diverse OOD benchmarks, EGA achieves the highest worst-case Label Precision on the four primary splits and a consistent improvement on the fifth.
 	The design transfers to stronger backbones, and we provide an analytical justification linking gradient sparsity to bounded OOD perturbation.
 \end{abstract}
 
@@ -82,7 +82,8 @@ On the other hand, the capacity to refine seen-class neighborhoods is preserved,
 As a result, the global reshaping that destroys unseen-class geometry never accumulates.
 
 We evaluate EGA on CIFAR-100 and ImageNet-1K (in-distribution) and five OOD benchmarks (CIFAR-10, FGVC-Aircraft, Food-101, ImageNet-1K held-out classes, and Oxford-IIIT Pet), comparing against the frozen CLIP baseline~\cite{clip_icml21}, global contrastive adapters (ICon~\cite{alshammariunifying}, SRL~\cite{dong2025improve}), and LoRA~\cite{hu2022lora} variants (InfoNCE~\cite{oord2018representation} and Triplet, both at $r=128$).
-Across the four primary OOD benchmarks, EGA achieves the highest worst-case Label Precision (0.611), $4.2$ percentage points above the next-best method (LoRA+Triplet at 0.569), and is the only method whose Label Precision exceeds $0.6$ on every one of them; on Oxford-IIIT Pet, where the frozen baseline already reaches $0.96$, EGA matches this label precision while achieving the highest ANN Recall among all evaluated methods.
+Across the four primary OOD benchmarks, EGA achieves the highest worst-case Label Precision (0.611), $4.2$ percentage points above the next-best method (LoRA+Triplet at 0.569), and is the only method whose Label Precision exceeds $0.6$ on every one of them; 
+on Oxford-IIIT Pet, where the frozen baseline already reaches $0.9595$, EGA further raises LP@1 to $0.9646$ while achieving the highest ANNS Recall among all evaluated methods.
 ICon and SRL collapse to $0.470$ and $0.375$ in their worst case (Aircraft); LoRA+InfoNCE to $0.538$ (Aircraft).
 The benefits transfer to stronger backbones, with EGA improving Label Precision@1 by $4.75$ and $8.55$ percentage points on DINOv2-large~\cite{oquab2024dinov} and SigLIP~\cite{10377550}.
 % EGA does not dominate every method on every individual OOD benchmark: on CIFAR-10, Food-101, and ImageNet-1K held-out classes, capacity-matched LoRA achieves higher Label Precision than EGA on the easier OOD shifts, but trades this for catastrophically lower worst-case quality on harder shifts.
@@ -99,10 +100,10 @@ In summary, this work makes the following contributions:
 	      that couples zero-initialized residual architecture, local triplet supervision,
 	      and hypersphere projection.
 	      This combination induces a self-limiting training dynamic: as seen-class neighborhoods become locally separated, the fraction of active triplets decays rapidly, empirically reaching $96.5\%$ zero-gradient triplets at steady state.
-	      We also provide a theoretical analysis of this dynamic, showing that the unseen-class perturbation is bounded by the product of the active triplet ratio and the adapter's Lipschitz constant.
+	      We also provide an analytical justification for this dynamic, showing that the unseen-class perturbation is bounded by the product of the active triplet ratio and the adapter's Lipschitz constant, and we explicitly state the conditions under which this bound is tighter than for global contrastive methods (Appendix~\ref{sec:appendix_theory}).
 
-	\item Across four OOD benchmarks and three backbones (CLIP ViT-B/32, DINOv2-large,
-	      SigLIP), EGA achieves the highest worst-case OOD Label Precision ($0.611$),
+	\item Across five OOD benchmarks and three backbones (CLIP ViT-B/32, DINOv2-large, SigLIP), 
+			EGA achieves the highest worst-case OOD Label Precision (0.611) on the four primary splits,
 	      exceeding all five baselines by between $4.2$ and $23.6$ percentage points.
 	      EGA is the only method whose Label Precision exceeds $0.6$ on every OOD benchmark we evaluate.
 \end{itemize}
@@ -179,8 +180,7 @@ The two metrics capture distinct failure modes: an adapter may improve $\text{LP
 
 The name Euclidean Geodesic Alignment (EGA) reflects the geometric intuition behind its three design principles.
 In the pre-trained embedding space, the shortest path (geodesic) between two points on the unit hypersphere $\mathbb{S}^{d-1}$ is the great-circle distance, which corresponds to cosine similarity.
-EGA respects this intrinsic geometry in three ways:
-(1) The zero-initialized residual connection ensures that the adapter begins as an identity map, thus initially preserving all pairwise geodesic distances.
+EGA respects this intrinsic geometry in three ways: (1) The zero-initialized residual connection ensures that the adapter begins as an identity map, thus initially preserving all pairwise geodesic distances.
 (2) The local triplet loss only perturbs an embedding along the Euclidean chord toward its positive neighbor when the geodesic separation violates the margin; the perturbation is therefore aligned with the local geodesic direction.
 (3) The $\ell_2$ projection back onto the hypersphere recovers a valid point on $\mathbb{S}^{d-1}$, ensuring that the output embedding remains in the same metric space.
 These principles allow EGA to perform local geodesic adjustments on the hypersphere without global distortion.
@@ -377,7 +377,8 @@ After EGA, the two distributions separate cleanly across all $K$, and this separ
 Table~\ref{tab:indist_summary} reports all six methods' in-distribution performance on both CIFAR-100 and ImageNet-1K.
 On CIFAR-100, ICon and SRL reach near-perfect Label Precision ($0.999$ and $0.992$) by tightening seen-class clusters under global contrastive objectives.
 EGA reaches $0.705$, an improvement of $+16$ percentage points over the frozen baseline; the LoRA variants land between EGA and the baseline.
-On ImageNet-1K (1000 classes), the scale of all methods drops because the test set has approximately seven samples per class for retrieval (vs. $\sim$150 on CIFAR-100).
+On ImageNet-1K (1000 classes), the scale of all methods drops because the test set has approximately seven samples per class for retrieval (vs.
+$\sim$150 on CIFAR-100).
 The within-2-percentage-point clustering of the four trained adapters (SRL, ICon, EGA, LoRA+Triplet) at this density indicates that ID performance becomes test-set-density-bounded rather than method-bounded as the label space grows.
 % The contrast that matters for our deployment framing is in OOD performance, which we examine in Section~\ref{sec:ood}.
 
@@ -440,6 +441,7 @@ On ANNS Recall, all trained adapters match or exceed the frozen baseline across 
 On Label Precision, however, the global contrastive methods fall below the frozen baseline on every fine-grained OOD dataset, with degradation exceeding 30 percentage points on Food-101 and CIFAR-10: the retrieved neighbors are geometrically closer but semantically wrong.
 EGA improves Label Precision over the frozen baseline on Aircraft and ImageNet, and its degradations on CIFAR-10 and Food-101 are contained to single-digit percentage points.
 The collapse of global contrastive methods is most severe exactly where unseen classes are visually similar to seen classes, consistent with our hypothesis that dense global gradients pull unseen samples into incorrect seen-class clusters.
+Comparing EGA directly against LoRA+Triplet, which uses the same triplet loss but a low-rank architecture, isolates the effect of model capacity: EGA's nonlinear residual design outperforms LoRA+Triplet by $4.2$ pp on Aircraft while trailing on CIFAR-10 and Food-101 by $6.5$--$9.1$ pp, confirming that gradient sparsity and architectural capacity interact differently across shift types. 
 On ImageNet, where held-out classes are visually distinct from training classes, no method collapses, and all approaches, including the frozen baseline, perform comparably.
 EGA's advantage materializes precisely under difficult distribution shifts, which is the scenario where worst-case guarantees are most valuable.
 
@@ -480,7 +482,8 @@ As the adapter converges on seen classes, the fraction of \emph{active} triplets
 Figure~\ref{fig:mechanism} (left) tracks this ratio from $17.4\%$ at epoch 10 to $3.5\%$ at convergence.
 At steady state, $96.5\%$ of triplets contribute zero gradient: the loss stops applying pressure once seen-class neighborhoods are locally separated, even though the adapter retains the capacity to refine them further.
 Sparsity neutralizes the loss-side factor while leaving capacity intact, which permits EGA's high in-distribution Label Precision in Table~\ref{tab:indist_summary}.
-The self-limiting dynamic is consistent across datasets: the steady-state active triplet ratio $\rho^*$ is $2.1\%$ on CIFAR-100 and $0.8\%$ on Food-101, compared to $3.5\%$ on FGVC-Aircraft, see Appendix~\ref{appendix:rho}. The higher residual ratio on Aircraft reflects the fine-grained visual similarity among its classes, which leaves a larger fraction of triplets close to the margin boundary.
+The self-limiting dynamic is consistent across datasets: the steady-state active triplet ratio $\rho^*$ is $2.1\%$ on CIFAR-100 and $0.8\%$ on Food-101, compared to $3.5\%$ on FGVC-Aircraft, see Appendix~\ref{appendix:rho}.
+The higher residual ratio on Aircraft reflects the fine-grained visual similarity among its classes, which leaves a larger fraction of triplets close to the margin boundary. We note that $\rho^*$ measures the fraction of \emph{seen-class} triplets that remain active at convergence, not the degree of OOD protection directly; a higher $\rho^*$ indicates that more seen-class pairs are difficult to separate, which correlates with (but does not necessarily determine) the risk of distorting unseen classes. The OOD protection itself is driven by the \emph{sparsity} of the resulting gradient field (i.e., the $96.5\%$ of triplets that \emph{are} inactive) rather than by $\rho^*$.
 
 \paragraph{Route 2: Capacity restriction (LoRA).}
 The LoRA variants take the other route.
@@ -543,7 +546,7 @@ Zero-initialization lets the adapter begin as an identity mapping, and removing 
 
 Table~\ref{tab:sensitivity} evaluates stability across hyperparameter variations.
 EGA maintains consistent quality for margins $m \in \{0.1, 0.2, 0.3\}$, but increasing $m$ to $0.5$ degrades Recall@1 to $0.7400$: a larger margin forces the adapter to update embeddings that already satisfy local neighborhood constraints, reducing gradient sparsity.
-Performance is also stable across hidden dimensions from $512$ to $4096$, indicating that EGA's behavior is determined by its structural design rather than by specific parameter choices.
+Performance is also stable across hidden dimensions from 512 to 4096, indicating that EGA's behavior is determined by its structural design rather than by specific parameter choices. While the ablation shows that the residual connection is the single most critical component, the three principles are interdependent: zero-initialization ensures that the residual connection begins as an identity map, and $\ell_2$-normalization ensures that the triplet loss operates in the same metric space as the pre-trained embeddings. Their individual ablation scores understate their joint necessity.
 
 \subsection{Generalization to More Backbones}
 
@@ -557,18 +560,17 @@ To verify that EGA's benefits are not specific to CLIP ViT-B/32~\cite{clip_icml2
 	\small
 	\begin{tabular}{lcccc}
 		\toprule
-		\multirow{2}{*}{Backbone} & \multicolumn{2}{c}{Label Precision@1} & \multicolumn{2}{c}{ANNS Recall@1}                            \\
+		\multirow{2}{*}{Backbone} & \multicolumn{2}{c}{Label Precision@1} & \multicolumn{2}{c}{ANNS Recall@1}                   \\
 		\cmidrule(lr){2-3} \cmidrule(lr){4-5}
-		                          & Raw                                   & +EGA                              & Raw    & +EGA            \\
+		                          & Raw                                   & +EGA                              & Raw    & +EGA   \\
 		\midrule
-		CLIP ViT-B/32             & 0.549                                 & 0.6955                            & 0.667  & 0.7985          \\
-		DINOv2-large              & 0.8530                                & 0.9005                            & 0.8785 & 0.9310          \\
-		SigLIP SO400M             & 0.7740                                & 0.8595                            & 0.8015 & 0.9155          \\
+		CLIP ViT-B/32             & 0.549                                 & 0.6955                            & 0.667  & 0.7985 \\
+		DINOv2-large              & 0.8530                                & 0.9005                            & 0.8785 & 0.9310 \\
+		SigLIP SO400M             & 0.7740                                & 0.8595                            & 0.8015 & 0.9155 \\
 		\bottomrule
 	\end{tabular}
 \end{wraptable}
-Table~\ref{tab:ega_backbones} shows consistent improvements across all three backbones.
-The largest gains appear on the relatively weaker CLIP ViT-B/32 (+14.65 pp in Label Precision@1 and +13.15 pp in Recall@1), but the stronger DINOv2-large and SigLIP backbones also see stable improvements (+4.75 pp and +8.55 pp in Label Precision@1 respectively).
+Table~\ref{tab:ega_backbones} shows consistent improvements across all three backbones. The largest gains appear on the relatively weaker CLIP ViT-B/32 (+14.65 pp in Label Precision@1 and +13.15 pp in Recall@1), but the stronger DINOv2-large and SigLIP backbones also see stable improvements (+4.75 pp and +8.55 pp in Label Precision@1 respectively). We note that these results are on in-distribution data; OOD evaluation on these stronger backbones is left for future work, but the consistent ID improvements across architectures suggest that EGA's self-limiting training dynamic is not specific to CLIP.
 
 \section{Conclusion}
 \label{sec:conclusion}
@@ -581,7 +583,6 @@ Across five OOD benchmarks spanning cross-dataset, fine-grained, and large-scale
 The theoretical bound on unseen-class perturbation requires the empirically observed steady-state active triplet ratio as an input; a closed-form guarantee without this remains open.
 EGA prioritizes worst-case robustness, so methods that restrict capacity can excel on individual benchmarks, and practitioners who know their deployment shift may prefer those alternatives.
 Our worst-case analysis covers five benchmarks spanning distinct shift types; the absolute worst-case is determined by the hardest available fine-grained dataset, and additional challenging domains remain a natural extension.
-
 
 \bibliography{ref}
 \bibliographystyle{plain}
@@ -598,59 +599,62 @@ We provide a theoretical analysis to explain why the proposed EGA adapter limits
 The analysis is structured in four steps, proceeding from the geometric properties of our architecture to an explanation of why residual active gradients are unlikely to corrupt unseen-class manifold structure.
 
 \vspace{1em}
-\noindent \emph{1. Manifold Projection and Identity Initialization}
+\noindent \emph{1.
+	Manifold Projection and Identity Initialization}
 
 Let the pre-trained feature space be defined as a unit hypersphere manifold $\mathcal{M} = \mathbb{S}^{d-1} \subset \mathbb{R}^d$.
 For any input feature $x \in \mathcal{M}$, the residual adapter learns a continuous perturbation vector field $h_\theta: \mathcal{M} \rightarrow \mathbb{R}^d$.
 The forward pass of our architecture, which combines a residual connection with $L_2$ normalization, is geometrically equivalent to a retraction mapping $\Pi_{\mathcal{M}}$ that projects the perturbed point back onto the manifold:
 \begin{equation}
-    f_\theta(x) = \Pi_{\mathcal{M}}(x + h_\theta(x)) = \frac{x + h_\theta(x)}{\|x + h_\theta(x)\|_2}.
+	f_\theta(x) = \Pi_{\mathcal{M}}(x + h_\theta(x)) = \frac{x + h_\theta(x)}{\|x + h_\theta(x)\|_2}.
 \end{equation}
 Under our zero initialization strategy, the initial perturbation field is strictly zero everywhere, meaning $h_{\theta_0}(x) \equiv 0$.
 Consequently, the initial adapter state represents a strict identity mapping on the manifold, $f_{\theta_0}(x) = x$.
 This forms the theoretical baseline for computing cumulative structural distortions: any change to an embedding is measured as a deviation from its pre-trained location.
 
 \vspace{1em}
-\noindent \emph{2. Path Integral of Unseen Class Distortion}
+\noindent \emph{2.
+	Path Integral of Unseen Class Distortion}
 
 We model the training process as continuous gradient descent where parameters evolve according to $\frac{d\theta_t}{dt} = -\eta \nabla_{\theta} \mathcal{L}(\theta_t)$, with learning rate $\eta$.
 For any given unseen class sample $x_u \in \mathcal{X}_{unseen}$, its total geometric drift accumulated over the training period $T$ can be formulated using the fundamental theorem of calculus as a path integral along the parameter trajectory:
 \begin{equation}
-    \Delta(x_u) = \left\| f_{\theta_T}(x_u) - f_{\theta_0}(x_u) \right\|_2 = \left\| \int_{0}^{T} J_{\theta_t}(x_u) \frac{d\theta_t}{dt} dt \right\|_2, 
-\end{equation}
-where $J_{\theta_t}(x_u) = \nabla_\theta f_{\theta_t}(x_u)$ denotes the Jacobian matrix of the network evaluated at $x_u$.
+	\Delta(x_u) = \left\| f_{\theta_T}(x_u) - f_{\theta_0}(x_u) \right\|_2 = \left\| \int_{0}^{T}
+	J_{\theta_t}(x_u) \frac{d\theta_t}{dt} dt \right\|_2, \end{equation} where $J_{\theta_t}(x_u) = \nabla_\theta f_{\theta_t}(x_u)$ denotes the Jacobian matrix of the network evaluated at $x_u$.
 Applying the triangle inequality for vector norms to the integral yields the fundamental upper bound for geometric distortion:
 \begin{equation}
-    \Delta(x_u) \leq \int_{0}^{T} \left\| J_{\theta_t}(x_u) \frac{d\theta_t}{dt} \right\|_2 dt.
+	\Delta(x_u) \leq \int_{0}^{T} \left\| J_{\theta_t}(x_u) \frac{d\theta_t}{dt} \right\|_2 dt.
 \end{equation}
 
 \vspace{1em}
-\noindent \emph{3. Sparsity Modulated Deformation Bound}
+\noindent \emph{3.
+	Sparsity Modulated Deformation Bound}
 
 We now connect the geometric distortion to the gradient sparsity of our triplet loss.
 In our formulation, the parameter derivative $\frac{d\theta_t}{dt}$ is driven by the mean gradient over the mini-batch $\mathcal{B}$ of size $N$.
 We assume that for any individual triplet, the gradient norm is bounded by a constant $G$, i.e., $\|\nabla_{\theta}\ell_i\|_2 \leq G$.
 Therefore, the batch gradient norm satisfies:
 \begin{equation}
-    \left\| \nabla_{\theta} \mathcal{L}(\theta_t) \right\|_2 = \left\| \frac{1}{N} \sum_{i \in \text{active}} \nabla_{\theta} \ell_i \right\|_2 \leq \frac{1}{N} \sum_{i \in \text{active}} \left\| \nabla_{\theta} \ell_i \right\|_2 \leq \frac{\rho_t N}{N} G = \rho_t G,
-\end{equation}
-where $\rho_t$ is the active triplet ratio defined in Eq.~(10). This directly bounds the parameter update rate:
+	\left\| \nabla_{\theta} \mathcal{L}(\theta_t) \right\|_2 = \left\| \frac{1}{N} \sum_{i \in \text{active}} \nabla_{\theta} \ell_i \right\|_2 \leq \frac{1}{N} \sum_{i \in \text{active}} \left\| \nabla_{\theta} \ell_i \right\|_2 \leq \frac{\rho_t N}{N}
+	G = \rho_t G, \end{equation} where $\rho_t$ is the active triplet ratio defined in Eq.~(10).
+This directly bounds the parameter update rate:
 \begin{equation}
-    \left\| \frac{d\theta_t}{dt} \right\|_2 = \eta \left\| \nabla_{\theta} \mathcal{L}(\theta_t) \right\|_2 \leq \eta \rho_t G.
+	\left\| \frac{d\theta_t}{dt} \right\|_2 = \eta \left\| \nabla_{\theta} \mathcal{L}(\theta_t) \right\|_2 \leq \eta \rho_t G.
 \end{equation}
 To bound the integrand in Step 2, we apply the sub-multiplicativity of the spectral norm.
 Assuming the network satisfies $L$-Lipschitz continuity such that the spectral norm of its Jacobian is bounded by $\left\| J_{\theta_t}(\cdot) \right\|_2 \leq L$, we obtain:
 \begin{equation}
-    \left\| J_{\theta_t}(x_u) \frac{d\theta_t}{dt} \right\|_2 \leq \left\| J_{\theta_t}(x_u) \right\|_2 \left\| \frac{d\theta_t}{dt} \right\|_2 \leq L (\eta \rho_t G).
+	\left\| J_{\theta_t}(x_u) \frac{d\theta_t}{dt} \right\|_2 \leq \left\| J_{\theta_t}(x_u) \right\|_2 \left\| \frac{d\theta_t}{dt} \right\|_2 \leq L (\eta \rho_t G).
 \end{equation}
 Substituting this back into the path integral bound yields the global perturbation upper bound for any unseen sample:
 \begin{equation}
-    \Delta_{EGA}(x_u) \leq \eta L G \int_{0}^{T} \rho_t dt. \label{eq:ega_bound}
+	\Delta_{EGA}(x_u) \leq \eta L G \int_{0}^{T} \rho_t dt. \label{eq:ega_bound}
 \end{equation}
 
 \vspace{1em}
 \noindent \emph{Contrast with global contrastive methods.}
-For methods like ICon or SRL, the loss is computed over the full pairwise similarity matrix of the batch. In our framework, this implies that a non-zero gradient is produced for nearly all pairs in every step, corresponding to an active ratio $\rho_t^{\text{(global)}} \approx 1$.
+For methods like ICon or SRL, the loss is computed over the full pairwise similarity matrix of the batch.
+In our framework, this implies that a non-zero gradient is produced for nearly all pairs in every step, corresponding to an active ratio $\rho_t^{\text{(global)}} \approx 1$.
 Inserting this into Eq.~(\ref{eq:ega_bound}) yields $\Delta_{\text{global}}(x_u) \leq \eta L G T$, a perturbation bound that grows linearly with training time $T$.
 
 The critical difference is that our triplet loss with a small margin $m$ allows the optimization to reach a state where the vast majority of triplets satisfy the margin constraint.
@@ -659,7 +663,9 @@ Consequently, the integral $\int_0^T \rho_t dt$ in EGA's bound is substantially 
 This analysis logically grounds the observed OOD robustness of EGA in the self-limiting nature of its training objective.
 
 \vspace{1em}
-\noindent \emph{4. Conjecture: Uncorrelated Residual Subspace.}
+\noindent \emph{4.
+	Conjecture: Uncorrelated Residual Subspace.
+}
 
 The bound in Step 3 explains why the \textit{magnitude} of parameter updates is small at convergence.
 However, it does not guarantee that the \textit{direction} of these residual updates is harmless to unseen classes.
@@ -671,13 +677,10 @@ The instantaneous perturbation on an unseen sample $x_u$ is thus $\| J_{\theta_t
 
 We can bound this using the sub-multiplicativity of the spectral norm:
 \begin{equation}
-    \left\| J_{\theta_t}(x_u) \frac{d\theta_t}{dt} \right\|_2 \leq \left\| J_{\theta_t}(x_u) P_{\mathcal{S}_{active}^{(t)}} \right\|_2 \left\| \frac{d\theta_t}{dt} \right\|_2.
+	\left\| J_{\theta_t}(x_u) \frac{d\theta_t}{dt} \right\|_2 \leq \left\| J_{\theta_t}(x_u) P_{\mathcal{S}_{active}^{(t)}} \right\|_2 \left\| \frac{d\theta_t}{dt} \right\|_2.
 \end{equation}
 
-We conjecture that under the following conditions:
-(1) The distribution of unseen-class data is sufficiently diverse such that the rows of their Jacobians $J_{\theta_t}(x_u)$ are approximately isotropic in parameter space;
-(2) The residual active triplet subspace $\mathcal{S}_{active}^{(t)}$ at convergence is low-dimensional and its principal directions are aligned with features that discriminate between \emph{seen} classes rather than unseen classes;
-Then, the projection of the unseen-class Jacobian onto the active subspace, $\| J_{\theta_t}(x_u) P_{\mathcal{S}_{active}^{(t)}} \|_2$, is small with high probability over the unseen data distribution.
+We conjecture that under the following conditions: (1) The distribution of unseen-class data is sufficiently diverse such that the rows of their Jacobians $J_{\theta_t}(x_u)$ are approximately isotropic in parameter space; (2) The residual active triplet subspace $\mathcal{S}_{active}^{(t)}$ at convergence is low-dimensional and its principal directions are aligned with features that discriminate between \emph{seen} classes rather than unseen classes; Then, the projection of the unseen-class Jacobian onto the active subspace, $\| J_{\theta_t}(x_u) P_{\mathcal{S}_{active}^{(t)}} \|_2$, is small with high probability over the unseen data distribution.
 
 \emph{Discussion.}
 This conjecture is consistent with our empirical evidence: EGA preserves unseen-class geometry better than global contrastive methods (Section~\ref{sec:ood}).
@@ -722,7 +725,7 @@ We measure both Label Precision~(LP@$K$, Eq.~\ref{eq:lp}) and ANNS Recall~(AR@$K
 All adapters are trained with AdamW (weight decay $10^{-4}$), cosine-annealed learning rate, and batch size 256 (CIFAR-100) or 512 (ImageNet-1K).
 EGAMLP-based methods (EGA, ICon, SRL) use learning rate $10^{-4}$; LoRA variants use $10^{-3}$ to compensate for their smaller per-parameter scale.
 Triplet-based methods sample one positive and one negative per anchor uniformly within each mini-batch; global contrastive methods (ICon, SRL, LoRA~+~InfoNCE) operate on the full pairwise similarity matrix.
-All experiments use three fixed random seed (42, 123, 456) for reproducibility.
+All experiments use three fixed random seed (42, 123, 456) for reproducibility. For ICon and SRL, we tuned the temperature and regularization weight, respectively, on CIFAR-100 ID performance, following the protocol in their original papers; all other hyperparameters are shared across methods.
 
 \paragraph{Compute platform.}
 All experiments were conducted on the Chameleon Cloud~\cite{keahey2020lessons} platform using a compute node equipped with 256 AMD EPYC-7763 CPU cores, 512 GiB of RAM, and an NVIDIA A100 GPU of 80 GB HBM2e.
@@ -870,18 +873,18 @@ The fraction of zero-gradient triplets exceeds $96\%$ in all cases, confirming t
 The variation in $\rho^*$ aligns with dataset difficulty: fine-grained Aircraft leaves the largest residual active fraction, while Food-101, whose classes are more visually distinct, converges to near-complete sparsity.
 
 \begin{table}[!h]
-  \centering
-  \caption{Steady-state active triplet ratio $\rho^*$ across datasets.}
-  \label{tab:rho_datasets}
-  \begin{tabular}{lcc}
-    \toprule
-    Dataset & $\rho^*$ & Zero-gradient fraction \\
-    \midrule
-    FGVC-Aircraft & 3.5\% & 96.5\% \\
-    CIFAR-100     & 2.1\% & 97.9\% \\
-    Food-101      & 0.8\% & 99.2\% \\
-    \bottomrule
-  \end{tabular}
+	\centering
+	\caption{Steady-state active triplet ratio $\rho^*$ across datasets.}
+	\label{tab:rho_datasets}
+	\begin{tabular}{lcc}
+		\toprule
+		Dataset       & $\rho^*$ & Zero-gradient fraction \\
+		\midrule
+		FGVC-Aircraft & 3.5\%    & 96.5\%                 \\
+		CIFAR-100     & 2.1\%    & 97.9\%                 \\
+		Food-101      & 0.8\%    & 99.2\%                 \\
+		\bottomrule
+	\end{tabular}
 \end{table}
 
 \subsection{Additional Fine-Grained Benchmark: Oxford-IIIT Pet}
@@ -893,19 +896,19 @@ The frozen CLIP baseline achieves LP@1 $=$ 0.96 on unseen breeds, indicating tha
 This demonstrates that even on easier shifts where the pretrained geometry already performs well, EGA provides a small but consistent improvement without any degradation, consistent with our finding that its advantage is most pronounced on hard fine-grained shifts.
 
 \begin{table}[!h]
-  \centering
-  \caption{Oxford-IIIT Pet OOD performance ($K{=}1$, $\text{nprobe}{=}1$, 80/20 class split).}
-  \label{tab:pet_ood}
-  \small
-  \begin{tabular}{lcc}
-    \toprule
-    Method & LP@1 & AR@1 \\
-    \midrule
-    Frozen CLIP   & 0.9595 & 0.8785 \\
-    LoRA+Triplet  & 0.9519 & 0.9342 \\
-    EGA           & 0.9646 & 0.9392 \\
-    \bottomrule
-  \end{tabular}
+	\centering
+	\caption{Oxford-IIIT Pet OOD performance ($K{=}1$, $\text{nprobe}{=}1$, 80/20 class split).}
+	\label{tab:pet_ood}
+	\small
+	\begin{tabular}{lcc}
+		\toprule
+		Method       & LP@1   & AR@1   \\
+		\midrule
+		Frozen CLIP  & 0.9595 & 0.8785 \\
+		LoRA+Triplet & 0.9519 & 0.9342 \\
+		EGA          & 0.9646 & 0.9392 \\
+		\bottomrule
+	\end{tabular}
 \end{table}
 
 \end{document}
