@@ -1,7 +1,7 @@
 \documentclass{article}
 
-% \usepackage[preprint]{neurips_2026}
-\usepackage{neurips_2026}
+\usepackage[preprint]{neurips_2026}
+% \usepackage{neurips_2026}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{hyperref}
@@ -30,9 +30,8 @@
 \author{%
   Dongfang Zhao \\
   Tacoma School of Engineering and Technology\\
-  Paul G. Allen School of Computer Science \& Engineering\\
   University of Washington\\
-  \texttt{dzhao@cs.washington.edu} \\
+  \texttt{dzhao@uw.edu} \\
 }
 
 \begin{document}
@@ -40,12 +39,12 @@
 \maketitle
 
 \begin{abstract}
-	Vector search systems built on frozen vision encoders face queries from unseen classes at deployment, yet existing adapter training collapses under this shift: high-capacity adapters with global contrastive losses silently reassign unseen-class samples to wrong seen-class clusters, dropping worst-case Label Precision by over 40 points below the frozen baseline in our tests.
-	We propose Euclidean Geodesic Alignment (EGA), a residual adapter that couples three principles: zero initialization, local triplet loss, and hypersphere projection.
-	These collectively induce a self-limiting dynamic: triplets that already satisfy a small margin stop producing gradients, so the adapter automatically stops updating where the local geometry is already correct.
-	Our experiments show that at convergence $96.5\%$ of triplets are gradient-free, leaving unseen-class regions largely untouched while still enabling full-capacity refinement of seen classes.
-	Across five diverse out-of-distribution (OOD) benchmarks, EGA achieves the highest worst-case Label Precision on the four primary splits and a consistent improvement on the fifth.
-	The design also transfers to stronger backbones in addition to CLIP, and we provide an analytical justification linking gradient sparsity to bounded OOD perturbation.
+Vector search systems built on frozen vision encoders face queries from unseen classes at deployment, yet existing adapter training collapses under this shift: high-capacity adapters with global contrastive losses silently reassign unseen-class samples to wrong seen-class clusters, dropping worst-case Label Precision by over 40 points below the frozen baseline in our tests.
+We propose Euclidean Geodesic Alignment (EGA), a residual adapter that couples three principles: zero initialization, local triplet loss, and hypersphere projection.
+These collectively induce a self-limiting dynamic: triplets that already satisfy a small margin stop producing gradients, so the adapter automatically stops updating where the local geometry is already correct.
+Our experiments show that at convergence $96.5\%$ of triplets are gradient-free, leaving unseen-class regions largely untouched while still enabling full-capacity refinement of seen classes.
+Across five diverse out-of-distribution (OOD) benchmarks, EGA achieves the highest worst-case Label Precision on the four primary splits and a consistent improvement on the fifth.
+The design also transfers to stronger backbones in addition to CLIP, and we provide an analytical justification linking gradient sparsity to bounded OOD perturbation.
 \end{abstract}
 
 \section{Introduction}
@@ -556,8 +555,8 @@ Our analysis covers five benchmarks spanning distinct shift types; additional fi
 \bibliography{ref}
 \bibliographystyle{plain}
 
-\clearpage
-\input{checklist.tex}
+% \clearpage
+% \input{checklist.tex}
 \clearpage
 \appendix
 
