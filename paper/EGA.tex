@@ -547,10 +547,17 @@ The residual architecture and zero initialization anchor training to the frozen 
 A Lipschitz-based bound on the unseen-class perturbation, controlled by the empirically decaying active triplet ratio, provides analytical support for this mechanism.
 Across five OOD benchmarks spanning cross-dataset, fine-grained, and large-scale shifts, EGA achieves the highest worst-case retrieval quality, with consistent improvement on two independent fine-grained domains, and transfers to more recent backbones besides CLIP.
 
-\paragraph{Limitations}
-The theoretical bound requires the empirically observed steady-state active triplet ratio as an input; a closed-form guarantee without this remains open.
-EGA prioritizes worst-case robustness, so methods that restrict capacity can excel on individual benchmarks, and practitioners who know their deployment shift may prefer those alternatives.
-Our analysis covers five benchmarks spanning distinct shift types; additional fine-grained domains remain a natural extension.
+% \paragraph{Limitations}
+% The theoretical bound requires the empirically observed steady-state active triplet ratio as an input; a closed-form guarantee without this remains open.
+% EGA prioritizes worst-case robustness, so methods that restrict capacity can excel on individual benchmarks, and practitioners who know their deployment shift may prefer those alternatives.
+% Our analysis covers five benchmarks spanning distinct shift types; additional fine-grained domains remain a natural extension.
+
+This entire project is publicly available at \url{https://github.com/hpdic/EGA}, including all source code, paper draft, and edit history.
+
+\begin{ack}
+Results presented in this paper were obtained using the Chameleon testbed supported by the National Science Foundation.
+The implementation of EGA and the preparation of this manuscript were assisted by Claude Opus 4.7 and DeepSeek V4. The ideas and analyses presented in this paper are the original work of the author, and any assistance provided by AI tools was limited to code generation and language editing under the author's supervision.
+\end{ack}
 
 \bibliography{ref}
 \bibliographystyle{plain}

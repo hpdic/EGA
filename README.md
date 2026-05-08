@@ -3,7 +3,7 @@
 We aim to establish a new paradigm that bridges the gap between upstream representation learning and downstream approximate nearest neighbor search. By introducing a lightweight manifold alignment layer, EGA smooths the highly twisted semantic space into a geometrically navigable Euclidean space.
 
 ## Technical Reports
-* [Preprint]({https://arxiv.org/abs/TBD})
+* [Preprint](https://arxiv.org/pdf/2605.05674)
 * [Latest draft](./paper/EGA.pdf)
 
 ## Quick Start
