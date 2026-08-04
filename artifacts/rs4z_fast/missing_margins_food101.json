@@ -1,0 +1,47 @@
+[
+  {
+    "dataset": "Food-101",
+    "margin": 0.1,
+    "seed": 42,
+    "lp1": 0.8301599390708302,
+    "ar1": 0.8827113480578828,
+    "wall_time": 178.84016680717468,
+    "ckpt_path": "/home/cc/hpdic/EGA/models/rs4z_missing_margins/ega_food101_m0.1_seed42.pth"
+  },
+  {
+    "dataset": "Food-101",
+    "margin": 0.4,
+    "seed": 42,
+    "lp1": 0.7174409748667174,
+    "ar1": 0.8743335872048743,
+    "wall_time": 177.5270721912384,
+    "ckpt_path": "/home/cc/hpdic/EGA/models/rs4z_missing_margins/ega_food101_m0.4_seed42.pth"
+  },
+  {
+    "dataset": "Food-101",
+    "margin": 0.1,
+    "seed": 123,
+    "lp1": 0.8248286367098249,
+    "ar1": 0.8918507235338918,
+    "wall_time": 201.2666518688202,
+    "ckpt_path": "/home/cc/hpdic/EGA/models/rs4z_missing_margins/ega_food101_m0.1_seed123.pth"
+  },
+  {
+    "dataset": "Food-101",
+    "margin": 0.1,
+    "seed": 456,
+    "lp1": 0.817974105102818,
+    "ar1": 0.8903274942878904,
+    "wall_time": 200.82376790046692,
+    "ckpt_path": "/home/cc/hpdic/EGA/models/rs4z_missing_margins/ega_food101_m0.1_seed456.pth"
+  },
+  {
+    "dataset": "Food-101",
+    "margin": 0.2,
+    "seed": 42,
+    "lp1": 0.7852246763137852,
+    "ar1": 0.8918507235338918,
+    "wall_time": 195.42210412025452,
+    "ckpt_path": "/home/cc/hpdic/EGA/models/rs4z_missing_margins/ega_food101_m0.2_seed42.pth"
+  }
+]

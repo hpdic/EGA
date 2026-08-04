@@ -1,0 +1,29 @@
+[
+  {
+    "dataset": "Aircraft",
+    "margin": 0.1,
+    "seed": 42,
+    "lp1": 0.6071428571428571,
+    "ar1": 0.8869047619047619,
+    "wall_time": 21.366132736206055,
+    "ckpt_path": "/home/cc/hpdic/EGA/models/rs4z_missing_margins/ega_aircraft_m0.1_seed42.pth"
+  },
+  {
+    "dataset": "Aircraft",
+    "margin": 0.2,
+    "seed": 42,
+    "lp1": 0.6190476190476191,
+    "ar1": 0.8928571428571429,
+    "wall_time": 19.626550436019897,
+    "ckpt_path": "/home/cc/hpdic/EGA/models/rs4z_missing_margins/ega_aircraft_m0.2_seed42.pth"
+  },
+  {
+    "dataset": "Aircraft",
+    "margin": 0.4,
+    "seed": 42,
+    "lp1": 0.5773809523809523,
+    "ar1": 0.8809523809523809,
+    "wall_time": 17.786941051483154,
+    "ckpt_path": "/home/cc/hpdic/EGA/models/rs4z_missing_margins/ega_aircraft_m0.4_seed42.pth"
+  }
+]

@@ -1,0 +1,47 @@
+[
+  {
+    "dataset": "CIFAR-10",
+    "margin": 0.1,
+    "seed": 42,
+    "lp1": 0.85,
+    "ar1": 0.8568,
+    "wall_time": 83.41738820075989,
+    "ckpt_path": "/home/cc/hpdic/EGA/models/rs4z_missing_margins/ega_cifar10_m0.1_seed42.pth"
+  },
+  {
+    "dataset": "CIFAR-10",
+    "margin": 0.4,
+    "seed": 42,
+    "lp1": 0.7336,
+    "ar1": 0.8324,
+    "wall_time": 75.6611328125,
+    "ckpt_path": "/home/cc/hpdic/EGA/models/rs4z_missing_margins/ega_cifar10_m0.4_seed42.pth"
+  },
+  {
+    "dataset": "CIFAR-10",
+    "margin": 0.1,
+    "seed": 123,
+    "lp1": 0.836,
+    "ar1": 0.8464,
+    "wall_time": 86.4501268863678,
+    "ckpt_path": "/home/cc/hpdic/EGA/models/rs4z_missing_margins/ega_cifar10_m0.1_seed123.pth"
+  },
+  {
+    "dataset": "CIFAR-10",
+    "margin": 0.1,
+    "seed": 456,
+    "lp1": 0.8504,
+    "ar1": 0.8636,
+    "wall_time": 86.59644222259521,
+    "ckpt_path": "/home/cc/hpdic/EGA/models/rs4z_missing_margins/ega_cifar10_m0.1_seed456.pth"
+  },
+  {
+    "dataset": "CIFAR-10",
+    "margin": 0.2,
+    "seed": 42,
+    "lp1": 0.8164,
+    "ar1": 0.8492,
+    "wall_time": 88.70904064178467,
+    "ckpt_path": "/home/cc/hpdic/EGA/models/rs4z_missing_margins/ega_cifar10_m0.2_seed42.pth"
+  }
+]

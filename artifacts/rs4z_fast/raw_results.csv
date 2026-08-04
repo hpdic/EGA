@@ -1,0 +1,183 @@
+experiment,dataset,method,hyperparameter,seed,split,lp1,ar1,source_file,command
+exp1_or_exp3_baseline,CIFAR-10,Frozen,,mean_of_42_123_456,ood_unseen,0.88,0.863,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,CIFAR-10,ICon,,mean_of_42_123_456,ood_unseen,0.56,0.797,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,CIFAR-10,SRL,,mean_of_42_123_456,ood_unseen,0.536,0.819,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,CIFAR-10,InfoNCE(LoRA),,mean_of_42_123_456,ood_unseen,0.885,0.869,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,CIFAR-10,LoRA+Triplet,,mean_of_42_123_456,ood_unseen,0.875,0.861,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,CIFAR-10,EGA_default,0.2,mean_of_42_123_456,ood_unseen,0.81,0.833,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,Aircraft,Frozen,,mean_of_42_123_456,ood_unseen,0.512,0.773,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,Aircraft,ICon,,mean_of_42_123_456,ood_unseen,0.47,0.853,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,Aircraft,SRL,,mean_of_42_123_456,ood_unseen,0.375,0.879,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,Aircraft,InfoNCE(LoRA),,mean_of_42_123_456,ood_unseen,0.538,0.891,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,Aircraft,LoRA+Triplet,,mean_of_42_123_456,ood_unseen,0.569,0.893,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,Aircraft,EGA_default,0.2,mean_of_42_123_456,ood_unseen,0.611,0.905,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,Food-101,Frozen,,mean_of_42_123_456,ood_unseen,0.881,0.842,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,Food-101,ICon,,mean_of_42_123_456,ood_unseen,0.562,0.821,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,Food-101,SRL,,mean_of_42_123_456,ood_unseen,0.552,0.824,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,Food-101,InfoNCE(LoRA),,mean_of_42_123_456,ood_unseen,0.883,0.906,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,Food-101,LoRA+Triplet,,mean_of_42_123_456,ood_unseen,0.833,0.893,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,Food-101,EGA_default,0.2,mean_of_42_123_456,ood_unseen,0.791,0.879,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,ImageNet-1K,Frozen,,mean_of_42_123_456,ood_unseen,0.684,0.829,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,ImageNet-1K,ICon,,mean_of_42_123_456,ood_unseen,0.62,0.849,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,ImageNet-1K,SRL,,mean_of_42_123_456,ood_unseen,0.665,0.747,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,ImageNet-1K,InfoNCE(LoRA),,mean_of_42_123_456,ood_unseen,0.753,0.878,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,ImageNet-1K,LoRA+Triplet,,mean_of_42_123_456,ood_unseen,0.714,0.883,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1_or_exp3_baseline,ImageNet-1K,EGA_default,0.2,mean_of_42_123_456,ood_unseen,0.711,0.868,paper/EGA.tex#tab:ood_summary,camera-ready paper table (no command; pre-existing)
+exp1,FGVC-Aircraft,InfoNCE+preserve,0.01,42,ood_unseen,0.5297619047619048,0.6130952380952381,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,FGVC-Aircraft,InfoNCE+preserve,0.01,123,ood_unseen,0.5357142857142857,0.5892857142857143,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,FGVC-Aircraft,InfoNCE+preserve,0.01,456,ood_unseen,0.4523809523809524,0.5178571428571429,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,FGVC-Aircraft,InfoNCE+preserve,0.1,42,ood_unseen,0.5714285714285714,0.5178571428571429,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,FGVC-Aircraft,InfoNCE+preserve,0.1,123,ood_unseen,0.5357142857142857,0.5892857142857143,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,FGVC-Aircraft,InfoNCE+preserve,0.1,456,ood_unseen,0.5059523809523809,0.5,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,FGVC-Aircraft,InfoNCE+preserve,1.0,42,ood_unseen,0.5357142857142857,0.5297619047619048,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,FGVC-Aircraft,InfoNCE+preserve,1.0,123,ood_unseen,0.5238095238095238,0.6011904761904762,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,FGVC-Aircraft,InfoNCE+preserve,1.0,456,ood_unseen,0.47023809523809523,0.42857142857142855,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,FGVC-Aircraft,InfoNCE+preserve,10.0,42,ood_unseen,0.5535714285714286,0.5595238095238095,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,FGVC-Aircraft,InfoNCE+preserve,10.0,123,ood_unseen,0.6011904761904762,0.5714285714285714,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,FGVC-Aircraft,InfoNCE+preserve,10.0,456,ood_unseen,0.5773809523809523,0.5535714285714286,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,Food-101,InfoNCE+preserve,0.01,42,ood_unseen,0.6816450875856817,0.6115765422696116,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,Food-101,InfoNCE+preserve,0.01,123,ood_unseen,0.6884996191926885,0.6504188880426505,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,Food-101,InfoNCE+preserve,0.01,456,ood_unseen,0.7067783701447068,0.6268088347296268,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,Food-101,InfoNCE+preserve,0.1,42,ood_unseen,0.7448591012947449,0.6496572734196496,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,Food-101,InfoNCE+preserve,0.1,123,ood_unseen,0.7273419649657273,0.6435643564356436,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,Food-101,InfoNCE+preserve,0.1,456,ood_unseen,0.7326732673267327,0.6283320639756284,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,Food-101,InfoNCE+preserve,1.0,42,ood_unseen,0.8187357197258187,0.6686976389946687,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,Food-101,InfoNCE+preserve,1.0,123,ood_unseen,0.8194973343488196,0.6587966488956588,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,Food-101,InfoNCE+preserve,1.0,456,ood_unseen,0.821020563594821,0.6557501904036558,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,Food-101,InfoNCE+preserve,10.0,42,ood_unseen,0.872048743335872,0.6374714394516374,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,Food-101,InfoNCE+preserve,10.0,123,ood_unseen,0.8796648895658796,0.6671744097486672,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,Food-101,InfoNCE+preserve,10.0,456,ood_unseen,0.8811881188118812,0.6496572734196496,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,CIFAR-10,InfoNCE+preserve,0.01,42,ood_unseen,0.706,0.5032,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,CIFAR-10,InfoNCE+preserve,0.01,123,ood_unseen,0.718,0.5372,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,CIFAR-10,InfoNCE+preserve,0.01,456,ood_unseen,0.6912,0.49,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,CIFAR-10,InfoNCE+preserve,0.1,42,ood_unseen,0.75,0.5128,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,CIFAR-10,InfoNCE+preserve,0.1,123,ood_unseen,0.754,0.5396,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,CIFAR-10,InfoNCE+preserve,0.1,456,ood_unseen,0.7392,0.5096,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,CIFAR-10,InfoNCE+preserve,1.0,42,ood_unseen,0.8,0.5548,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,CIFAR-10,InfoNCE+preserve,1.0,123,ood_unseen,0.8064,0.5564,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,CIFAR-10,InfoNCE+preserve,1.0,456,ood_unseen,0.8044,0.538,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,CIFAR-10,InfoNCE+preserve,10.0,42,ood_unseen,0.8888,0.5972,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,CIFAR-10,InfoNCE+preserve,10.0,123,ood_unseen,0.8844,0.5832,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1,CIFAR-10,InfoNCE+preserve,10.0,456,ood_unseen,0.8864,0.5968,rebuttal_preserve_reg_results.json,scripts/50_infonce_preserve_reg_ood.py (pre-existing rebuttal run)
+exp1_reference,Aircraft,EGA,0.05,42,ood_unseen,0.6071428571428571,0.8690476190476191,rebuttal_margin_geometry_results.json,"scripts/57_margin_geometry_sweep.py (pre-existing rebuttal run, referenced not primary)"
+exp1_reference,Aircraft,EGA,0.05,123,ood_unseen,0.6428571428571429,0.8630952380952381,rebuttal_margin_geometry_results.json,"scripts/57_margin_geometry_sweep.py (pre-existing rebuttal run, referenced not primary)"
+exp1_reference,Aircraft,EGA,0.05,456,ood_unseen,0.5952380952380952,0.9404761904761905,rebuttal_margin_geometry_results.json,"scripts/57_margin_geometry_sweep.py (pre-existing rebuttal run, referenced not primary)"
+exp1_reference,Aircraft,EGA,0.1,42,ood_unseen,0.625,0.8392857142857143,rebuttal_margin_geometry_results.json,"scripts/57_margin_geometry_sweep.py (pre-existing rebuttal run, referenced not primary)"
+exp1_reference,Aircraft,EGA,0.1,123,ood_unseen,0.6011904761904762,0.8869047619047619,rebuttal_margin_geometry_results.json,"scripts/57_margin_geometry_sweep.py (pre-existing rebuttal run, referenced not primary)"
+exp1_reference,Aircraft,EGA,0.1,456,ood_unseen,0.5773809523809523,0.9583333333333334,rebuttal_margin_geometry_results.json,"scripts/57_margin_geometry_sweep.py (pre-existing rebuttal run, referenced not primary)"
+exp1_reference,Aircraft,EGA,0.2,42,ood_unseen,0.5892857142857143,0.8630952380952381,rebuttal_margin_geometry_results.json,"scripts/57_margin_geometry_sweep.py (pre-existing rebuttal run, referenced not primary)"
+exp1_reference,Aircraft,EGA,0.2,123,ood_unseen,0.6190476190476191,0.8928571428571429,rebuttal_margin_geometry_results.json,"scripts/57_margin_geometry_sweep.py (pre-existing rebuttal run, referenced not primary)"
+exp1_reference,Aircraft,EGA,0.2,456,ood_unseen,0.5714285714285714,0.9107142857142857,rebuttal_margin_geometry_results.json,"scripts/57_margin_geometry_sweep.py (pre-existing rebuttal run, referenced not primary)"
+exp1_reference,Aircraft,EGA,0.3,42,ood_unseen,0.5595238095238095,0.8630952380952381,rebuttal_margin_geometry_results.json,"scripts/57_margin_geometry_sweep.py (pre-existing rebuttal run, referenced not primary)"
+exp1_reference,Aircraft,EGA,0.3,123,ood_unseen,0.5773809523809523,0.9047619047619048,rebuttal_margin_geometry_results.json,"scripts/57_margin_geometry_sweep.py (pre-existing rebuttal run, referenced not primary)"
+exp1_reference,Aircraft,EGA,0.3,456,ood_unseen,0.5773809523809523,0.8988095238095238,rebuttal_margin_geometry_results.json,"scripts/57_margin_geometry_sweep.py (pre-existing rebuttal run, referenced not primary)"
+exp1_reference,Aircraft,EGA,0.4,42,ood_unseen,0.5476190476190477,0.8988095238095238,rebuttal_margin_geometry_results.json,"scripts/57_margin_geometry_sweep.py (pre-existing rebuttal run, referenced not primary)"
+exp1_reference,Aircraft,EGA,0.4,123,ood_unseen,0.5714285714285714,0.9464285714285714,rebuttal_margin_geometry_results.json,"scripts/57_margin_geometry_sweep.py (pre-existing rebuttal run, referenced not primary)"
+exp1_reference,Aircraft,EGA,0.4,456,ood_unseen,0.5773809523809523,0.9404761904761905,rebuttal_margin_geometry_results.json,"scripts/57_margin_geometry_sweep.py (pre-existing rebuttal run, referenced not primary)"
+exp1_reference,Aircraft,EGA,0.5,42,ood_unseen,0.5714285714285714,0.9047619047619048,rebuttal_margin_geometry_results.json,"scripts/57_margin_geometry_sweep.py (pre-existing rebuttal run, referenced not primary)"
+exp1_reference,Aircraft,EGA,0.5,123,ood_unseen,0.5297619047619048,0.9404761904761905,rebuttal_margin_geometry_results.json,"scripts/57_margin_geometry_sweep.py (pre-existing rebuttal run, referenced not primary)"
+exp1_reference,Aircraft,EGA,0.5,456,ood_unseen,0.5178571428571429,0.9345238095238095,rebuttal_margin_geometry_results.json,"scripts/57_margin_geometry_sweep.py (pre-existing rebuttal run, referenced not primary)"
+exp1,CIFAR-10,EGA,0.1,42,ood_unseen,0.85,0.8568,artifacts/rs4z_fast/missing_margins_cifar10.json,python scripts/58_rs4z_missing_margins.py --dataset cifar10 --margins 0.1 --seeds 42
+exp1,CIFAR-10,EGA,0.4,42,ood_unseen,0.7336,0.8324,artifacts/rs4z_fast/missing_margins_cifar10.json,python scripts/58_rs4z_missing_margins.py --dataset cifar10 --margins 0.4 --seeds 42
+exp1,CIFAR-10,EGA,0.1,123,ood_unseen,0.836,0.8464,artifacts/rs4z_fast/missing_margins_cifar10.json,python scripts/58_rs4z_missing_margins.py --dataset cifar10 --margins 0.1 --seeds 123
+exp1,CIFAR-10,EGA,0.1,456,ood_unseen,0.8504,0.8636,artifacts/rs4z_fast/missing_margins_cifar10.json,python scripts/58_rs4z_missing_margins.py --dataset cifar10 --margins 0.1 --seeds 456
+exp1,CIFAR-10,EGA,0.2,42,ood_unseen,0.8164,0.8492,artifacts/rs4z_fast/missing_margins_cifar10.json,python scripts/58_rs4z_missing_margins.py --dataset cifar10 --margins 0.2 --seeds 42
+exp1,Food-101,EGA,0.1,42,ood_unseen,0.8302,0.8827,artifacts/rs4z_fast/missing_margins_food101.json,python scripts/58_rs4z_missing_margins.py --dataset food101 --margins 0.1 --seeds 42
+exp1,Food-101,EGA,0.4,42,ood_unseen,0.7174,0.8743,artifacts/rs4z_fast/missing_margins_food101.json,python scripts/58_rs4z_missing_margins.py --dataset food101 --margins 0.4 --seeds 42
+exp1,Food-101,EGA,0.1,123,ood_unseen,0.8248,0.8919,artifacts/rs4z_fast/missing_margins_food101.json,python scripts/58_rs4z_missing_margins.py --dataset food101 --margins 0.1 --seeds 123
+exp1,Food-101,EGA,0.1,456,ood_unseen,0.818,0.8903,artifacts/rs4z_fast/missing_margins_food101.json,python scripts/58_rs4z_missing_margins.py --dataset food101 --margins 0.1 --seeds 456
+exp1,Food-101,EGA,0.2,42,ood_unseen,0.7852,0.8919,artifacts/rs4z_fast/missing_margins_food101.json,python scripts/58_rs4z_missing_margins.py --dataset food101 --margins 0.2 --seeds 42
+exp1,Aircraft,EGA,0.1,42,ood_unseen,0.6071,0.8869,artifacts/rs4z_fast/missing_margins_aircraft.json,python scripts/58_rs4z_missing_margins.py --dataset aircraft --margins 0.1 --seeds 42
+exp1,Aircraft,EGA,0.2,42,ood_unseen,0.619,0.8929,artifacts/rs4z_fast/missing_margins_aircraft.json,python scripts/58_rs4z_missing_margins.py --dataset aircraft --margins 0.2 --seeds 42
+exp1,Aircraft,EGA,0.4,42,ood_unseen,0.5774,0.881,artifacts/rs4z_fast/missing_margins_aircraft.json,python scripts/58_rs4z_missing_margins.py --dataset aircraft --margins 0.4 --seeds 42
+exp2,CIFAR-10,selected=Frozen,5,0,validation_then_test,0.8804,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,5,1,validation_then_test,0.88,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,5,2,validation_then_test,0.8792,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,5,3,validation_then_test,0.8796,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,5,4,validation_then_test,0.8788,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,5,5,validation_then_test,0.8792,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,5,6,validation_then_test,0.8808,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,5,7,validation_then_test,0.88,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,5,8,validation_then_test,0.8804,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,5,9,validation_then_test,0.8812,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=EGA 0.5x (m=0.1),10,0,validation_then_test,0.85,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,10,1,validation_then_test,0.8812,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,10,2,validation_then_test,0.8804,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,10,3,validation_then_test,0.8796,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=EGA 1.0x (m=0.2),10,4,validation_then_test,0.8142,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,10,5,validation_then_test,0.8796,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,10,6,validation_then_test,0.8779,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=EGA 0.5x (m=0.1),10,7,validation_then_test,0.8471,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,10,8,validation_then_test,0.8817,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,10,9,validation_then_test,0.8792,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,20,0,validation_then_test,0.8778,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,20,1,validation_then_test,0.8787,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,20,2,validation_then_test,0.8774,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,20,3,validation_then_test,0.8791,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,20,4,validation_then_test,0.8826,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,20,5,validation_then_test,0.8791,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,20,6,validation_then_test,0.8796,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,20,7,validation_then_test,0.8804,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,20,8,validation_then_test,0.8791,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,CIFAR-10,selected=Frozen,20,9,validation_then_test,0.883,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),5,0,validation_then_test,0.6232,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 2.0x (m=0.4),5,1,validation_then_test,0.4928,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),5,2,validation_then_test,0.5797,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),5,3,validation_then_test,0.6377,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),5,4,validation_then_test,0.6232,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),5,5,validation_then_test,0.6087,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),5,6,validation_then_test,0.6087,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),5,7,validation_then_test,0.6522,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),5,8,validation_then_test,0.6087,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 0.5x (m=0.1),5,9,validation_then_test,0.6087,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),10,0,validation_then_test,0.5909,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),10,1,validation_then_test,0.8182,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),10,2,validation_then_test,0.5,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),10,3,validation_then_test,0.5,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),10,4,validation_then_test,0.6818,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 0.5x (m=0.1),10,5,validation_then_test,0.5455,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),10,6,validation_then_test,0.6364,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),10,7,validation_then_test,0.4091,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),10,8,validation_then_test,0.7273,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),10,9,validation_then_test,0.6364,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),20,0,validation_then_test,0.65,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),20,1,validation_then_test,0.75,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),20,2,validation_then_test,0.55,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),20,3,validation_then_test,0.75,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),20,4,validation_then_test,0.6,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),20,5,validation_then_test,0.6,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),20,6,validation_then_test,0.7,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 0.5x (m=0.1),20,7,validation_then_test,0.6,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),20,8,validation_then_test,0.55,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Aircraft,selected=EGA 1.0x (m=0.2),20,9,validation_then_test,0.7,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,5,0,validation_then_test,0.8775,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,5,1,validation_then_test,0.88,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,5,2,validation_then_test,0.875,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,5,3,validation_then_test,0.8767,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,5,4,validation_then_test,0.875,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,5,5,validation_then_test,0.8733,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,5,6,validation_then_test,0.88,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,5,7,validation_then_test,0.8717,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,5,8,validation_then_test,0.8783,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,5,9,validation_then_test,0.88,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,10,0,validation_then_test,0.8849,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,10,1,validation_then_test,0.874,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,10,2,validation_then_test,0.8749,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,10,3,validation_then_test,0.8785,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,10,4,validation_then_test,0.8767,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,10,5,validation_then_test,0.8704,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,10,6,validation_then_test,0.8758,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,10,7,validation_then_test,0.8685,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,10,8,validation_then_test,0.8767,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,10,9,validation_then_test,0.8785,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,20,0,validation_then_test,0.8869,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,20,1,validation_then_test,0.8835,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,20,2,validation_then_test,0.8835,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,20,3,validation_then_test,0.8802,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,20,4,validation_then_test,0.8869,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,20,5,validation_then_test,0.8791,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,20,6,validation_then_test,0.8735,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,20,7,validation_then_test,0.8723,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,20,8,validation_then_test,0.8735,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp2,Food-101,selected=Frozen,20,9,validation_then_test,0.869,,artifacts/rs4z_fast/selection_raw.json,python scripts/59_rs4z_selection_sim.py
+exp3,multiple,derived-from-paper-table,,,,,,paper/EGA.tex#tab:ood_summary,"no new command; arithmetic on paper table, see regime_results.md"

@@ -1,0 +1,1119 @@
+{
+  "aggregate": [
+    {
+      "dataset": "CIFAR-10",
+      "budget": 5,
+      "mean_regret": 0.0,
+      "median_regret": 0.0,
+      "within1_frac": 1.0,
+      "frozen_rate": 1.0,
+      "ega_rate": 0.0,
+      "n_draws_used": 10,
+      "selected_counts": {
+        "Frozen": 10
+      }
+    },
+    {
+      "dataset": "CIFAR-10",
+      "budget": 10,
+      "mean_regret": 0.013208333333333332,
+      "median_regret": 0.0,
+      "within1_frac": 0.7,
+      "frozen_rate": 0.7,
+      "ega_rate": 0.3,
+      "n_draws_used": 10,
+      "selected_counts": {
+        "EGA 0.5x (m=0.1)": 2,
+        "Frozen": 7,
+        "EGA 1.0x (m=0.2)": 1
+      }
+    },
+    {
+      "dataset": "CIFAR-10",
+      "budget": 20,
+      "mean_regret": 0.0,
+      "median_regret": 0.0,
+      "within1_frac": 1.0,
+      "frozen_rate": 1.0,
+      "ega_rate": 0.0,
+      "n_draws_used": 10,
+      "selected_counts": {
+        "Frozen": 10
+      }
+    },
+    {
+      "dataset": "Aircraft",
+      "budget": 5,
+      "mean_regret": 0.04637681159420288,
+      "median_regret": 0.04347826086956519,
+      "within1_frac": 0.3,
+      "frozen_rate": 0.0,
+      "ega_rate": 1.0,
+      "n_draws_used": 10,
+      "selected_counts": {
+        "EGA 1.0x (m=0.2)": 8,
+        "EGA 2.0x (m=0.4)": 1,
+        "EGA 0.5x (m=0.1)": 1
+      }
+    },
+    {
+      "dataset": "Aircraft",
+      "budget": 10,
+      "mean_regret": 0.06363636363636363,
+      "median_regret": 0.06818181818181812,
+      "within1_frac": 0.3,
+      "frozen_rate": 0.0,
+      "ega_rate": 1.0,
+      "n_draws_used": 10,
+      "selected_counts": {
+        "EGA 1.0x (m=0.2)": 9,
+        "EGA 0.5x (m=0.1)": 1
+      }
+    },
+    {
+      "dataset": "Aircraft",
+      "budget": 20,
+      "mean_regret": 0.034999999999999996,
+      "median_regret": 0.0,
+      "within1_frac": 0.6,
+      "frozen_rate": 0.0,
+      "ega_rate": 1.0,
+      "n_draws_used": 10,
+      "selected_counts": {
+        "EGA 1.0x (m=0.2)": 9,
+        "EGA 0.5x (m=0.1)": 1
+      }
+    },
+    {
+      "dataset": "Food-101",
+      "budget": 5,
+      "mean_regret": 0.0,
+      "median_regret": 0.0,
+      "within1_frac": 1.0,
+      "frozen_rate": 1.0,
+      "ega_rate": 0.0,
+      "n_draws_used": 10,
+      "selected_counts": {
+        "Frozen": 10
+      }
+    },
+    {
+      "dataset": "Food-101",
+      "budget": 10,
+      "mean_regret": 0.0,
+      "median_regret": 0.0,
+      "within1_frac": 1.0,
+      "frozen_rate": 1.0,
+      "ega_rate": 0.0,
+      "n_draws_used": 10,
+      "selected_counts": {
+        "Frozen": 10
+      }
+    },
+    {
+      "dataset": "Food-101",
+      "budget": 20,
+      "mean_regret": 0.0,
+      "median_regret": 0.0,
+      "within1_frac": 1.0,
+      "frozen_rate": 1.0,
+      "ega_rate": 0.0,
+      "n_draws_used": 10,
+      "selected_counts": {
+        "Frozen": 10
+      }
+    }
+  ],
+  "events": [
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 5,
+      "draw": 0,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8804081632653061,
+      "oracle_test_lp1": 0.8804081632653061,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 5,
+      "draw": 1,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.88,
+      "oracle_test_lp1": 0.88,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 5,
+      "draw": 2,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8791836734693877,
+      "oracle_test_lp1": 0.8791836734693877,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 5,
+      "draw": 3,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8795918367346939,
+      "oracle_test_lp1": 0.8795918367346939,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 5,
+      "draw": 4,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8787755102040816,
+      "oracle_test_lp1": 0.8787755102040816,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 5,
+      "draw": 5,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8791836734693877,
+      "oracle_test_lp1": 0.8791836734693877,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 5,
+      "draw": 6,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8808163265306123,
+      "oracle_test_lp1": 0.8808163265306123,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 5,
+      "draw": 7,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.88,
+      "oracle_test_lp1": 0.88,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 5,
+      "draw": 8,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8804081632653061,
+      "oracle_test_lp1": 0.8804081632653061,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 5,
+      "draw": 9,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8812244897959184,
+      "oracle_test_lp1": 0.8812244897959184,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 10,
+      "draw": 0,
+      "selected": "EGA 0.5x (m=0.1)",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.85,
+      "oracle_test_lp1": 0.8825,
+      "regret": 0.03249999999999997
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 10,
+      "draw": 1,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.88125,
+      "oracle_test_lp1": 0.88125,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 10,
+      "draw": 2,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8804166666666666,
+      "oracle_test_lp1": 0.8804166666666666,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 10,
+      "draw": 3,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8795833333333334,
+      "oracle_test_lp1": 0.8795833333333334,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 10,
+      "draw": 4,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8141666666666667,
+      "oracle_test_lp1": 0.88125,
+      "regret": 0.06708333333333327
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 10,
+      "draw": 5,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8795833333333334,
+      "oracle_test_lp1": 0.8795833333333334,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 10,
+      "draw": 6,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8779166666666667,
+      "oracle_test_lp1": 0.8779166666666667,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 10,
+      "draw": 7,
+      "selected": "EGA 0.5x (m=0.1)",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8470833333333333,
+      "oracle_test_lp1": 0.8795833333333334,
+      "regret": 0.032500000000000084
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 10,
+      "draw": 8,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8816666666666667,
+      "oracle_test_lp1": 0.8816666666666667,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 10,
+      "draw": 9,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8791666666666667,
+      "oracle_test_lp1": 0.8791666666666667,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 20,
+      "draw": 0,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8778260869565218,
+      "oracle_test_lp1": 0.8778260869565218,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 20,
+      "draw": 1,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.878695652173913,
+      "oracle_test_lp1": 0.878695652173913,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 20,
+      "draw": 2,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8773913043478261,
+      "oracle_test_lp1": 0.8773913043478261,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 20,
+      "draw": 3,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8791304347826087,
+      "oracle_test_lp1": 0.8791304347826087,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 20,
+      "draw": 4,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8826086956521739,
+      "oracle_test_lp1": 0.8826086956521739,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 20,
+      "draw": 5,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8791304347826087,
+      "oracle_test_lp1": 0.8791304347826087,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 20,
+      "draw": 6,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8795652173913043,
+      "oracle_test_lp1": 0.8795652173913043,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 20,
+      "draw": 7,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8804347826086957,
+      "oracle_test_lp1": 0.8804347826086957,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 20,
+      "draw": 8,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8791304347826087,
+      "oracle_test_lp1": 0.8791304347826087,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "CIFAR-10",
+      "budget_per_class": 20,
+      "draw": 9,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8830434782608696,
+      "oracle_test_lp1": 0.8830434782608696,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 5,
+      "draw": 0,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 0.5x (m=0.1)",
+      "selected_test_lp1": 0.6231884057971014,
+      "oracle_test_lp1": 0.6231884057971014,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 5,
+      "draw": 1,
+      "selected": "EGA 2.0x (m=0.4)",
+      "oracle": "EGA 1.0x (m=0.2)",
+      "selected_test_lp1": 0.4927536231884058,
+      "oracle_test_lp1": 0.6521739130434783,
+      "regret": 0.15942028985507245
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 5,
+      "draw": 2,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 0.5x (m=0.1)",
+      "selected_test_lp1": 0.5797101449275363,
+      "oracle_test_lp1": 0.6231884057971014,
+      "regret": 0.04347826086956519
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 5,
+      "draw": 3,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 1.0x (m=0.2)",
+      "selected_test_lp1": 0.6376811594202898,
+      "oracle_test_lp1": 0.6376811594202898,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 5,
+      "draw": 4,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 1.0x (m=0.2)",
+      "selected_test_lp1": 0.6231884057971014,
+      "oracle_test_lp1": 0.6231884057971014,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 5,
+      "draw": 5,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 0.5x (m=0.1)",
+      "selected_test_lp1": 0.6086956521739131,
+      "oracle_test_lp1": 0.6811594202898551,
+      "regret": 0.07246376811594202
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 5,
+      "draw": 6,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 0.5x (m=0.1)",
+      "selected_test_lp1": 0.6086956521739131,
+      "oracle_test_lp1": 0.6666666666666666,
+      "regret": 0.05797101449275355
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 5,
+      "draw": 7,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 0.5x (m=0.1)",
+      "selected_test_lp1": 0.6521739130434783,
+      "oracle_test_lp1": 0.6811594202898551,
+      "regret": 0.02898550724637683
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 5,
+      "draw": 8,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 0.5x (m=0.1)",
+      "selected_test_lp1": 0.6086956521739131,
+      "oracle_test_lp1": 0.6666666666666666,
+      "regret": 0.05797101449275355
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 5,
+      "draw": 9,
+      "selected": "EGA 0.5x (m=0.1)",
+      "oracle": "EGA 1.0x (m=0.2)",
+      "selected_test_lp1": 0.6086956521739131,
+      "oracle_test_lp1": 0.6521739130434783,
+      "regret": 0.04347826086956519
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 10,
+      "draw": 0,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 0.5x (m=0.1)",
+      "selected_test_lp1": 0.5909090909090909,
+      "oracle_test_lp1": 0.6818181818181818,
+      "regret": 0.09090909090909083
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 10,
+      "draw": 1,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 2.0x (m=0.4)",
+      "selected_test_lp1": 0.8181818181818182,
+      "oracle_test_lp1": 0.8636363636363636,
+      "regret": 0.045454545454545414
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 10,
+      "draw": 2,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 0.5x (m=0.1)",
+      "selected_test_lp1": 0.5,
+      "oracle_test_lp1": 0.5909090909090909,
+      "regret": 0.09090909090909094
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 10,
+      "draw": 3,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 0.5x (m=0.1)",
+      "selected_test_lp1": 0.5,
+      "oracle_test_lp1": 0.6363636363636364,
+      "regret": 0.13636363636363635
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 10,
+      "draw": 4,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 1.0x (m=0.2)",
+      "selected_test_lp1": 0.6818181818181818,
+      "oracle_test_lp1": 0.6818181818181818,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 10,
+      "draw": 5,
+      "selected": "EGA 0.5x (m=0.1)",
+      "oracle": "EGA 1.0x (m=0.2)",
+      "selected_test_lp1": 0.5454545454545454,
+      "oracle_test_lp1": 0.6363636363636364,
+      "regret": 0.09090909090909094
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 10,
+      "draw": 6,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 0.5x (m=0.1)",
+      "selected_test_lp1": 0.6363636363636364,
+      "oracle_test_lp1": 0.6818181818181818,
+      "regret": 0.045454545454545414
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 10,
+      "draw": 7,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 0.5x (m=0.1)",
+      "selected_test_lp1": 0.4090909090909091,
+      "oracle_test_lp1": 0.5454545454545454,
+      "regret": 0.1363636363636363
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 10,
+      "draw": 8,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 1.0x (m=0.2)",
+      "selected_test_lp1": 0.7272727272727273,
+      "oracle_test_lp1": 0.7272727272727273,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 10,
+      "draw": 9,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.6363636363636364,
+      "oracle_test_lp1": 0.6363636363636364,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 20,
+      "draw": 0,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 0.5x (m=0.1)",
+      "selected_test_lp1": 0.65,
+      "oracle_test_lp1": 0.7,
+      "regret": 0.04999999999999993
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 20,
+      "draw": 1,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 0.5x (m=0.1)",
+      "selected_test_lp1": 0.75,
+      "oracle_test_lp1": 0.8,
+      "regret": 0.050000000000000044
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 20,
+      "draw": 2,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 1.0x (m=0.2)",
+      "selected_test_lp1": 0.55,
+      "oracle_test_lp1": 0.55,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 20,
+      "draw": 3,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 0.5x (m=0.1)",
+      "selected_test_lp1": 0.75,
+      "oracle_test_lp1": 0.75,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 20,
+      "draw": 4,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 1.0x (m=0.2)",
+      "selected_test_lp1": 0.6,
+      "oracle_test_lp1": 0.6,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 20,
+      "draw": 5,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 0.5x (m=0.1)",
+      "selected_test_lp1": 0.6,
+      "oracle_test_lp1": 0.6,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 20,
+      "draw": 6,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 1.0x (m=0.2)",
+      "selected_test_lp1": 0.7,
+      "oracle_test_lp1": 0.7,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 20,
+      "draw": 7,
+      "selected": "EGA 0.5x (m=0.1)",
+      "oracle": "EGA 1.0x (m=0.2)",
+      "selected_test_lp1": 0.6,
+      "oracle_test_lp1": 0.8,
+      "regret": 0.20000000000000007
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 20,
+      "draw": 8,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 0.5x (m=0.1)",
+      "selected_test_lp1": 0.55,
+      "oracle_test_lp1": 0.6,
+      "regret": 0.04999999999999993
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Aircraft",
+      "budget_per_class": 20,
+      "draw": 9,
+      "selected": "EGA 1.0x (m=0.2)",
+      "oracle": "EGA 0.5x (m=0.1)",
+      "selected_test_lp1": 0.7,
+      "oracle_test_lp1": 0.7,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 5,
+      "draw": 0,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8774834437086093,
+      "oracle_test_lp1": 0.8774834437086093,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 5,
+      "draw": 1,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8799668874172185,
+      "oracle_test_lp1": 0.8799668874172185,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 5,
+      "draw": 2,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.875,
+      "oracle_test_lp1": 0.875,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 5,
+      "draw": 3,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8766556291390728,
+      "oracle_test_lp1": 0.8766556291390728,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 5,
+      "draw": 4,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.875,
+      "oracle_test_lp1": 0.875,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 5,
+      "draw": 5,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8733443708609272,
+      "oracle_test_lp1": 0.8733443708609272,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 5,
+      "draw": 6,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8799668874172185,
+      "oracle_test_lp1": 0.8799668874172185,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 5,
+      "draw": 7,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8716887417218543,
+      "oracle_test_lp1": 0.8716887417218543,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 5,
+      "draw": 8,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8783112582781457,
+      "oracle_test_lp1": 0.8783112582781457,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 5,
+      "draw": 9,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8799668874172185,
+      "oracle_test_lp1": 0.8799668874172185,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 10,
+      "draw": 0,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8848594741613781,
+      "oracle_test_lp1": 0.8848594741613781,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 10,
+      "draw": 1,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8739800543970988,
+      "oracle_test_lp1": 0.8739800543970988,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 10,
+      "draw": 2,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8748866727107888,
+      "oracle_test_lp1": 0.8748866727107888,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 10,
+      "draw": 3,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8785131459655485,
+      "oracle_test_lp1": 0.8785131459655485,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 10,
+      "draw": 4,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8766999093381687,
+      "oracle_test_lp1": 0.8766999093381687,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 10,
+      "draw": 5,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8703535811423391,
+      "oracle_test_lp1": 0.8703535811423391,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 10,
+      "draw": 6,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8757932910244787,
+      "oracle_test_lp1": 0.8757932910244787,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 10,
+      "draw": 7,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8685403445149592,
+      "oracle_test_lp1": 0.8685403445149592,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 10,
+      "draw": 8,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8766999093381687,
+      "oracle_test_lp1": 0.8766999093381687,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 10,
+      "draw": 9,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8785131459655485,
+      "oracle_test_lp1": 0.8785131459655485,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 20,
+      "draw": 0,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8868980963045913,
+      "oracle_test_lp1": 0.8868980963045913,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 20,
+      "draw": 1,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.883538633818589,
+      "oracle_test_lp1": 0.883538633818589,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 20,
+      "draw": 2,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.883538633818589,
+      "oracle_test_lp1": 0.883538633818589,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 20,
+      "draw": 3,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8801791713325868,
+      "oracle_test_lp1": 0.8801791713325868,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 20,
+      "draw": 4,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8868980963045913,
+      "oracle_test_lp1": 0.8868980963045913,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 20,
+      "draw": 5,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8790593505039194,
+      "oracle_test_lp1": 0.8790593505039194,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 20,
+      "draw": 6,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8734602463605823,
+      "oracle_test_lp1": 0.8734602463605823,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 20,
+      "draw": 7,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8723404255319149,
+      "oracle_test_lp1": 0.8723404255319149,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 20,
+      "draw": 8,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8734602463605823,
+      "oracle_test_lp1": 0.8734602463605823,
+      "regret": 0.0
+    },
+    {
+      "experiment": "selection",
+      "dataset": "Food-101",
+      "budget_per_class": 20,
+      "draw": 9,
+      "selected": "Frozen",
+      "oracle": "Frozen",
+      "selected_test_lp1": 0.8689809630459127,
+      "oracle_test_lp1": 0.8689809630459127,
+      "regret": 0.0
+    }
+  ]
+}
